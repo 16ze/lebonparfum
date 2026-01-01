@@ -4,6 +4,8 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import MenuOverlay from "@/components/layout/MenuOverlay";
+import { MenuProvider } from "@/context/MenuContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,11 +27,14 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
-        <SmoothScroll>
-          <Header />
-          {children}
-          <Footer />
-        </SmoothScroll>
+        <MenuProvider>
+          <SmoothScroll>
+            <Header />
+            <MenuOverlay />
+            {children}
+            <Footer />
+          </SmoothScroll>
+        </MenuProvider>
       </body>
     </html>
   );

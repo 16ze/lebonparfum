@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { Menu, ShoppingBag } from "lucide-react";
+import { useMenu } from "@/context/MenuContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Menu, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,6 +26,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
+  const { toggleMenu, isOpen } = useMenu();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -84,6 +86,31 @@ export default function Header() {
     return () => ctx.revert();
   }, []);
 
+  // Animation Header : Assombrissement et blur quand le menu est ouvert
+  useEffect(() => {
+    if (!headerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      if (isOpen) {
+        // Menu ouvert : Assombrir et flouter le header
+        gsap.to(headerRef.current, {
+          filter: "brightness(0.6) blur(150px)", // Assombrir à 30% + blur 12px
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      } else {
+        // Menu fermé : Restaurer la luminosité et enlever le blur
+        gsap.to(headerRef.current, {
+          filter: "brightness(1) blur(0px)",
+          duration: 0.4,
+          ease: "power2.in",
+        });
+      }
+    }, headerRef);
+
+    return () => ctx.revert();
+  }, [isOpen]);
+
   return (
     <header
       ref={headerRef}
@@ -99,6 +126,7 @@ export default function Header() {
           ref={(el) => {
             elementsRef.current[0] = el;
           }}
+          onClick={toggleMenu}
           className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-all duration-300"
           style={{ color: "#FFFFFF" }}
           aria-label="Ouvrir le menu"
