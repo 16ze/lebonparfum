@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 /**
  * MenuContext - Gestion de l'état global du menu overlay
@@ -57,4 +57,3 @@ export function useMenu() {
   }
   return context;
 }
-

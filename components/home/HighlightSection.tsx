@@ -80,7 +80,7 @@ export default function HighlightSection() {
 
           {/* CTA souligné */}
           <Link
-            href="/products/blanche"
+            href="/product/4-black-op"
             className="inline-block text-white text-xs md:text-sm uppercase tracking-widest font-medium border-b border-white pb-1 hover:opacity-70 transition-opacity duration-300"
           >
             Découvrir le Parfum

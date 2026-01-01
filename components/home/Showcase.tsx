@@ -45,7 +45,7 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
       "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=2000&auto=format&fit=crop",
     productImg:
       "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop",
-    link: "/products/rouge-velours",
+    link: "/product/4-black-op",
   },
   {
     id: "2",
@@ -55,7 +55,7 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
       "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=2000&auto=format&fit=crop",
     productImg:
       "https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&w=800&auto=format&fit=crop",
-    link: "/products/blanc-pur",
+    link: "/product/4-black-op",
   },
   {
     id: "3",
@@ -65,7 +65,7 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
       "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=2000&auto=format&fit=crop",
     productImg:
       "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop",
-    link: "/products/bois-sacre",
+    link: "/product/4-black-op",
   },
 ];
 

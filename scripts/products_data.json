@@ -1,0 +1,51 @@
+[
+  {
+    "name": "4 BLACK OP",
+    "slug": "4-black-op",
+    "collection": "CP King Édition",
+    "price": 15.0,
+    "description": "Une interprétation audacieuse et mystérieuse. Des notes de café noir adoucies par la vanille et la fleur d'oranger.",
+    "notes": "Café noir, Cardamome, Vanille, Fleur d'oranger, Ambre, Musc, Patchouli",
+    "inspiration": "Black Opium - Yves Saint Laurent",
+    "category": "Unisexe",
+    "stock": 10,
+    "image_url": null
+  },
+  {
+    "name": "4 TOBACCO VANILLE",
+    "slug": "4-tobacco-vanille",
+    "collection": "CP King Édition",
+    "price": 15.0,
+    "description": "Un accord chaleureux entre le tabac et la vanille, créant une fragrance gourmande et enveloppante.",
+    "notes": "Tabac, Vanille, Tonka, Ambre, Cacao",
+    "inspiration": "Tobacco Vanille - Tom Ford",
+    "category": "Unisexe",
+    "stock": 10,
+    "image_url": null
+  },
+  {
+    "name": "2 YARA",
+    "slug": "2-yara",
+    "collection": "CP Paris",
+    "price": 10.0,
+    "description": "Une fragrance douce et fruitée aux notes de fruits rouges et de vanille.",
+    "notes": "Framboise, Fraise, Vanille, Musc, Ambre",
+    "inspiration": "Yara - Lattafa",
+    "category": "Femme",
+    "stock": 10,
+    "image_url": null
+  },
+  {
+    "name": "3 COCO VANILLE",
+    "slug": "3-coco-vanille",
+    "collection": "CP King Édition",
+    "price": 15.0,
+    "description": "Une combinaison exotique de noix de coco et de vanille, créant une fragrance tropicale et gourmande.",
+    "notes": "Noix de coco, Vanille, Ambre, Musc, Tonka",
+    "inspiration": null,
+    "category": "Unisexe",
+    "stock": 10,
+    "image_url": null
+  }
+]
+

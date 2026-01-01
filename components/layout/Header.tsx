@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
  * Header - Byredo-style immersive navigation
  *
  * Layout :
- * [ ☰ MENU ]     HÉRITAGE     [ PANIER (0) 🛍️ ]
+ * [ ☰ MENU ]     LE BON PARFUM     [ PANIER (0) 🛍️ ]
  *
  * États :
  * - Top (0px) : Transparent + Texte/Icons blanc
@@ -135,7 +135,7 @@ export default function Header() {
           <span>Menu</span>
         </button>
 
-        {/* Centre : Logo HÉRITAGE */}
+        {/* Centre : Logo LE BON PARFUM */}
         <Link
           href="/"
           ref={(el) => {
@@ -146,7 +146,7 @@ export default function Header() {
             className="text-base md:text-lg font-bold uppercase tracking-widest"
             style={{ color: "#FFFFFF" }}
           >
-            HÉRITAGE
+            LE BON PARFUM
           </h1>
         </Link>
 

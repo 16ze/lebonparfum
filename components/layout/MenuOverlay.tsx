@@ -29,65 +29,25 @@ import { useEffect, useRef, useState } from "react";
  * - Bloque TOTALEMENT le scroll du site quand le menu est ouvert
  */
 
-// Données de marques (exemple)
-interface Brand {
-  id: string;
-  name: string;
+// Interface pour les données passées depuis le Server Component
+interface MenuOverlayProps {
+  collections: string[];
   products: {
     id: string;
     name: string;
-    image?: string;
+    products: {
+      id: string;
+      name: string;
+      slug: string;
+      image?: string;
+    }[];
   }[];
 }
 
-const BRANDS: Brand[] = [
-  {
-    id: "cp-king",
-    name: "CP King",
-    products: [
-      { id: "cpk-1", name: "Royal Oud", image: "/products/royal-oud.jpg" },
-      { id: "cpk-2", name: "Imperial", image: "/products/imperial.jpg" },
-      { id: "cpk-3", name: "Crown", image: "/products/crown.jpg" },
-    ],
-  },
-  {
-    id: "cp-paris",
-    name: "CP Paris",
-    products: [
-      { id: "cpp-1", name: "Parisienne", image: "/products/parisienne.jpg" },
-      { id: "cpp-2", name: "Champs-Élysées", image: "/products/champs.jpg" },
-      { id: "cpp-3", name: "Seine", image: "/products/seine.jpg" },
-    ],
-  },
-  {
-    id: "byredo",
-    name: "Byredo",
-    products: [
-      {
-        id: "byr-1",
-        name: "Bal d'Afrique",
-        image: "/products/bal-afrique.jpg",
-      },
-      { id: "byr-2", name: "Gypsy Water", image: "/products/gypsy-water.jpg" },
-      {
-        id: "byr-3",
-        name: "Mojave Ghost",
-        image: "/products/mojave-ghost.jpg",
-      },
-    ],
-  },
-  {
-    id: "le-labo",
-    name: "Le Labo",
-    products: [
-      { id: "ll-1", name: "Santal 33", image: "/products/santal-33.jpg" },
-      { id: "ll-2", name: "Rose 31", image: "/products/rose-31.jpg" },
-      { id: "ll-3", name: "Bergamote 22", image: "/products/bergamote-22.jpg" },
-    ],
-  },
-];
-
-export default function MenuOverlay() {
+export default function MenuOverlay({
+  collections = [],
+  products = [],
+}: MenuOverlayProps) {
   const { isOpen, closeMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -120,14 +80,14 @@ export default function MenuOverlay() {
             overlayRef.current,
             {
               opacity: 0,
-              backdropFilter: "blur(0px)",
+              backdropFilter: "blur(250px)",
               visibility: "visible",
             },
             {
               opacity: 0.8, // 80% d'opacité pour un focus maximal
-              backdropFilter: "blur(80px)", // Blur total pour un effet complètement flouté
+              backdropFilter: "blur(250px)", // Blur maximum pour un effet complètement flouté
               duration: 0.5,
-              ease: "power2.out",
+              ease: "power2.out", // Smooth animation
             }
           );
         }
@@ -213,15 +173,17 @@ export default function MenuOverlay() {
     }
   }, [isOpen]);
 
-  // Trouver la marque active
-  const activeBrandData = BRANDS.find((b) => b.id === activeBrand);
+  // Trouver la collection active
+  const activeCollectionData = products.find(
+    (p) => p.id === activeBrand || p.name === activeBrand
+  );
 
   return (
     <>
       {/* Overlay Backdrop (assombrit et floute le fond pour focus sur le menu) */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/80 z-30"
+        className="fixed inset-0 bg-black/80 z-[55]"
         style={{
           visibility: "hidden",
           backdropFilter: "blur(0px)", // Sera animé par GSAP
@@ -233,7 +195,7 @@ export default function MenuOverlay() {
       {/* Menu Overlay */}
       <div
         ref={menuRef}
-        className="fixed z-40 bg-white shadow-2xl rounded-3xl left-4 overflow-hidden flex flex-col"
+        className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4 overflow-hidden flex flex-col"
         style={{
           top: "90px", // Positionné sous le header
           bottom: "1rem",
@@ -261,27 +223,32 @@ export default function MenuOverlay() {
           <div className="w-[350px] border-r border-black/10 flex flex-col overflow-y-auto">
             <div className="flex-1 px-6 py-6">
               <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
-                Marques
+                Collections
               </h3>
               <ul className="space-y-1">
-                {BRANDS.map((brand) => (
-                  <li key={brand.id}>
-                    <button
-                      onClick={() =>
-                        setActiveBrand(
-                          brand.id === activeBrand ? null : brand.id
-                        )
-                      }
-                      className={`w-full text-left px-4 py-3 text-sm uppercase tracking-wide font-medium transition-colors underline-offset-4 ${
-                        activeBrand === brand.id
-                          ? "text-black underline"
-                          : "text-black hover:underline"
-                      }`}
-                    >
-                      {brand.name}
-                    </button>
-                  </li>
-                ))}
+                {collections.map((collection) => {
+                  const collectionId = collection
+                    .toLowerCase()
+                    .replace(/\s+/g, "-");
+                  const isActive =
+                    activeBrand === collectionId || activeBrand === collection;
+                  return (
+                    <li key={collection}>
+                      <button
+                        onClick={() =>
+                          setActiveBrand(isActive ? null : collectionId)
+                        }
+                        className={`w-full text-left px-4 py-3 text-sm uppercase tracking-wide font-medium transition-colors underline-offset-4 ${
+                          isActive
+                            ? "text-black underline"
+                            : "text-black hover:underline"
+                        }`}
+                      >
+                        {collection}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -311,17 +278,17 @@ export default function MenuOverlay() {
             </div>
           </div>
 
-          {/* COLONNE 2 : Produits de la marque active */}
-          {activeBrandData && (
+          {/* COLONNE 2 : Produits de la collection active */}
+          {activeCollectionData && (
             <div className="flex-1 border-r border-black/10 overflow-y-auto px-6 py-6">
               <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
                 Produits
               </h3>
               <ul className="space-y-2">
-                {activeBrandData.products.map((product) => (
+                {activeCollectionData.products.map((product) => (
                   <li key={product.id}>
                     <Link
-                      href={`/products/${product.id}`}
+                      href={`/product/${product.slug}`}
                       onClick={closeMenu}
                       onMouseEnter={() => setHoveredProduct(product.id)}
                       onMouseLeave={() => setHoveredProduct(null)}
@@ -336,18 +303,19 @@ export default function MenuOverlay() {
           )}
 
           {/* COLONNE 3 : Photo du produit au survol */}
-          {activeBrandData && hoveredProduct && (
+          {activeCollectionData && hoveredProduct && (
             <div className="w-[400px] overflow-hidden bg-gray-50 flex items-center justify-center">
-              {activeBrandData.products.find((p) => p.id === hoveredProduct)
-                ?.image ? (
+              {activeCollectionData.products.find(
+                (p) => p.id === hoveredProduct
+              )?.image ? (
                 <img
                   src={
-                    activeBrandData.products.find(
+                    activeCollectionData.products.find(
                       (p) => p.id === hoveredProduct
                     )?.image
                   }
                   alt={
-                    activeBrandData.products.find(
+                    activeCollectionData.products.find(
                       (p) => p.id === hoveredProduct
                     )?.name
                   }

@@ -1,11 +1,11 @@
+import SmoothScroll from "@/components/SmoothScroll";
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
+import { MenuProvider } from "@/context/MenuContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import SmoothScroll from "@/components/SmoothScroll";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import MenuOverlay from "@/components/layout/MenuOverlay";
-import { MenuProvider } from "@/context/MenuContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HÉRITAGE - Parfums de Niche",
-  description: "Revendeur de parfums de niche",
+  title: "LE BON PARFUM - Parfums de Niche & Dupes de Luxe",
+  description: "Revendeur de parfums de niche et dupes de luxe",
 };
 
 export default function RootLayout({
@@ -30,7 +30,7 @@ export default function RootLayout({
         <MenuProvider>
           <SmoothScroll>
             <Header />
-            <MenuOverlay />
+            <MenuOverlayWrapper />
             {children}
             <Footer />
           </SmoothScroll>

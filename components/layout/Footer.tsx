@@ -8,12 +8,31 @@ import Link from "next/link";
  * - Typographie blanche minimaliste
  * - Newsletter simple en haut
  * - Grille de liens (Client, Légal, Social)
- * - Signature gigantesque "HÉRITAGE" (text-[13vw])
+ * - Signature gigantesque "LE BON PARFUM" (text-[10vw])
  */
 
 export default function Footer() {
   return (
     <footer className="relative z-20 w-full bg-black text-white pt-16 md:pt-24 pb-8">
+      <div className="text-center text-white text-xs uppercase tracking-widest ">
+        Inscrivez-vous pour suivre l'actualité{" "}
+      </div>
+      <div className="text-center text-white text-2xl uppercase tracking-widest mb-8 py-4 col-auto mx-auto max-w-2xl font-bold">
+        Recevez des informations exclusives sur le lancement de la collection,
+        des communications personnalisées et les dernières actualités{" "}
+      </div>
+
+      {/* Bouton souligné */}
+      <div className="text-center mb-16">
+        <button
+          type="button"
+          className="text-white text-xs uppercase tracking-widest font-medium hover:underline transition-colors underline-offset-4 mb-16"
+        >
+          + S'inscrire
+        </button>
+      </div>
+      {/* Separator */}
+      <div className="border-t border-gray-500/10 pt-8 md:pt-12"></div>
       <div className="max-w-[1800px] mx-auto px-4 md:px-6">
         {/* Newsletter Simple */}
         <div className="mb-16 md:mb-24 max-w-2xl">
@@ -137,18 +156,18 @@ export default function Footer() {
         </div>
 
         {/* Separator */}
-        <div className="border-t border-white/10 pt-8 md:pt-12">
+        <div className="border-t border-gray-500/10 pt-8 md:pt-12">
           {/* Signature Gigantesque */}
           <div className="text-center mb-8">
-            <h2 className="text-[13vw] font-bold uppercase tracking-wider leading-none">
-              HÉRITAGE
+            <h2 className="text-[10vw] font-bold uppercase tracking-wider leading-none">
+              LE BON PARFUM
             </h2>
           </div>
 
           {/* Copyright */}
           <div className="text-center">
             <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-              © 2024 Héritage. Tous droits réservés.
+              © 2026 LE BON PARFUM. Tous droits réservés.
             </p>
           </div>
         </div>
