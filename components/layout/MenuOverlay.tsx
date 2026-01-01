@@ -54,6 +54,13 @@ export default function MenuOverlay({
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
 
+  // DEBUG: Log des données reçues
+  console.log("🔍 MenuOverlay - Props reçues:", {
+    collections,
+    productsCount: products.length,
+    products: products.map((p) => ({ id: p.id, name: p.name, count: p.products.length })),
+  });
+
   // Animation GSAP : Slide depuis la gauche
   useEffect(() => {
     if (!menuRef.current) return;
@@ -178,6 +185,18 @@ export default function MenuOverlay({
     (p) => p.id === activeBrand || p.name === activeBrand
   );
 
+  // DEBUG: Log de la collection active
+  console.log("🔍 MenuOverlay - État actuel:", {
+    activeBrand,
+    activeCollectionData: activeCollectionData
+      ? {
+          id: activeCollectionData.id,
+          name: activeCollectionData.name,
+          productsCount: activeCollectionData.products.length,
+        }
+      : null,
+  });
+
   return (
     <>
       {/* Overlay Backdrop (assombrit et floute le fond pour focus sur le menu) */}
@@ -192,21 +211,21 @@ export default function MenuOverlay({
         aria-hidden="true"
       />
 
-      {/* Menu Overlay */}
+      {/* Menu Overlay - Structure corrigée pour le scroll */}
       <div
         ref={menuRef}
-        className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4 overflow-hidden flex flex-col"
+        className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4 flex flex-col"
         style={{
-          top: "90px", // Positionné sous le header
+          top: "90px",
           bottom: "1rem",
-          height: "calc(100dvh - 90px - 1rem)", // Hauteur ajustée pour être sous le header
+          // IMPORTANT: Pas de height ici, top+bottom définissent déjà la hauteur
           width: activeBrand ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
-        {/* Header du Menu */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-black/10">
+        {/* Header du Menu - shrink-0 pour ne jamais se comprimer */}
+        <div className="shrink-0 flex items-center justify-between px-6 py-6 border-b border-black/10">
           <h2 className="text-xs uppercase tracking-widest font-bold">Menu</h2>
           <button
             onClick={closeMenu}
@@ -217,11 +236,11 @@ export default function MenuOverlay({
           </button>
         </div>
 
-        {/* Contenu : Grille Cascading */}
-        <div className="flex-1 flex overflow-hidden">
+        {/* Contenu : Grille Cascading - flex-1 + min-h-0 pour permettre le scroll */}
+        <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* COLONNE 1 : Liste des Marques */}
-          <div className="w-[350px] border-r border-black/10 flex flex-col overflow-y-auto">
-            <div className="flex-1 px-6 py-6">
+          <div className="w-[350px] shrink-0 border-r border-black/10 flex flex-col min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
               <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
                 Collections
               </h3>
@@ -253,7 +272,7 @@ export default function MenuOverlay({
             </div>
 
             {/* Bas de Col 1 : Liens (CONNEXION, COMMANDES, CONTACT) */}
-            <div className="mt-auto px-6 py-6 border-t border-black/10 space-y-3">
+            <div className="shrink-0 px-6 py-6 border-t border-black/10 space-y-3">
               <Link
                 href="/connexion"
                 onClick={closeMenu}
@@ -280,25 +299,32 @@ export default function MenuOverlay({
 
           {/* COLONNE 2 : Produits de la collection active */}
           {activeCollectionData && (
-            <div className="flex-1 border-r border-black/10 overflow-y-auto px-6 py-6">
-              <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
-                Produits
-              </h3>
-              <ul className="space-y-2">
-                {activeCollectionData.products.map((product) => (
-                  <li key={product.id}>
-                    <Link
-                      href={`/product/${product.slug}`}
-                      onClick={closeMenu}
-                      onMouseEnter={() => setHoveredProduct(product.id)}
-                      onMouseLeave={() => setHoveredProduct(null)}
-                      className="block px-4 py-3 text-sm uppercase tracking-wide font-medium hover:underline transition-colors underline-offset-4"
-                    >
-                      {product.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex-1 min-h-0 min-w-0 flex flex-col border-r border-black/10">
+              {/* Header de colonne - shrink-0 pour ne jamais se comprimer */}
+              <div className="shrink-0 px-6 pt-6 pb-4">
+                <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500">
+                  Produits ({activeCollectionData.products.length})
+                </h3>
+              </div>
+
+              {/* Zone de scroll - CRITIQUE: flex-1 + min-h-0 + overflow-y-auto */}
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24">
+                <ul className="space-y-2">
+                  {activeCollectionData.products.map((product) => (
+                    <li key={product.id}>
+                      <Link
+                        href={`/product/${product.slug}`}
+                        onClick={closeMenu}
+                        onMouseEnter={() => setHoveredProduct(product.id)}
+                        onMouseLeave={() => setHoveredProduct(null)}
+                        className="block px-4 py-3 text-sm uppercase tracking-wide font-medium hover:underline transition-colors underline-offset-4"
+                      >
+                        {product.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           )}
 

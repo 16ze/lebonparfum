@@ -1,7 +1,9 @@
 import SmoothScroll from "@/components/SmoothScroll";
+import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
+import { CartProvider } from "@/context/CartContext";
 import { MenuProvider } from "@/context/MenuContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -27,14 +29,17 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
-        <MenuProvider>
-          <SmoothScroll>
-            <Header />
-            <MenuOverlayWrapper />
-            {children}
-            <Footer />
-          </SmoothScroll>
-        </MenuProvider>
+        <CartProvider>
+          <MenuProvider>
+            <SmoothScroll>
+              <Header />
+              <MenuOverlayWrapper />
+              <CartDrawer />
+              {children}
+              <Footer />
+            </SmoothScroll>
+          </MenuProvider>
+        </CartProvider>
       </body>
     </html>
   );

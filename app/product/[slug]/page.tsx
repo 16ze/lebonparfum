@@ -97,11 +97,15 @@ export default async function ProductPage({
         {/* ZONE 2 : Infos Produit (Col 8 -> 12 sur Desktop, Sticky) */}
         <div className="md:col-span-5">
           <ProductInfo
+            productId={product.id || product.slug} // ID unique (UUID ou slug en fallback)
+            slug={product.slug}
             collection={product.collection}
             title={product.name}
             price={formattedPrice}
+            priceNumeric={Number(product.price)}
             description={product.description || ""}
             variants={variants}
+            image={product.image_url || images[0]} // Première image du produit
             notes={product.notes || undefined}
             ingredients={undefined}
             shipping="Livraison gratuite à partir de 100€ d'achat. Retours acceptés sous 14 jours. Emballage premium inclus."

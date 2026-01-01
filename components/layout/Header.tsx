@@ -1,11 +1,14 @@
 "use client";
 
+import { useCart } from "@/context/CartContext";
 import { useMenu } from "@/context/MenuContext";
+import clsx from "clsx";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Menu, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,11 +18,11 @@ gsap.registerPlugin(ScrollTrigger);
  * Layout :
  * [ ☰ MENU ]     LE BON PARFUM     [ PANIER (0) 🛍️ ]
  *
- * États :
- * - Top (0px) : Transparent + Texte/Icons blanc
- * - Scrolled (>100px) : Fond blanc/80 + Blur + Texte/Icons noir
+ * Logique conditionnelle :
+ * - Page d'accueil (/) : Transparent au top → Blanc au scroll
+ * - Autres pages (/product/...) : Toujours blanc avec texte noir
  *
- * Comportement :
+ * Comportement (Home uniquement) :
  * - Disparaît au scroll down (yPercent: -100)
  * - Réapparaît au scroll up (yPercent: 0)
  */
@@ -27,10 +30,21 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
   const { toggleMenu, isOpen } = useMenu();
+  const { cartCount, openCart } = useCart();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [isScrolled, setIsScrolled] = useState(!isHome); // Sur les autres pages, on considère qu'on est "scrollé"
 
+  // Gestion du scroll uniquement sur la page d'accueil
   useEffect(() => {
+    if (!isHome) {
+      // Sur les autres pages, on force l'état "scrollé"
+      setIsScrolled(true);
+      return;
+    }
+
     const ctx = gsap.context(() => {
-      // 1. Animation Hide/Show basée sur la direction du scroll
+      // 1. Animation Hide/Show basée sur la direction du scroll (Home uniquement)
       ScrollTrigger.create({
         start: "top top",
         end: "max",
@@ -48,14 +62,15 @@ export default function Header() {
       // 2. Animation Transparent → White basée sur la position du scroll
       ScrollTrigger.create({
         start: "top top",
-        end: "100px top",
+        end: "50px top", // Réduit à 50px pour un changement plus rapide
         scrub: 0.3,
         onUpdate: (self) => {
-          const progress = self.progress; // 0 (top) → 1 (scrolled)
+          const progress = self.progress; // 0 (top) → 1 (scrolled 50px)
+          setIsScrolled(progress > 0.5); // Update state pour les classes CSS
 
           // Header background & blur
           gsap.to(headerRef.current, {
-            backgroundColor: `rgba(255, 255, 255, ${progress * 0.8})`,
+            backgroundColor: `rgba(255, 255, 255, ${progress * 0.9})`,
             backdropFilter: `blur(${progress * 12}px)`,
             borderBottom: `1px solid rgba(0, 0, 0, ${progress * 0.1})`,
             duration: 0.3,
@@ -84,7 +99,7 @@ export default function Header() {
     }, headerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [isHome]);
 
   // Animation Header : Assombrissement et blur quand le menu est ouvert
   useEffect(() => {
@@ -111,15 +126,29 @@ export default function Header() {
     return () => ctx.revert();
   }, [isOpen]);
 
-  return (
-    <header
-      ref={headerRef}
-      className="fixed top-0 left-0 w-full z-50"
-      style={{
+  // Déterminer la couleur du texte et des icônes selon la page et le scroll
+  const textColor = isHome && !isScrolled ? "#FFFFFF" : "#000000";
+
+  // Classes conditionnelles pour le header
+  // Note : Sur la home, GSAP gère les animations de background via styles inline
+  // Sur les autres pages, on utilise les classes CSS pour un header blanc fixe
+  const headerClasses = clsx("fixed top-0 left-0 w-full z-50", {
+    // Autres pages : toujours blanc avec bordure (pas d'animation GSAP)
+    "bg-white shadow-sm border-b border-gray-100 transition-colors duration-300":
+      !isHome,
+  });
+
+  // Styles inline pour la home (seront animés par GSAP)
+  // Pour les autres pages, undefined (les classes CSS gèrent le style)
+  const headerStyle = isHome
+    ? {
         backgroundColor: "transparent",
         borderBottom: "1px solid transparent",
-      }}
-    >
+      }
+    : undefined;
+
+  return (
+    <header ref={headerRef} className={headerClasses} style={headerStyle}>
       <nav className="flex items-center justify-between px-4 md:px-6 py-6">
         {/* Gauche : Menu Burger */}
         <button
@@ -128,10 +157,10 @@ export default function Header() {
           }}
           onClick={toggleMenu}
           className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-all duration-300"
-          style={{ color: "#FFFFFF" }}
+          style={{ color: textColor }}
           aria-label="Ouvrir le menu"
         >
-          <Menu size={18} strokeWidth={1.5} />
+          <Menu size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
           <span>Menu</span>
         </button>
 
@@ -144,7 +173,7 @@ export default function Header() {
         >
           <h1
             className="text-base md:text-lg font-bold uppercase tracking-widest"
-            style={{ color: "#FFFFFF" }}
+            style={{ color: textColor }}
           >
             LE BON PARFUM
           </h1>
@@ -155,12 +184,17 @@ export default function Header() {
           ref={(el) => {
             elementsRef.current[2] = el;
           }}
+          onClick={openCart}
           className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-          style={{ color: "#FFFFFF" }}
+          style={{ color: textColor }}
           aria-label="Ouvrir le panier"
         >
-          <span>Panier (0)</span>
-          <ShoppingBag size={18} strokeWidth={1.5} />
+          <span>Panier ({cartCount})</span>
+          <ShoppingBag
+            size={18}
+            strokeWidth={1.5}
+            style={{ stroke: textColor }}
+          />
         </button>
       </nav>
     </header>

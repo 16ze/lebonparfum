@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCart } from "@/context/CartContext";
 import AccordionItem from "./AccordionItem";
 
 /**
@@ -13,34 +14,62 @@ import AccordionItem from "./AccordionItem";
  * - Accordéons pour détails
  */
 interface ProductInfoProps {
+  productId: string; // ID unique du produit (slug ou UUID)
+  slug: string; // Slug pour l'URL
   collection: string;
   title: string;
-  price: string;
+  price: string; // Prix formaté en string (ex: "15,00 €")
+  priceNumeric: number; // Prix en nombre pour les calculs
   description: string;
   variants: { id: string; label: string; value: string }[];
+  image?: string; // URL de l'image du produit
   notes?: string;
   ingredients?: string;
   shipping?: string;
 }
 
 export default function ProductInfo({
+  productId,
+  slug,
   collection,
   title,
   price,
+  priceNumeric,
   description,
   variants,
+  image,
   notes,
   ingredients,
   shipping,
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(variants[0]?.id);
+  const { addToCart, openCart } = useCart();
 
   /**
-   * handleAddToCart - Gère l'ajout au panier
+   * handleAddToCart - Ajoute le produit au panier et ouvre le drawer
    */
   const handleAddToCart = () => {
-    // TODO: Implémenter la logique d'ajout au panier
-    console.log("Ajout au panier:", { title, variant: selectedVariant });
+    // Créer un ID unique pour cette combinaison produit + variante
+    // Si plusieurs variantes, on les traite comme des produits distincts
+    const cartItemId = variants.length > 0 
+      ? `${productId}-${selectedVariant}`
+      : productId;
+
+    // Nom complet avec variante si applicable
+    const productName = variants.length > 0
+      ? `${title} - ${variants.find(v => v.id === selectedVariant)?.label || selectedVariant}`
+      : title;
+
+    addToCart({
+      id: cartItemId,
+      name: productName,
+      price: priceNumeric,
+      image: image,
+      slug: slug,
+    });
+
+    // Ouvrir le drawer pour montrer que le produit a été ajouté
+    openCart();
   };
 
   return (

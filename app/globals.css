@@ -17,3 +17,15 @@
 .animate-slideUp {
   animation: slideUp 0.5s ease-out;
 }
+
+/* Classe utilitaire pour masquer la scrollbar tout en gardant le scroll fonctionnel */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
