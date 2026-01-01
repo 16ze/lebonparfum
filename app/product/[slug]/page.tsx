@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { createBuildClient } from "@/utils/supabase/build";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 
@@ -15,9 +16,12 @@ import ProductInfo from "@/components/product/ProductInfo";
  * generateStaticParams - Génère les slugs statiques pour le SEO
  * 
  * Récupère tous les slugs depuis Supabase pour pré-générer les pages au build
+ * 
+ * IMPORTANT : Utilise createBuildClient() car generateStaticParams s'exécute
+ * au build time (pas de contexte de requête, donc pas de cookies)
  */
 export async function generateStaticParams() {
-  const supabase = createClient();
+  const supabase = createBuildClient();
 
   const { data: products, error } = await supabase
     .from("products")

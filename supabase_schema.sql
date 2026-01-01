@@ -41,7 +41,8 @@ create index idx_products_inspiration on public.products(inspiration) where insp
 alter table public.products enable row level security;
 
 -- Policy : Tous les produits sont visibles publiquement (lecture seule)
-create policy "Public products are viewable by everyone." 
+-- IMPORTANT : Cette policy permet à tous les utilisateurs (même non authentifiés) de lire les produits
+create policy "Public Read" 
   on public.products 
   for select 
   using (true);

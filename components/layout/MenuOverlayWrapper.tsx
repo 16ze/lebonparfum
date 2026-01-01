@@ -22,13 +22,30 @@ export default async function MenuOverlayWrapper() {
     .select("name, slug, collection, image_url")
     .order("name");
 
+  // Logs pour débugger
+  console.log("🔍 MenuOverlayWrapper - Debug:");
+  console.log("Collections data:", collectionsData);
+  console.log("Collections error:", collectionsError);
+  console.log("Products data:", productsData?.length, "produits");
+  console.log("Products error:", productsError);
+
   // Gestion des erreurs
   if (collectionsError || productsError) {
-    console.error("Erreur lors du fetch des données:", {
-      collectionsError,
-      productsError,
+    console.error("❌ Erreur lors du fetch des données:", {
+      collectionsError: collectionsError?.message,
+      productsError: productsError?.message,
     });
     // Retourner un menu vide en cas d'erreur
+    return <MenuOverlay collections={[]} products={[]} />;
+  }
+
+  // Vérifier si les données sont vides
+  if (!collectionsData || collectionsData.length === 0) {
+    console.warn("⚠️ Aucune collection trouvée dans la base de données");
+    console.warn("💡 Vérifiez que:");
+    console.warn("   1. La table 'products' existe dans Supabase");
+    console.warn("   2. La RLS policy 'Public Read' est créée");
+    console.warn("   3. Les données ont été injectées (npm run seed)");
     return <MenuOverlay collections={[]} products={[]} />;
   }
 
@@ -37,11 +54,11 @@ export default async function MenuOverlayWrapper() {
     new Set(collectionsData?.map((item) => item.collection) || [])
   );
 
+  console.log("✅ Collections uniques trouvées:", uniqueCollections);
+
   // Organiser les produits par collection
-  const productsByCollection = uniqueCollections.map((collection) => ({
-    id: collection.toLowerCase().replace(/\s+/g, "-"),
-    name: collection,
-    products:
+  const productsByCollection = uniqueCollections.map((collection) => {
+    const collectionProducts =
       productsData
         ?.filter((product) => product.collection === collection)
         .map((product) => ({
@@ -49,8 +66,21 @@ export default async function MenuOverlayWrapper() {
           name: product.name,
           slug: product.slug,
           image: product.image_url || undefined,
-        })) || [],
-  }));
+        })) || [];
+
+    console.log(`   - ${collection}: ${collectionProducts.length} produits`);
+
+    return {
+      id: collection.toLowerCase().replace(/\s+/g, "-"),
+      name: collection,
+      products: collectionProducts,
+    };
+  });
+
+  console.log("✅ MenuOverlayWrapper - Données prêtes:", {
+    collections: uniqueCollections.length,
+    totalProducts: productsData?.length || 0,
+  });
 
   return (
     <MenuOverlay collections={uniqueCollections} products={productsByCollection} />
