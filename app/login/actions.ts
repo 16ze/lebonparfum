@@ -1,0 +1,249 @@
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+import { validateEmail, validatePassword } from "@/lib/validators";
+
+/**
+ * Server Action: Login utilisateur
+ *
+ * @param email - Email de l'utilisateur
+ * @param password - Mot de passe
+ * @returns Objet avec success, isAdmin et error
+ */
+export async function loginAction(email: string, password: string) {
+  try {
+    // Validation basique
+    if (!validateEmail(email)) {
+      return {
+        success: false,
+        isAdmin: false,
+        error: "Email invalide",
+      };
+    }
+
+    if (!password || password.length === 0) {
+      return {
+        success: false,
+        isAdmin: false,
+        error: "Mot de passe requis",
+      };
+    }
+
+    const supabase = await createClient();
+
+    // Tentative de connexion
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("❌ Erreur login Supabase:", error.message);
+      return {
+        success: false,
+        isAdmin: false,
+        error: "Email ou mot de passe incorrect",
+      };
+    }
+
+    if (!data.user) {
+      return {
+        success: false,
+        isAdmin: false,
+        error: "Erreur lors de la connexion",
+      };
+    }
+
+    // Récupérer le profil pour vérifier is_admin
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Erreur récupération profil:", profileError.message);
+      return {
+        success: false,
+        isAdmin: false,
+        error: "Erreur lors de la récupération du profil",
+      };
+    }
+
+    return {
+      success: true,
+      isAdmin: profile?.is_admin || false,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Erreur inattendue login:", error);
+    return {
+      success: false,
+      isAdmin: false,
+      error: "Erreur inattendue lors de la connexion",
+    };
+  }
+}
+
+/**
+ * Server Action: Créer un compte utilisateur
+ *
+ * @param email - Email du nouvel utilisateur
+ * @param password - Mot de passe
+ * @param fullName - Nom complet
+ * @returns Objet avec success et error
+ */
+export async function signupAction(
+  email: string,
+  password: string,
+  fullName: string
+) {
+  try {
+    // Validations
+    if (!validateEmail(email)) {
+      return {
+        success: false,
+        error: "Email invalide",
+      };
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return {
+        success: false,
+        error: passwordValidation.errors.join(", "),
+      };
+    }
+
+    if (!fullName || fullName.trim().length === 0) {
+      return {
+        success: false,
+        error: "Le nom complet est requis",
+      };
+    }
+
+    const supabase = await createClient();
+
+    // Création du compte Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+        },
+      },
+    });
+
+    if (error) {
+      console.error("❌ Erreur signup Supabase:", error.message);
+
+      // Messages d'erreur personnalisés
+      if (error.message.includes("already registered")) {
+        return {
+          success: false,
+          error: "Cet email est déjà utilisé",
+        };
+      }
+
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    if (!data.user) {
+      return {
+        success: false,
+        error: "Erreur lors de la création du compte",
+      };
+    }
+
+    // Le trigger handle_new_user() crée automatiquement le profil
+    // Pas besoin de créer manuellement l'entrée dans profiles
+
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Erreur inattendue signup:", error);
+    return {
+      success: false,
+      error: "Erreur inattendue lors de la création du compte",
+    };
+  }
+}
+
+/**
+ * Server Action: Connexion avec Google OAuth
+ *
+ * Initialise le flow OAuth avec Google
+ * Redirige vers la page de consentement Google
+ */
+export async function loginWithGoogleAction() {
+  try {
+    const supabase = await createClient();
+
+    // Récupérer l'URL de callback (origin + /auth/callback)
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const redirectTo = `${origin}/auth/callback`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    if (error) {
+      console.error("❌ Erreur OAuth Google:", error.message);
+      return {
+        success: false,
+        url: null,
+        error: error.message,
+      };
+    }
+
+    // Retourner l'URL de redirection vers Google
+    return {
+      success: true,
+      url: data.url,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Erreur inattendue Google OAuth:", error);
+    return {
+      success: false,
+      url: null,
+      error: "Erreur lors de la connexion avec Google",
+    };
+  }
+}
+
+/**
+ * Server Action: Déconnexion utilisateur
+ *
+ * Déconnecte l'utilisateur et redirige vers la home
+ */
+export async function logoutAction() {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("❌ Erreur logout Supabase:", error.message);
+    }
+  } catch (error) {
+    console.error("❌ Erreur inattendue logout:", error);
+  }
+
+  // Rediriger vers la home dans tous les cas
+  redirect("/");
+}

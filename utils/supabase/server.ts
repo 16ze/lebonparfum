@@ -2,14 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * createClient - Crée un client Supabase pour les Server Components
+ * Crée un client Supabase pour les Server Components et Server Actions (Next.js 15)
+ * IMPORTANT : cookies() est async dans Next.js 15 → await cookies()
  *
- * Utilisation :
- *   const supabase = createClient();
- *   const { data } = await supabase.from('products').select('*');
+ * Usage :
+ * - Server Components : const supabase = await createClient()
+ * - Server Actions : const supabase = await createClient()
  */
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,14 +26,14 @@ export function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // setAll peut être appelé depuis un Server Component
+            // Le middleware gère le refresh des sessions, donc on ignore l'erreur
           }
         },
       },
     }
   );
 }
+
 
 

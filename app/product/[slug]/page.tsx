@@ -109,7 +109,7 @@ export default async function ProductPage({
 }) {
   // Next.js 15 : params est une Promise, on doit l'attendre
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Récupérer le produit depuis Supabase
   const { data: product, error } = await supabase

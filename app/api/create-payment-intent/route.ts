@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupération du client Supabase pour vérifier les prix
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Récupérer les IDs des produits (peuvent être des slugs ou des UUIDs)
     const productIds = items.map((item) => item.id);

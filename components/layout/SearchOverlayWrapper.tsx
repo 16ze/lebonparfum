@@ -7,7 +7,7 @@ import SearchOverlay from "./SearchOverlay";
  * Récupère tous les produits depuis Supabase et les passe au SearchOverlay
  */
 export default async function SearchOverlayWrapper() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Récupérer tous les produits (id, name, slug, price, image_url, collection)
   const { data: products, error } = await supabase

@@ -8,7 +8,7 @@ import MenuOverlay from "./MenuOverlay";
  * et les passe au Client Component MenuOverlay
  */
 export default async function MenuOverlayWrapper() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Récupérer la session utilisateur
   const {

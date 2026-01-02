@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/server";
  * - Connecté + Client -> Redirige vers /account/profile
  */
 export default async function AccountPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Récupérer la session utilisateur
   const {
