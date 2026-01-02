@@ -141,6 +141,15 @@ export default function ProductInfo({
         </div>
       )}
 
+      {/* Message d'urgence si stock faible */}
+      {!isOutOfStock && stock > 0 && stock < 5 && (
+        <div className="mb-4">
+          <p className="text-xs text-red-600 uppercase tracking-widest font-medium">
+            Plus que {stock} exemplaire{stock > 1 ? "s" : ""} !
+          </p>
+        </div>
+      )}
+
       {/* Bouton CTA - Désactivé si rupture de stock */}
       <button
         onClick={handleAddToCart}
@@ -151,7 +160,7 @@ export default function ProductInfo({
             : "bg-black text-white hover:bg-gray-800"
         }`}
       >
-        {isOutOfStock ? "Bientôt disponible" : "Ajouter au panier"}
+        {isOutOfStock ? "Rupture de stock" : "Ajouter au panier"}
       </button>
 
       {/* Accordéons */}

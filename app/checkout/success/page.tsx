@@ -19,10 +19,12 @@ export default function CheckoutSuccessPage() {
   /**
    * Vider le panier au chargement de la page
    * La commande est payée, donc on nettoie le panier
+   * Dépendance vide [] pour que ça ne se lance qu'une fois au montage
    */
   useEffect(() => {
     clearCart();
-  }, [clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
