@@ -68,7 +68,7 @@ export default function Hero() {
       className="relative h-[100dvh] w-full overflow-hidden"
     >
       {/* Image de fond (dominante) */}
-      <div ref={imageRef} className="absolute inset-0 w-full h-full md:scale-110">
+      <div ref={imageRef} className="absolute inset-0 w-full h-full md:scale-110 ">
         <Image
           src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2908&auto=format&fit=crop"
           alt="Parfum de niche - Essence mystérieuse"

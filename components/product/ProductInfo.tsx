@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import AccordionItem from "./AccordionItem";
+import { Check, AlertCircle } from "lucide-react";
 
 /**
  * ProductInfo - Informations produit avec sticky desktop
  *
  * Design Byredo :
  * - Collection, Titre, Prix, Description
+ * - Indicateur de stock
  * - Sélecteur de variante (taille)
- * - Bouton CTA large
+ * - Bouton CTA large (désactivé si rupture)
  * - Accordéons pour détails
  */
 interface ProductInfoProps {
@@ -23,6 +25,7 @@ interface ProductInfoProps {
   description: string;
   variants: { id: string; label: string; value: string }[];
   image?: string; // URL de l'image du produit
+  stock?: number; // Quantité en stock
   notes?: string;
   ingredients?: string;
   shipping?: string;
@@ -38,12 +41,16 @@ export default function ProductInfo({
   description,
   variants,
   image,
+  stock = 0,
   notes,
   ingredients,
   shipping,
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(variants[0]?.id);
   const { addToCart, openCart } = useCart();
+
+  // Rupture de stock ?
+  const isOutOfStock = stock === 0;
 
   /**
    * handleAddToCart - Ajoute le produit au panier et ouvre le drawer
@@ -85,7 +92,25 @@ export default function ProductInfo({
       </h1>
 
       {/* Prix */}
-      <div className="text-lg font-medium mb-6">{price}</div>
+      <div className="text-lg font-medium mb-4">{price}</div>
+
+      {/* Indicateur de Stock */}
+      <div className="flex items-center gap-2 mb-6">
+        {isOutOfStock ? (
+          <>
+            <AlertCircle size={14} className="text-gray-400" strokeWidth={1.5} />
+            <span className="text-xs uppercase tracking-widest text-gray-400">
+              Rupture de stock
+            </span>
+          </>
+        ) : (
+          <>
+            <Check size={14} className="text-green-600" strokeWidth={1.5} />
+            <span className="text-xs uppercase tracking-widest text-green-600">
+              En stock ({stock} disponible{stock > 1 ? "s" : ""})
+            </span>
+          </>
+        )}</div>
 
       {/* Description */}
       <p className="text-sm text-gray-600 leading-relaxed mb-8">
@@ -116,12 +141,17 @@ export default function ProductInfo({
         </div>
       )}
 
-      {/* Bouton CTA */}
+      {/* Bouton CTA - Désactivé si rupture de stock */}
       <button
         onClick={handleAddToCart}
-        className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors mb-8"
+        disabled={isOutOfStock}
+        className={`w-full py-4 uppercase tracking-widest text-xs font-bold transition-colors mb-8 ${
+          isOutOfStock
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-black text-white hover:bg-gray-800"
+        }`}
       >
-        Ajouter au panier
+        {isOutOfStock ? "Bientôt disponible" : "Ajouter au panier"}
       </button>
 
       {/* Accordéons */}

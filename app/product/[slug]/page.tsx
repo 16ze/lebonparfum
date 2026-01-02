@@ -1,8 +1,10 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { createBuildClient } from "@/utils/supabase/build";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
+import ProductCard from "@/components/product/ProductCard";
 
 /**
  * Page Produit Dynamique - Style Byredo/Aesop
@@ -10,13 +12,29 @@ import ProductInfo from "@/components/product/ProductInfo";
  * Layout :
  * - Desktop : Split Screen (60% galerie gauche, 40% infos droite sticky)
  * - Mobile : Stack vertical (galerie slider en haut, infos en bas)
+ * - Section Cross-selling : "Vous aimerez aussi" avec produits de la même collection
  */
+
+// Types pour les données produit
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  collection: string;
+  price: number;
+  description: string | null;
+  notes: string | null;
+  inspiration: string | null;
+  image_url: string | null;
+  stock: number;
+  category: string | null;
+}
 
 /**
  * generateStaticParams - Génère les slugs statiques pour le SEO
- * 
+ *
  * Récupère tous les slugs depuis Supabase pour pré-générer les pages au build
- * 
+ *
  * IMPORTANT : Utilise createBuildClient() car generateStaticParams s'exécute
  * au build time (pas de contexte de requête, donc pas de cookies)
  */
@@ -32,15 +50,57 @@ export async function generateStaticParams() {
     return [];
   }
 
-  return products?.map((product) => ({
-    slug: product.slug,
-  })) || [];
+  return (
+    products?.map((product) => ({
+      slug: product.slug,
+    })) || []
+  );
+}
+
+/**
+ * generateMetadata - Génère les métadonnées SEO dynamiques
+ *
+ * Récupère le nom du produit pour le titre de la page
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = createBuildClient();
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, collection, description")
+    .eq("slug", slug)
+    .single();
+
+  if (!product) {
+    return {
+      title: "Produit non trouvé | LE BON PARFUM",
+    };
+  }
+
+  return {
+    title: `${product.name} - ${product.collection} | LE BON PARFUM`,
+    description:
+      product.description ||
+      `Découvrez ${product.name} de la collection ${product.collection}. Parfum de niche de haute qualité.`,
+    openGraph: {
+      title: `${product.name} | LE BON PARFUM`,
+      description:
+        product.description ||
+        `${product.name} - Collection ${product.collection}`,
+      type: "website",
+    },
+  };
 }
 
 /**
  * Page Produit - Server Component async
- * 
- * Récupère les données du produit depuis Supabase
+ *
+ * Récupère les données du produit et les produits similaires depuis Supabase
  */
 export default async function ProductPage({
   params,
@@ -64,16 +124,27 @@ export default async function ProductPage({
     notFound();
   }
 
+  // Cast le produit pour TypeScript
+  const typedProduct = product as Product;
+
+  // Récupérer les produits similaires (même collection, excluant le produit actuel)
+  const { data: relatedProducts } = await supabase
+    .from("products")
+    .select("id, name, slug, collection, price, image_url, stock")
+    .eq("collection", typedProduct.collection)
+    .neq("slug", slug)
+    .limit(4);
+
   // Formater le prix (ex: 15.00 -> "15,00 €")
   const formattedPrice = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
-  }).format(Number(product.price));
+  }).format(Number(typedProduct.price));
 
   // Préparer les images (pour l'instant, on utilise une image placeholder si image_url est null)
-  const images = product.image_url
-    ? [product.image_url]
+  const images = typedProduct.image_url
+    ? [typedProduct.image_url]
     : [
         "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop",
@@ -87,31 +158,66 @@ export default async function ProductPage({
   ];
 
   return (
-    <main className="min-h-screen bg-white pt-[120px] pb-20 px-6 md:px-12">
-      <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
+    <main className="min-h-screen bg-white pt-[120px] pb-20">
+      {/* Section Principale : Galerie + Infos */}
+      <div className="px-6 md:px-12 max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* ZONE 1 : Galerie (Col 1 -> 7 sur Desktop) */}
         <div className="md:col-span-7">
-          <ProductGallery images={images} productName={product.name} />
+          <ProductGallery images={images} productName={typedProduct.name} />
         </div>
 
         {/* ZONE 2 : Infos Produit (Col 8 -> 12 sur Desktop, Sticky) */}
         <div className="md:col-span-5">
           <ProductInfo
-            productId={product.id || product.slug} // ID unique (UUID ou slug en fallback)
-            slug={product.slug}
-            collection={product.collection}
-            title={product.name}
+            productId={typedProduct.id || typedProduct.slug}
+            slug={typedProduct.slug}
+            collection={typedProduct.collection}
+            title={typedProduct.name}
             price={formattedPrice}
-            priceNumeric={Number(product.price)}
-            description={product.description || ""}
+            priceNumeric={Number(typedProduct.price)}
+            description={typedProduct.description || ""}
             variants={variants}
-            image={product.image_url || images[0]} // Première image du produit
-            notes={product.notes || undefined}
+            image={typedProduct.image_url || images[0]}
+            stock={typedProduct.stock}
+            notes={typedProduct.notes || undefined}
             ingredients={undefined}
             shipping="Livraison gratuite à partir de 100€ d'achat. Retours acceptés sous 14 jours. Emballage premium inclus."
           />
         </div>
       </div>
+
+      {/* Section Cross-Selling : "Vous aimerez aussi" */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <section className="mt-24 px-6 md:px-12">
+          <div className="max-w-[1800px] mx-auto">
+            {/* Titre de section */}
+            <div className="mb-12 text-center">
+              <h2 className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">
+                Vous aimerez aussi
+              </h2>
+              <p className="text-2xl md:text-3xl font-bold uppercase tracking-wide">
+                De la même collection
+              </p>
+            </div>
+
+            {/* Grille de produits */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+              {relatedProducts.slice(0, 4).map((relatedProduct) => (
+                <ProductCard
+                  key={relatedProduct.id}
+                  id={relatedProduct.id}
+                  name={relatedProduct.name}
+                  slug={relatedProduct.slug}
+                  collection={relatedProduct.collection}
+                  price={relatedProduct.price}
+                  imageUrl={relatedProduct.image_url}
+                  stock={relatedProduct.stock}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
