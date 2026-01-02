@@ -1,7 +1,6 @@
 import SmoothScroll from "@/components/SmoothScroll";
 import CartDrawer from "@/components/cart/CartDrawer";
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
 import { CartProvider } from "@/context/CartContext";
 import { MenuProvider } from "@/context/MenuContext";
@@ -32,11 +31,11 @@ export default function RootLayout({
         <CartProvider>
           <MenuProvider>
             <SmoothScroll>
-              <Header />
-              <MenuOverlayWrapper />
-              <CartDrawer />
-              {children}
-              <Footer />
+              <ConditionalLayout>
+                <MenuOverlayWrapper />
+                <CartDrawer />
+                {children}
+              </ConditionalLayout>
             </SmoothScroll>
           </MenuProvider>
         </CartProvider>
