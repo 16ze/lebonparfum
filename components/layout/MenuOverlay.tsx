@@ -211,21 +211,28 @@ export default function MenuOverlay({
         aria-hidden="true"
       />
 
-      {/* Menu Overlay - Structure corrigée pour le scroll */}
+      {/* Menu Overlay - Structure bullet-proof pour le scroll */}
       <div
         ref={menuRef}
-        className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4 flex flex-col"
+        className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4"
         style={{
           top: "90px",
           bottom: "1rem",
-          // IMPORTANT: Pas de height ici, top+bottom définissent déjà la hauteur
           width: activeBrand ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          // CRITIQUE: overflow hidden pour contraindre les enfants
+          overflow: "hidden",
+          // CRITIQUE: display flex en colonne
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        {/* Header du Menu - shrink-0 pour ne jamais se comprimer */}
-        <div className="shrink-0 flex items-center justify-between px-6 py-6 border-b border-black/10">
+        {/* Header du Menu - hauteur fixe, ne se comprime jamais */}
+        <div
+          className="flex items-center justify-between px-6 py-6 border-b border-black/10"
+          style={{ flexShrink: 0 }}
+        >
           <h2 className="text-xs uppercase tracking-widest font-bold">Menu</h2>
           <button
             onClick={closeMenu}
@@ -236,11 +243,37 @@ export default function MenuOverlay({
           </button>
         </div>
 
-        {/* Contenu : Grille Cascading - flex-1 + min-h-0 pour permettre le scroll */}
-        <div className="flex-1 min-h-0 flex overflow-hidden">
+        {/* Contenu : Grille Cascading - prend tout l'espace restant */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0, // CRITIQUE: permet au conteneur de shrink
+            display: "flex",
+            overflow: "hidden",
+          }}
+        >
           {/* COLONNE 1 : Liste des Marques */}
-          <div className="w-[350px] shrink-0 border-r border-black/10 flex flex-col min-h-0">
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+          <div
+            className="border-r border-black/10"
+            style={{
+              width: "350px",
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
+          >
+            {/* Zone scrollable des collections */}
+            <div
+              className="px-6 py-6"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                overscrollBehavior: "contain", // Empêche propagation du scroll
+              }}
+              data-lenis-prevent // Indique à Lenis d'ignorer cette zone
+            >
               <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
                 Collections
               </h3>
@@ -271,8 +304,11 @@ export default function MenuOverlay({
               </ul>
             </div>
 
-            {/* Bas de Col 1 : Liens (CONNEXION, COMMANDES, CONTACT) */}
-            <div className="shrink-0 px-6 py-6 border-t border-black/10 space-y-3">
+            {/* Bas de Col 1 : Liens fixes */}
+            <div
+              className="px-6 py-6 border-t border-black/10 space-y-3"
+              style={{ flexShrink: 0 }}
+            >
               <Link
                 href="/connexion"
                 onClick={closeMenu}
@@ -299,16 +335,34 @@ export default function MenuOverlay({
 
           {/* COLONNE 2 : Produits de la collection active */}
           {activeCollectionData && (
-            <div className="flex-1 min-h-0 min-w-0 flex flex-col border-r border-black/10">
-              {/* Header de colonne - shrink-0 pour ne jamais se comprimer */}
-              <div className="shrink-0 px-6 pt-6 pb-4">
+            <div
+              className="border-r border-black/10"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {/* Header de colonne - fixe */}
+              <div className="px-6 pt-6 pb-4" style={{ flexShrink: 0 }}>
                 <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500">
                   Produits ({activeCollectionData.products.length})
                 </h3>
               </div>
 
-              {/* Zone de scroll - CRITIQUE: flex-1 + min-h-0 + overflow-y-auto */}
-              <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24">
+              {/* Zone de scroll des produits - CRITIQUE */}
+              <div
+                className="px-6 pb-24"
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overscrollBehavior: "contain", // Empêche propagation du scroll
+                }}
+                data-lenis-prevent // Indique à Lenis d'ignorer cette zone
+              >
                 <ul className="space-y-2">
                   {activeCollectionData.products.map((product) => (
                     <li key={product.id}>

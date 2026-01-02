@@ -8,14 +8,14 @@ import gsap from "gsap";
 import { useCart } from "@/context/CartContext";
 
 /**
- * CartDrawer - Volet latéral droit pour le panier
+ * CartDrawer - Volet latéral droit pour le panier (style carte flottante)
  *
- * Design Byredo :
- * - Sidebar droite fixe (fixed right-0)
- * - Fond blanc, z-index élevé
+ * Design Byredo (identique au MenuOverlay) :
+ * - Carte flottante arrondie (rounded-3xl)
+ * - Position : fixed right-4, avec marges
+ * - Fond blanc, shadow-2xl
  * - Animation slide-in depuis la droite (GSAP)
- * - Liste scrollable avec produits
- * - Footer sticky avec total et bouton paiement
+ * - Backdrop blur comme le menu
  */
 export default function CartDrawer() {
   const {
@@ -41,52 +41,61 @@ export default function CartDrawer() {
         gsap.fromTo(
           drawerRef.current,
           {
-            x: "100%",
+            x: "105%",
             visibility: "visible",
           },
           {
             x: 0,
-            duration: 0.5,
+            duration: 0.6,
             ease: "power3.out",
           }
         );
 
-        // Overlay backdrop
+        // Overlay backdrop avec blur
         if (overlayRef.current) {
           gsap.fromTo(
             overlayRef.current,
             {
               opacity: 0,
+              backdropFilter: "blur(0px)",
               visibility: "visible",
             },
             {
-              opacity: 1,
-              duration: 0.3,
+              opacity: 0.8,
+              backdropFilter: "blur(250px)",
+              duration: 0.5,
+              ease: "power2.out",
             }
           );
         }
       } else {
         // Sortie : Slide vers la droite
+        const cleanup = () => {
+          if (drawerRef.current) {
+            gsap.set(drawerRef.current, { visibility: "hidden" });
+          }
+          if (overlayRef.current) {
+            gsap.set(overlayRef.current, { visibility: "hidden" });
+          }
+        };
+
         gsap.to(drawerRef.current, {
-          x: "100%",
-          duration: 0.4,
+          x: "105%",
+          duration: 0.5,
           ease: "power2.in",
-          onComplete: () => {
-            if (drawerRef.current) {
-              gsap.set(drawerRef.current, { visibility: "hidden" });
-            }
-            if (overlayRef.current) {
-              gsap.set(overlayRef.current, { visibility: "hidden" });
-            }
-          },
         });
 
         // Fade out overlay
         if (overlayRef.current) {
           gsap.to(overlayRef.current, {
             opacity: 0,
-            duration: 0.3,
+            backdropFilter: "blur(0px)",
+            duration: 0.4,
+            ease: "power2.in",
+            onComplete: cleanup,
           });
+        } else {
+          setTimeout(cleanup, 500);
         }
       }
     }, drawerRef);
@@ -136,23 +145,38 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Overlay Backdrop */}
+      {/* Overlay Backdrop - même style que MenuOverlay */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/40 z-[60]"
-        style={{ visibility: "hidden" }}
+        className="fixed inset-0 bg-black/80 z-[55]"
+        style={{
+          visibility: "hidden",
+          backdropFilter: "blur(0px)",
+        }}
         onClick={closeCart}
         aria-hidden="true"
       />
 
-      {/* Cart Drawer */}
+      {/* Cart Drawer - Style carte flottante comme MenuOverlay */}
       <div
         ref={drawerRef}
-        className="fixed right-0 top-0 h-[100dvh] w-full max-w-md bg-white z-[70] shadow-2xl flex flex-col"
-        style={{ visibility: "hidden", transform: "translateX(100%)" }}
+        className="fixed z-[60] bg-white shadow-2xl rounded-3xl right-4"
+        style={{
+          top: "90px",
+          bottom: "1rem",
+          width: "400px",
+          maxWidth: "calc(100vw - 2rem)",
+          visibility: "hidden",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-black/10">
+        {/* Header - fixe */}
+        <div
+          className="flex items-center justify-between px-6 py-6 border-b border-black/10"
+          style={{ flexShrink: 0 }}
+        >
           <h2 className="text-xs uppercase tracking-widest font-bold">Panier</h2>
           <button
             onClick={closeCart}
@@ -164,7 +188,16 @@ export default function CartDrawer() {
         </div>
 
         {/* Contenu scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div
+          className="px-6 py-6"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+          }}
+          data-lenis-prevent
+        >
           {cartItems.length === 0 ? (
             // Panier vide
             <div className="flex flex-col items-center justify-center h-full text-center">
@@ -259,9 +292,12 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Footer sticky */}
+        {/* Footer sticky - fixe en bas */}
         {cartItems.length > 0 && (
-          <div className="border-t border-black/10 px-6 py-6 space-y-4">
+          <div
+            className="border-t border-black/10 px-6 py-6 space-y-4"
+            style={{ flexShrink: 0 }}
+          >
             {/* Sous-total */}
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest font-bold">
@@ -286,4 +322,3 @@ export default function CartDrawer() {
     </>
   );
 }
-
