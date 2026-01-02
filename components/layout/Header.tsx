@@ -177,6 +177,8 @@ export default function Header() {
           >
             <Search size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
           </button>
+         
+      
         </div>
 
         {/* Centre : Logo LE BON PARFUM */}
