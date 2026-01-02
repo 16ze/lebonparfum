@@ -13,3 +13,4 @@ create policy "Public Read"
 
 -- Vérification : Cette policy permet à tous (même non authentifiés) de lire les produits
 
+

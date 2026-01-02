@@ -87,3 +87,4 @@ INSERT INTO public.products (name, slug, collection, price, stock, category) VAL
 -- SELECT collection, COUNT(*) as count FROM public.products GROUP BY collection;
 -- ============================================
 
+

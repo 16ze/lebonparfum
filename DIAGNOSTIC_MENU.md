@@ -78,3 +78,4 @@ const { data, error } = await supabase.from("products").select("count");
 console.log("Count:", data, "Error:", error);
 ```
 
+

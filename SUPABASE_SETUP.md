@@ -53,3 +53,4 @@ Le script va :
 
 Après le seed, vérifiez dans Supabase Dashboard > Table Editor > `products` que tous les produits sont bien présents.
 
+

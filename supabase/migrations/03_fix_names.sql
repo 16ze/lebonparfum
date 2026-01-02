@@ -37,3 +37,4 @@ WHERE name ~ '^[0-9]+'; -- Uniquement les produits qui commencent par un chiffre
 -- Vérification : Afficher les résultats (optionnel, pour debug)
 -- SELECT id, name, stock FROM public.products ORDER BY collection, name;
 
+
