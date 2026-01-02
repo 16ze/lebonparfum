@@ -2,6 +2,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import CartDrawer from "@/components/cart/CartDrawer";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
+import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
 import { CartProvider } from "@/context/CartContext";
 import { MenuProvider } from "@/context/MenuContext";
 import type { Metadata } from "next";
@@ -33,6 +34,7 @@ export default function RootLayout({
             <SmoothScroll>
               <ConditionalLayout>
                 <MenuOverlayWrapper />
+                <SearchOverlayWrapper />
                 <CartDrawer />
                 {children}
               </ConditionalLayout>
