@@ -150,25 +150,40 @@ export default function Header() {
   return (
     <header ref={headerRef} className={headerClasses} style={headerStyle}>
       <nav className="flex items-center justify-between px-4 md:px-6 py-6">
-        {/* Gauche : Menu Burger */}
-        <button
-          ref={(el) => {
-            elementsRef.current[0] = el;
-          }}
-          onClick={toggleMenu}
-          className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-all duration-300"
-          style={{ color: textColor }}
-          aria-label="Ouvrir le menu"
-        >
-          <Menu size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
-          <span>Menu</span>
-        </button>
+        {/* Gauche : Menu Burger + Recherche */}
+        <div className="flex items-center gap-4">
+          <button
+            ref={(el) => {
+              elementsRef.current[0] = el;
+            }}
+            onClick={toggleMenu}
+            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-all duration-300"
+            style={{ color: textColor }}
+            aria-label="Ouvrir le menu"
+          >
+            <Menu size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+            <span>Menu</span>
+          </button>
+
+          {/* Recherche */}
+          <button
+            ref={(el) => {
+              elementsRef.current[1] = el;
+            }}
+            onClick={openSearch}
+            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            style={{ color: textColor }}
+            aria-label="Ouvrir la recherche"
+          >
+            <Search size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+          </button>
+        </div>
 
         {/* Centre : Logo LE BON PARFUM */}
         <Link
           href="/"
           ref={(el) => {
-            elementsRef.current[1] = el;
+            elementsRef.current[2] = el;
           }}
         >
           <h1
@@ -179,39 +194,23 @@ export default function Header() {
           </h1>
         </Link>
 
-        {/* Droite : Recherche + Panier */}
-        <div className="flex items-center gap-4">
-          {/* Recherche */}
-          <button
-            ref={(el) => {
-              elementsRef.current[2] = el;
-            }}
-            onClick={openSearch}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-            style={{ color: textColor }}
-            aria-label="Ouvrir la recherche"
-          >
-            <Search size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
-          </button>
-
-          {/* Panier */}
-          <button
-            ref={(el) => {
-              elementsRef.current[3] = el;
-            }}
-            onClick={openCart}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-            style={{ color: textColor }}
-            aria-label="Ouvrir le panier"
-          >
-            <span>Panier ({cartCount})</span>
-            <ShoppingBag
-              size={18}
-              strokeWidth={1.5}
-              style={{ stroke: textColor }}
-            />
-          </button>
-        </div>
+        {/* Droite : Panier */}
+        <button
+          ref={(el) => {
+            elementsRef.current[3] = el;
+          }}
+          onClick={openCart}
+          className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+          style={{ color: textColor }}
+          aria-label="Ouvrir le panier"
+        >
+          <span>Panier ({cartCount})</span>
+          <ShoppingBag
+            size={18}
+            strokeWidth={1.5}
+            style={{ stroke: textColor }}
+          />
+        </button>
       </nav>
     </header>
   );
