@@ -42,11 +42,18 @@ interface MenuOverlayProps {
       image?: string;
     }[];
   }[];
+  // Infos de session utilisateur
+  user?: {
+    id: string;
+    email?: string;
+    isAdmin: boolean;
+  } | null;
 }
 
 export default function MenuOverlay({
   collections = [],
   products = [],
+  user = null,
 }: MenuOverlayProps) {
   const { isOpen, closeMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -309,20 +316,46 @@ export default function MenuOverlay({
               className="px-6 py-6 border-t border-black/10 space-y-3"
               style={{ flexShrink: 0 }}
             >
+              {/* Lien Connexion / Mon Compte */}
+              {user ? (
+                <Link
+                  href="/account"
+                  onClick={closeMenu}
+                  className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                >
+                  Mon compte
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                >
+                  Connexion
+                </Link>
+              )}
+
+              {/* Lien Commandes */}
               <Link
-                href="/connexion"
+                href={user ? "/account/orders" : "/login"}
                 onClick={closeMenu}
                 className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
               >
-                Connexion
+                Mes commandes
               </Link>
-              <Link
-                href="/commandes"
-                onClick={closeMenu}
-                className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
-              >
-                Commandes
-              </Link>
+
+              {/* Lien Dashboard Admin (si admin) */}
+              {user?.isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={closeMenu}
+                  className="block text-[10px] text-red-600 font-bold uppercase tracking-widest hover:text-red-700 hover:underline transition-colors underline-offset-4"
+                >
+                  Dashboard Admin
+                </Link>
+              )}
+
+              {/* Lien Contact */}
               <Link
                 href="/contact"
                 onClick={closeMenu}

@@ -13,7 +13,9 @@
 ## 📊 Tables Créées
 
 ### 1. `profiles`
+
 Extension de `auth.users` avec :
+
 - `id` (uuid, FK vers auth.users)
 - `email` (text)
 - `full_name` (text)
@@ -23,7 +25,9 @@ Extension de `auth.users` avec :
 **Trigger automatique** : Un profil est créé automatiquement à chaque inscription.
 
 ### 2. `orders`
+
 Historique des commandes avec :
+
 - `id` (uuid)
 - `user_id` (uuid, nullable pour invités)
 - `stripe_payment_id` (text, unique)
@@ -34,12 +38,15 @@ Historique des commandes avec :
 - `created_at`, `updated_at`
 
 ### 3. `site_settings`
+
 Configuration dynamique du site :
+
 - `key` (text, primary key)
 - `value` (text)
 - `updated_at`
 
 **Settings initiaux** :
+
 - `instagram_url`
 - `tiktok_url`
 - `contact_email`
@@ -47,21 +54,25 @@ Configuration dynamique du site :
 ## 🔐 Sécurité (RLS)
 
 ### Profiles
+
 - ✅ Utilisateur : Voit son propre profil
 - ✅ Admin : Voit tous les profils
 - ✅ Utilisateur : Peut mettre à jour son profil (sauf `is_admin`)
 - ✅ Admin : Peut modifier le statut admin
 
 ### Orders
+
 - ✅ Utilisateur : Voit uniquement ses commandes
 - ✅ Admin : Voit toutes les commandes
 - ✅ Admin : Peut créer/modifier des commandes
 
 ### Products
+
 - ✅ **Lecture** : Publique (tous peuvent voir)
 - ✅ **Écriture** : Admin uniquement (insert/update/delete)
 
 ### Storage
+
 - ✅ **Lecture** : Publique (images accessibles)
 - ✅ **Écriture** : Admin uniquement (upload/delete)
 
@@ -75,8 +86,8 @@ Configuration dynamique du site :
 4. Exécutez dans **SQL Editor** :
 
 ```sql
-UPDATE public.profiles 
-SET is_admin = true 
+UPDATE public.profiles
+SET is_admin = true
 WHERE email = 'admin@example.com';
 ```
 
@@ -84,8 +95,8 @@ WHERE email = 'admin@example.com';
 
 ```sql
 -- Si l'utilisateur existe déjà
-UPDATE public.profiles 
-SET is_admin = true 
+UPDATE public.profiles
+SET is_admin = true
 WHERE email = 'votre-email@example.com';
 
 -- Vérifier
@@ -95,12 +106,14 @@ SELECT email, is_admin FROM public.profiles WHERE is_admin = true;
 ## 📦 Storage Buckets
 
 ### Bucket `products`
+
 - **Usage** : Images des produits
 - **Limite** : 5MB par fichier
 - **Formats** : JPEG, PNG, WebP
 - **URL publique** : `https://[project].supabase.co/storage/v1/object/public/products/[filename]`
 
 ### Bucket `content`
+
 - **Usage** : Images home, bannières, contenu
 - **Limite** : 10MB par fichier
 - **Formats** : JPEG, PNG, WebP, GIF
@@ -126,8 +139,8 @@ SELECT email, is_admin FROM public.profiles WHERE is_admin = true;
 
 ```sql
 -- Vérifier que les tables existent
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN ('profiles', 'orders', 'site_settings');
 
 -- Vérifier les buckets
@@ -136,4 +149,3 @@ SELECT * FROM storage.buckets WHERE id IN ('products', 'content');
 -- Vérifier les policies RLS
 SELECT * FROM pg_policies WHERE tablename = 'products';
 ```
-

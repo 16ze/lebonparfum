@@ -5,7 +5,7 @@ import { useMenu } from "@/context/MenuContext";
 import clsx from "clsx";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Menu, ShoppingBag, Search } from "lucide-react";
+import { Menu, ShoppingBag, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -196,23 +196,39 @@ export default function Header() {
           </h1>
         </Link>
 
-        {/* Droite : Panier */}
-        <button
-          ref={(el) => {
-            elementsRef.current[3] = el;
-          }}
-          onClick={openCart}
-          className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-          style={{ color: textColor }}
-          aria-label="Ouvrir le panier"
-        >
-          <span>Panier ({cartCount})</span>
-          <ShoppingBag
-            size={18}
-            strokeWidth={1.5}
-            style={{ stroke: textColor }}
-          />
-        </button>
+        {/* Droite : Profil + Panier */}
+        <div className="flex items-center gap-4">
+          {/* Profil */}
+          <Link
+            href="/account"
+            ref={(el) => {
+              elementsRef.current[3] = el;
+            }}
+            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            style={{ color: textColor }}
+            aria-label="Accéder au compte"
+          >
+            <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+          </Link>
+
+          {/* Panier */}
+          <button
+            ref={(el) => {
+              elementsRef.current[4] = el;
+            }}
+            onClick={openCart}
+            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            style={{ color: textColor }}
+            aria-label="Ouvrir le panier"
+          >
+            <span>Panier ({cartCount})</span>
+            <ShoppingBag
+              size={18}
+              strokeWidth={1.5}
+              style={{ stroke: textColor }}
+            />
+          </button>
+        </div>
       </nav>
     </header>
   );

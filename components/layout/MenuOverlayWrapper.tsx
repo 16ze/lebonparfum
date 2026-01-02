@@ -10,6 +10,29 @@ import MenuOverlay from "./MenuOverlay";
 export default async function MenuOverlayWrapper() {
   const supabase = createClient();
 
+  // Récupérer la session utilisateur
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  // Si utilisateur connecté, récupérer le profil (pour is_admin)
+  let userProfile = null;
+  if (authUser) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, email, is_admin")
+      .eq("id", authUser.id)
+      .single();
+
+    if (profile) {
+      userProfile = {
+        id: profile.id,
+        email: profile.email || undefined,
+        isAdmin: profile.is_admin || false,
+      };
+    }
+  }
+
   // Récupérer toutes les collections distinctes
   const { data: collectionsData, error: collectionsError } = await supabase
     .from("products")
@@ -36,7 +59,7 @@ export default async function MenuOverlayWrapper() {
       productsError: productsError?.message,
     });
     // Retourner un menu vide en cas d'erreur
-    return <MenuOverlay collections={[]} products={[]} />;
+    return <MenuOverlay collections={[]} products={[]} user={userProfile} />;
   }
 
   // Vérifier si les données sont vides
@@ -46,7 +69,7 @@ export default async function MenuOverlayWrapper() {
     console.warn("   1. La table 'products' existe dans Supabase");
     console.warn("   2. La RLS policy 'Public Read' est créée");
     console.warn("   3. Les données ont été injectées (npm run seed)");
-    return <MenuOverlay collections={[]} products={[]} />;
+    return <MenuOverlay collections={[]} products={[]} user={userProfile} />;
   }
 
   // Extraire les collections uniques
@@ -83,7 +106,11 @@ export default async function MenuOverlayWrapper() {
   });
 
   return (
-    <MenuOverlay collections={uniqueCollections} products={productsByCollection} />
+    <MenuOverlay
+      collections={uniqueCollections}
+      products={productsByCollection}
+      user={userProfile}
+    />
   );
 }
 
