@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import gsap from "gsap";
@@ -26,6 +27,7 @@ export default function CartDrawer() {
     removeFromCart,
     updateQuantity,
   } = useCart();
+  const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -309,8 +311,9 @@ export default function CartDrawer() {
             {/* Bouton Paiement */}
             <button
               onClick={() => {
-                // TODO: Implémenter la redirection vers la page de paiement
-                console.log("Redirection vers le paiement");
+                // Fermer le drawer et rediriger vers la page de checkout
+                closeCart();
+                router.push("/checkout");
               }}
               className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors"
             >
