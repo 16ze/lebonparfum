@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PaymentForm from "./PaymentForm";
 
 /**
  * CheckoutForm - Formulaire d'adresse et zone de paiement
@@ -10,8 +11,13 @@ import { useState } from "react";
  * - Labels flottants ou discrets
  * - Beaucoup d'espace blanc
  * - Style minimaliste
+ * - Intégration Stripe Elements pour le paiement
  */
-export default function CheckoutForm() {
+interface CheckoutFormProps {
+  paymentForm?: React.ReactNode; // PaymentForm sera passé en props depuis la page
+}
+
+export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -159,17 +165,20 @@ export default function CheckoutForm() {
         </div>
       </section>
 
-      {/* Section Paiement (Placeholder) */}
+      {/* Section Paiement - Intégration Stripe Elements */}
       <section>
         <h2 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-8">
           Paiement
         </h2>
 
-        <div className="border border-gray-200 rounded-sm p-8 text-center">
-          <p className="text-sm text-gray-500 uppercase tracking-wide">
-            Le module de paiement sécurisé s'affichera ici
-          </p>
-        </div>
+        {/* PaymentForm injecté depuis la page checkout */}
+        {paymentForm || (
+          <div className="border border-gray-200 rounded-sm p-8 text-center">
+            <p className="text-sm text-gray-500 uppercase tracking-wide">
+              Chargement du module de paiement...
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

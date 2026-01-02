@@ -9,8 +9,9 @@ Créez un fichier `.env.local` à la racine du projet avec le contenu suivant :
 NEXT_PUBLIC_SUPABASE_URL=met_ton_url_ici
 NEXT_PUBLIC_SUPABASE_ANON_KEY=met_ta_cle_ici
 
-# Stripe Configuration (Backend)
+# Stripe Configuration
 STRIPE_SECRET_KEY=sk_test_met_ta_cle_secrete_ici
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_met_ta_cle_publique_ici
 ```
 
 ## 🔑 Où trouver ces valeurs ?
@@ -27,6 +28,11 @@ STRIPE_SECRET_KEY=sk_test_met_ta_cle_secrete_ici
    - Allez dans Stripe Dashboard > Developers > API keys
    - Copiez la clé secrète (commence par `sk_test_` pour le mode test, `sk_live_` pour la production)
    - ⚠️ **NE JAMAIS exposer cette clé côté client !**
+
+4. **NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY** :
+   - Dans le même écran (Stripe Dashboard > Developers > API keys)
+   - Copiez la clé publique (commence par `pk_test_` pour le mode test, `pk_live_` pour la production)
+   - Cette clé peut être exposée côté client (d'où le préfixe `NEXT_PUBLIC_`)
 
 ## ⚠️ Note
 

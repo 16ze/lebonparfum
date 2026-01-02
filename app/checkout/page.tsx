@@ -1,22 +1,81 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Elements } from "@stripe/react-stripe-js";
 import { useCart } from "@/context/CartContext";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import CheckoutSummary from "@/components/checkout/CheckoutSummary";
-import { ChevronRight } from "lucide-react";
+import PaymentForm from "@/components/checkout/PaymentForm";
+import { getStripe } from "@/utils/stripe";
+import { ChevronRight, Loader2 } from "lucide-react";
+import type { PaymentCartItem } from "@/types/payment";
 
 /**
- * Page Checkout - Paiement sécurisé
+ * Page Checkout - Paiement sécurisé avec Stripe
  *
  * Design Byredo :
  * - Layout split-screen (Formulaire gauche, Résumé droite)
  * - Pas de Header/Footer (distraction-free)
  * - Style minimaliste et épuré
- * - Beaucoup d'espace blanc
+ * - Intégration Stripe Elements pour le paiement
  */
 export default function CheckoutPage() {
   const { cartItems } = useCart();
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Créer le Payment Intent au montage du composant
+   */
+  useEffect(() => {
+    const createPaymentIntent = async () => {
+      if (cartItems.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Préparer les items pour l'API (id et quantity uniquement)
+        const items: PaymentCartItem[] = cartItems.map((item) => ({
+          id: item.slug || item.id, // Utiliser slug comme identifiant principal
+          quantity: item.quantity,
+        }));
+
+        // Appeler l'API pour créer le Payment Intent
+        const response = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ items }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Erreur lors de la création du paiement");
+        }
+
+        const data = await response.json();
+        setClientSecret(data.clientSecret);
+      } catch (err) {
+        console.error("Erreur lors de la création du payment intent:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Une erreur est survenue lors de la création du paiement"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    createPaymentIntent();
+  }, [cartItems]);
 
   // Si le panier est vide, afficher un message
   if (cartItems.length === 0) {
@@ -39,6 +98,42 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  // Options d'apparence Stripe (style Byredo)
+  const stripeOptions = {
+    clientSecret,
+    appearance: {
+      theme: "stripe" as const,
+      variables: {
+        colorPrimary: "#000000",
+        fontFamily: "Inter, sans-serif",
+        fontSizeBase: "14px",
+        spacingUnit: "4px",
+        borderRadius: "0px", // Angles droits style Byredo
+      },
+      rules: {
+        ".Input": {
+          borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+          borderTop: "none",
+          borderLeft: "none",
+          borderRight: "none",
+          borderRadius: "0",
+          paddingBottom: "8px",
+        },
+        ".Input:focus": {
+          borderBottom: "1px solid #000000",
+          boxShadow: "none",
+        },
+        ".Label": {
+          fontSize: "10px",
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          fontWeight: "500",
+          color: "#6b7280",
+        },
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -66,8 +161,36 @@ export default function CheckoutPage() {
             </nav>
           </div>
 
-          {/* Formulaire */}
-          <CheckoutForm />
+          {/* Formulaire avec intégration Stripe */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="animate-spin mx-auto mb-4 text-gray-400" size={32} />
+                <p className="text-sm text-gray-500 uppercase tracking-wide">
+                  Chargement du module de paiement...
+                </p>
+              </div>
+            </div>
+          ) : error ? (
+            <div>
+              <CheckoutForm />
+              <div className="mt-8 bg-red-50 border border-red-200 rounded-sm p-6">
+                <p className="text-sm text-red-600 mb-4">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-xs uppercase tracking-widest font-medium text-red-600 hover:underline"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          ) : clientSecret ? (
+            <Elements stripe={getStripe()} options={stripeOptions}>
+              <CheckoutForm paymentForm={<PaymentForm />} />
+            </Elements>
+          ) : (
+            <CheckoutForm />
+          )}
         </div>
 
         {/* COLONNE DROITE : Résumé Panier */}
@@ -78,4 +201,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
