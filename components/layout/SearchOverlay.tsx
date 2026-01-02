@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useMenu } from "@/context/MenuContext";
-import { X } from "lucide-react";
+import { X, Search } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
 
 /**
- * SearchOverlay - Overlay de recherche minimaliste style Byredo
+ * SearchOverlay - Overlay de recherche style Louis Vuitton
  *
  * Design :
- * - Fixed, couvre tout l'écran
- * - Fond blanc avec backdrop-blur
- * - Input gigantesque, border-bottom only
- * - Grille de résultats en dessous
+ * - Animation slide down (haut vers bas)
+ * - Logo centré en haut
+ * - Input style Louis Vuitton (rounded-full)
+ * - Produits groupés par collection
+ * - Grille par collection
  */
 interface Product {
   id: string;
@@ -29,6 +30,23 @@ interface SearchOverlayProps {
   products: Product[];
 }
 
+/**
+ * Grouper les produits par collection
+ */
+function groupProductsByCollection(products: Product[]) {
+  const grouped: Record<string, Product[]> = {};
+
+  products.forEach((product) => {
+    const collection = product.collection || "Autres";
+    if (!grouped[collection]) {
+      grouped[collection] = [];
+    }
+    grouped[collection].push(product);
+  });
+
+  return grouped;
+}
+
 export default function SearchOverlay({ products }: SearchOverlayProps) {
   const { isSearchOpen, closeSearch } = useMenu();
   const [query, setQuery] = useState("");
@@ -38,13 +56,25 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
   /**
    * Filtrer les produits selon la requête
    */
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = useMemo(() => {
+    if (!query.trim()) {
+      return products;
+    }
+
     const searchQuery = query.toLowerCase();
-    return (
-      product.name.toLowerCase().includes(searchQuery) ||
-      product.collection.toLowerCase().includes(searchQuery)
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchQuery) ||
+        product.collection.toLowerCase().includes(searchQuery)
     );
-  });
+  }, [products, query]);
+
+  /**
+   * Grouper les produits filtrés par collection
+   */
+  const groupedProducts = useMemo(() => {
+    return groupProductsByCollection(filteredProducts);
+  }, [filteredProducts]);
 
   /**
    * Auto-focus sur l'input à l'ouverture
@@ -54,7 +84,7 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
       // Petit délai pour que l'animation soit fluide
       setTimeout(() => {
         inputRef.current?.focus();
-      }, 100);
+      }, 300);
     } else {
       // Réinitialiser la recherche à la fermeture
       setQuery("");
@@ -62,31 +92,31 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
   }, [isSearchOpen]);
 
   /**
-   * Animation GSAP : Fade in/out
+   * Animation GSAP : Slide Down (Haut vers Bas)
    */
   useEffect(() => {
     if (!overlayRef.current) return;
 
     const ctx = gsap.context(() => {
       if (isSearchOpen) {
-        // Entrée : Fade in
+        // Entrée : Slide down depuis le haut
         gsap.fromTo(
           overlayRef.current,
           {
-            opacity: 0,
+            yPercent: -100,
             visibility: "visible",
           },
           {
-            opacity: 1,
-            duration: 0.3,
-            ease: "power2.out",
+            yPercent: 0,
+            duration: 0.6,
+            ease: "power3.out",
           }
         );
       } else {
-        // Sortie : Fade out
+        // Sortie : Slide up vers le haut
         gsap.to(overlayRef.current, {
-          opacity: 0,
-          duration: 0.2,
+          yPercent: -100,
+          duration: 0.4,
           ease: "power2.in",
           onComplete: () => {
             if (overlayRef.current) {
@@ -147,103 +177,119 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
     closeSearch();
   };
 
-  if (!isSearchOpen) return null;
+  // Trier les collections par ordre alphabétique
+  const sortedCollections = Object.keys(groupedProducts).sort();
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 bg-white/95 backdrop-blur-md z-[70]"
+      className="fixed inset-0 bg-white z-[70] flex flex-col"
       style={{ visibility: "hidden" }}
     >
-      <div className="h-full flex flex-col">
-        {/* Header : Input + Bouton Fermer */}
-        <div className="px-6 md:px-12 py-8 border-b border-black/10">
-          <div className="max-w-4xl mx-auto flex items-center gap-6">
-            {/* Input de recherche */}
+      {/* Header : Logo + Input + Bouton Fermer */}
+      <div className="pt-12 pb-8 border-b border-black/10 flex-shrink-0">
+        <div className="max-w-6xl mx-auto px-6 md:px-12">
+          {/* Logo centré */}
+          <h1 className="text-3xl font-bold uppercase tracking-widest text-center mb-8">
+            LE BON PARFUM
+          </h1>
+
+          {/* Input de recherche style Louis Vuitton */}
+          <div className="relative max-w-2xl mx-auto">
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="RECHERCHER UN PARFUM..."
-              className="flex-1 text-3xl md:text-5xl font-bold uppercase tracking-wider bg-transparent border-0 border-b-2 border-black/20 focus:outline-none focus:border-black transition-colors pb-4"
+              className="w-full border border-gray-300 rounded-full px-6 py-3 pl-12 text-sm uppercase tracking-wide focus:border-black transition-colors outline-none bg-white"
             />
-
-            {/* Bouton Fermer */}
-            <button
-              onClick={closeSearch}
-              className="p-2 hover:opacity-50 transition-opacity"
-              aria-label="Fermer la recherche"
-            >
-              <X size={24} strokeWidth={1.5} />
-            </button>
+            {/* Icône Loupe à gauche */}
+            <Search
+              size={18}
+              strokeWidth={1.5}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
           </div>
         </div>
 
-        {/* Résultats */}
-        <div className="flex-1 overflow-y-auto px-6 md:px-12 py-8">
-          {query.length === 0 ? (
-            <div className="max-w-4xl mx-auto text-center py-20">
-              <p className="text-sm text-gray-400 uppercase tracking-widest">
-                Commencez à taper pour rechercher...
-              </p>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="max-w-4xl mx-auto text-center py-20">
-              <p className="text-sm text-gray-400 uppercase tracking-widest">
-                Aucun résultat pour "{query}"
-              </p>
-            </div>
-          ) : (
-            <div className="max-w-4xl mx-auto">
-              <p className="text-xs uppercase tracking-widest text-gray-400 mb-6">
-                {filteredProducts.length} résultat{filteredProducts.length > 1 ? "s" : ""}
-              </p>
+        {/* Bouton Fermer en haut à droite */}
+        <button
+          onClick={closeSearch}
+          className="absolute top-6 right-6 p-2 hover:opacity-50 transition-opacity"
+          aria-label="Fermer la recherche"
+        >
+          <X size={24} strokeWidth={1.5} />
+        </button>
+      </div>
 
-              {/* Grille de résultats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    onClick={handleProductClick}
-                    className="group block"
-                  >
-                    {/* Image */}
-                    <div className="relative w-full aspect-square overflow-hidden bg-gray-100 mb-4">
-                      {product.image_url ? (
-                        <Image
-                          src={product.image_url}
-                          alt={product.name}
-                          fill
-                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                          Image
+      {/* Contenu scrollable : Grille par Collections */}
+      <div className="flex-1 overflow-y-auto py-8" data-lenis-prevent>
+        {sortedCollections.length === 0 ? (
+          <div className="max-w-6xl mx-auto px-6 md:px-12 text-center py-20">
+            <p className="text-sm text-gray-400 uppercase tracking-widest">
+              {query.trim()
+                ? `Aucun résultat pour "${query}"`
+                : "Commencez à taper pour rechercher..."}
+            </p>
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto">
+            {sortedCollections.map((collection) => {
+              const collectionProducts = groupedProducts[collection];
+              if (collectionProducts.length === 0) return null;
+
+              return (
+                <div key={collection} className="mb-16">
+                  {/* Titre Collection */}
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 mt-12 px-6 md:px-12">
+                    {collection}
+                  </h2>
+
+                  {/* Grille Produits */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 px-6 md:px-12">
+                    {collectionProducts.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/product/${product.slug}`}
+                        onClick={handleProductClick}
+                        className="group block"
+                      >
+                        {/* Image - Aspect 3/4 */}
+                        <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-50 mb-3">
+                          {product.image_url ? (
+                            <Image
+                              src={product.image_url}
+                              alt={product.name}
+                              fill
+                              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                              sizes="(max-width: 768px) 50vw, 25vw"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                              Image
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    {/* Infos */}
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400">
-                        {product.collection}
-                      </p>
-                      <h3 className="text-sm font-medium uppercase tracking-wide text-black group-hover:underline underline-offset-4 transition-all">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-black">{formatPrice(product.price)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+                        {/* Infos Produit */}
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold uppercase tracking-wide text-black group-hover:underline underline-offset-4 transition-all">
+                            {product.name}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {formatPrice(product.price)}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
