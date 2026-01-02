@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/utils/supabase/server";
-import type { PaymentCartItem } from "@/types/payment";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 /**
  * Route API : Confirmation de commande et décrémentation du stock
@@ -9,9 +8,10 @@ import type { PaymentCartItem } from "@/types/payment";
  * SÉCURITÉ CRITIQUE :
  * - Vérifie avec Stripe que le paiement a réellement réussi
  * - Ne décrémente le stock QUE si le paiement est confirmé
+ * - Lit les items depuis les metadata Stripe (source de vérité)
  *
  * @route POST /api/confirm-order
- * @body { paymentIntentId: string, items: PaymentCartItem[] }
+ * @body { payment_intent_id: string }
  * @returns { success: boolean, message?: string }
  */
 export async function POST(request: NextRequest) {
@@ -31,21 +31,20 @@ export async function POST(request: NextRequest) {
 
     // Récupération du body
     const body = await request.json();
-    const { paymentIntentId, items } = body as {
-      paymentIntentId: string;
-      items: PaymentCartItem[];
+    const { payment_intent_id } = body as {
+      payment_intent_id: string;
     };
 
     // Validation des données
-    if (!paymentIntentId || !items || !Array.isArray(items) || items.length === 0) {
+    if (!payment_intent_id) {
       return NextResponse.json(
-        { error: "Données invalides" },
+        { error: "payment_intent_id manquant" },
         { status: 400 }
       );
     }
 
     // **SÉCURITÉ : Vérifier que le paiement a réellement réussi**
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
 
     if (paymentIntent.status !== "succeeded") {
       console.error(`❌ Paiement non réussi. Status: ${paymentIntent.status}`);
@@ -55,20 +54,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Si le paiement est confirmé, décrémenter le stock
-    const supabase = createClient();
+    // **Lire les items depuis les metadata Stripe (source de vérité)**
+    const cartItemsJson = paymentIntent.metadata.cart_items;
+
+    if (!cartItemsJson) {
+      console.error("❌ cart_items manquant dans les metadata Stripe");
+      return NextResponse.json(
+        { error: "Données de commande introuvables" },
+        { status: 400 }
+      );
+    }
+
+    // Parser le JSON des items
+    let items: Array<{ id: string; qty: number }>;
+    try {
+      items = JSON.parse(cartItemsJson);
+    } catch (error) {
+      console.error("❌ Erreur lors du parsing des items:", error);
+      return NextResponse.json(
+        { error: "Format de données invalide" },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: "Aucun item trouvé dans la commande" },
+        { status: 400 }
+      );
+    }
+
+    // **Décrémenter le stock avec le client admin (bypass RLS)**
+    const supabase = createAdminClient();
 
     // Pour chaque item, décrémenter le stock
-    // On utilise une boucle pour traiter chaque item individuellement et gérer les erreurs
+    // On utilise Promise.allSettled pour gérer les erreurs individuellement
     const results = await Promise.allSettled(
       items.map(async (item) => {
-        // On peut utiliser soit l'id (UUID) soit le slug comme identifiant
-        // On essaie d'abord par slug (le plus commun), puis par id
+        // Rechercher le produit par slug ou id
         const { data: productBySlug } = await supabase
           .from("products")
           .select("id, slug, stock")
           .eq("slug", item.id)
-          .maybeSingle(); // maybeSingle retourne null au lieu d'erreur si pas trouvé
+          .maybeSingle();
 
         let product = productBySlug;
 
@@ -88,14 +116,14 @@ export async function POST(request: NextRequest) {
 
         // Vérifier que le stock est suffisant (sécurité supplémentaire)
         const currentStock = product.stock ?? 0;
-        if (currentStock < item.quantity) {
+        if (currentStock < item.qty) {
           throw new Error(
-            `Stock insuffisant pour ${item.id} (demandé: ${item.quantity}, disponible: ${currentStock})`
+            `Stock insuffisant pour ${item.id} (demandé: ${item.qty}, disponible: ${currentStock})`
           );
         }
 
         // Décrémenter le stock (en s'assurant qu'il ne devienne pas négatif)
-        const newStock = Math.max(0, currentStock - item.quantity);
+        const newStock = Math.max(0, currentStock - item.qty);
 
         const { error: updateError } = await supabase
           .from("products")
@@ -103,10 +131,18 @@ export async function POST(request: NextRequest) {
           .eq("id", product.id);
 
         if (updateError) {
-          throw new Error(`Erreur lors de la mise à jour du stock: ${updateError.message}`);
+          throw new Error(
+            `Erreur lors de la mise à jour du stock: ${updateError.message}`
+          );
         }
 
-        return { productId: product.id, itemId: item.id, success: true };
+        return {
+          productId: product.id,
+          itemId: item.id,
+          quantity: item.qty,
+          newStock,
+          success: true,
+        };
       })
     );
 
@@ -119,9 +155,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          message: "Commande confirmée, mais certaines mises à jour de stock ont échoué",
+          message:
+            "Commande confirmée, mais certaines mises à jour de stock ont échoué",
           errors: errors.map((e) =>
-            e.status === "rejected" ? e.reason?.message || "Erreur inconnue" : null
+            e.status === "rejected"
+              ? e.reason?.message || "Erreur inconnue"
+              : null
           ),
         },
         { status: 200 }
@@ -129,10 +168,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Tout s'est bien passé
+    console.log(
+      `✅ Commande confirmée et stock mis à jour pour ${items.length} produit(s)`
+    );
     return NextResponse.json(
       {
         success: true,
         message: "Commande confirmée et stock mis à jour",
+        itemsUpdated: results.length,
       },
       { status: 200 }
     );
@@ -141,10 +184,7 @@ export async function POST(request: NextRequest) {
 
     // Si c'est une erreur Stripe, on la retourne
     if (error instanceof Stripe.errors.StripeError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     // Erreur générique
@@ -157,4 +197,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

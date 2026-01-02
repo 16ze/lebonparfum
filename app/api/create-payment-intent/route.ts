@@ -177,6 +177,12 @@ export async function POST(request: NextRequest) {
     // Montant total (produits + livraison)
     const totalAmountCents = subtotalCents + shippingFeeCents;
 
+    // Préparer les metadata du panier pour Stripe
+    // Format léger : [{ id, qty }, ...] en JSON string
+    const cartMetadata = JSON.stringify(
+      items.map((i) => ({ id: i.id, qty: i.quantity }))
+    );
+
     // Création du Payment Intent Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmountCents, // Montant en centimes
@@ -189,6 +195,8 @@ export async function POST(request: NextRequest) {
         items_count: items.length.toString(),
         subtotal_euros: (subtotalCents / 100).toFixed(2),
         shipping_fee_euros: (shippingFeeCents / 100).toFixed(2),
+        // Stockage du panier dans metadata (source de vérité pour la décrémentation)
+        cart_items: cartMetadata,
       },
     });
 

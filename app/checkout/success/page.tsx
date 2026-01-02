@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import type { PaymentCartItem } from "@/types/payment";
 
 /**
  * Page de confirmation de commande après paiement Stripe
@@ -17,18 +16,18 @@ import type { PaymentCartItem } from "@/types/payment";
  *
  * Logique :
  * - Récupère le payment_intent depuis l'URL
- * - Récupère les cartItems depuis localStorage (avant de vider le panier)
- * - Appelle l'API confirm-order pour décrémenter le stock
+ * - Appelle l'API confirm-order (qui lit les items depuis Stripe metadata)
  * - Vide le panier seulement après confirmation de l'API
  */
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
-  const { clearCart, cartItems } = useCart();
+  const { clearCart } = useCart();
   const [isConfirming, setIsConfirming] = useState(true);
   const [confirmationError, setConfirmationError] = useState<string | null>(null);
 
   /**
    * Confirmer la commande et décrémenter le stock
+   * Les items sont lus depuis les metadata Stripe (source de vérité)
    */
   useEffect(() => {
     const confirmOrder = async () => {
@@ -42,55 +41,16 @@ export default function CheckoutSuccessPage() {
         return;
       }
 
-      // Récupérer les items du panier depuis localStorage AVANT de vider
-      // (pour ne pas perdre les données si l'API échoue)
-      let savedCartItems: PaymentCartItem[] = [];
-
-      try {
-        const savedCart = localStorage.getItem("lebonparfum-cart");
-        if (savedCart) {
-          const parsed = JSON.parse(savedCart);
-          // Convertir les CartItem en PaymentCartItem (id et quantity uniquement)
-          savedCartItems = parsed.map((item: { slug: string; id: string; quantity: number }) => ({
-            id: item.slug || item.id, // Utiliser slug comme identifiant principal
-            quantity: item.quantity,
-          }));
-        } else if (cartItems.length > 0) {
-          // Fallback : utiliser cartItems du context si localStorage est vide
-          savedCartItems = cartItems.map((item) => ({
-            id: item.slug || item.id,
-            quantity: item.quantity,
-          }));
-        }
-      } catch (error) {
-        console.error("❌ Erreur lors de la récupération du panier:", error);
-        // On continue quand même, on essaiera avec cartItems du context
-        if (cartItems.length > 0) {
-          savedCartItems = cartItems.map((item) => ({
-            id: item.slug || item.id,
-            quantity: item.quantity,
-          }));
-        }
-      }
-
-      if (savedCartItems.length === 0) {
-        console.warn("⚠️ Aucun item trouvé dans le panier pour confirmation");
-        // On vide quand même le panier et on continue
-        clearCart();
-        setIsConfirming(false);
-        return;
-      }
-
       try {
         // Appeler l'API pour confirmer la commande et décrémenter le stock
+        // L'API lit les items depuis les metadata Stripe
         const response = await fetch("/api/confirm-order", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            paymentIntentId,
-            items: savedCartItems,
+            payment_intent_id: paymentIntentId,
           }),
         });
 
