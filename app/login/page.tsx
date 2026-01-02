@@ -1,23 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 import { loginAction, signupAction, loginWithGoogleAction } from "./actions";
 
 /**
  * Page Login - Authentification utilisateur
  *
- * Design Byredo :
- * - Page minimaliste centrée
- * - Logo en haut
- * - Formulaire LoginForm
- * - Fond blanc pur
+ * Design Byredo Split Screen :
+ * - Image full height à gauche (50%)
+ * - Formulaire à droite (50%)
+ * - Mobile : Stack vertical
  */
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Vérifier si on revient après un reset password réussi
+  useEffect(() => {
+    if (searchParams.get("reset") === "success") {
+      setSuccessMessage(
+        "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter."
+      );
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (data: {
     email: string;
@@ -113,34 +123,61 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo / Titre */}
-        <div className="text-center mt-12 mb-12">
-          <h1 className="text-2xl md:text-3xl uppercase tracking-widest font-bold mb-2">
-            Le Bon Parfum
-          </h1>
-          <p className="text-xs uppercase tracking-widest text-gray-400">
-            Espace Client
-          </p>
-        </div>
-
-        {/* Formulaire de login */}
-        <LoginForm
-          onSubmit={handleSubmit}
-          onGoogleLogin={handleGoogleLogin}
-          isLoading={isLoading}
-          error={error}
+    <main className="min-h-screen bg-white flex flex-col md:flex-row">
+      {/* ZONE GAUCHE : Image (50% desktop, 40vh mobile) */}
+      <div className="relative w-full md:w-1/2 h-[40vh] md:h-screen bg-black">
+        {/* Image de fond */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-80"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2908&auto=format&fit=crop')",
+          }}
         />
 
-        {/* Retour à l'accueil */}
-        <div className="text-center mt-12">
-          <a
-            href="/"
-            className="text-xs uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            ← Retour à l'accueil
-          </a>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+
+        {/* Logo en overlay sur l'image */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h1 className="text-3xl md:text-5xl uppercase tracking-widest font-bold mb-4">
+              Le Bon Parfum
+            </h1>
+            <p className="text-xs md:text-sm uppercase tracking-widest opacity-80">
+              Parfums de niche
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE DROITE : Formulaire (50% desktop, auto mobile) */}
+      <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-12 md:py-0">
+        <div className="w-full max-w-md">
+          {/* Message de succès après reset password */}
+          {successMessage && (
+            <div className="mb-8 bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {/* Formulaire de login */}
+          <LoginForm
+            onSubmit={handleSubmit}
+            onGoogleLogin={handleGoogleLogin}
+            isLoading={isLoading}
+            error={error}
+          />
+
+          {/* Retour à l'accueil */}
+          <div className="text-center mt-12">
+            <a
+              href="/"
+              className="text-xs uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ← Retour à l'accueil
+            </a>
+          </div>
         </div>
       </div>
     </main>

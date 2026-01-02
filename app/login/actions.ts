@@ -227,6 +227,96 @@ export async function loginWithGoogleAction() {
 }
 
 /**
+ * Server Action: Demander un reset de mot de passe
+ *
+ * @param email - Email de l'utilisateur
+ * @returns Objet avec success et error
+ */
+export async function forgotPasswordAction(email: string) {
+  try {
+    if (!validateEmail(email)) {
+      return {
+        success: false,
+        error: "Email invalide",
+      };
+    }
+
+    const supabase = await createClient();
+
+    // Récupérer l'URL de callback
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const redirectTo = `${origin}/auth/reset-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+
+    if (error) {
+      console.error("❌ Erreur reset password Supabase:", error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // Retourner success même si l'email n'existe pas (sécurité)
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Erreur inattendue forgot password:", error);
+    return {
+      success: false,
+      error: "Erreur lors de l'envoi de l'email",
+    };
+  }
+}
+
+/**
+ * Server Action: Réinitialiser le mot de passe
+ *
+ * @param password - Nouveau mot de passe
+ * @returns Objet avec success et error
+ */
+export async function resetPasswordAction(password: string) {
+  try {
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return {
+        success: false,
+        error: passwordValidation.errors.join(", "),
+      };
+    }
+
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      console.error("❌ Erreur update password Supabase:", error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Erreur inattendue reset password:", error);
+    return {
+      success: false,
+      error: "Erreur lors de la réinitialisation du mot de passe",
+    };
+  }
+}
+
+/**
  * Server Action: Déconnexion utilisateur
  *
  * Déconnecte l'utilisateur et redirige vers la home
