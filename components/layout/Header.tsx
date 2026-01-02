@@ -5,7 +5,7 @@ import { useMenu } from "@/context/MenuContext";
 import clsx from "clsx";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Menu, ShoppingBag, Search, User } from "lucide-react";
+import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -177,8 +177,6 @@ export default function Header() {
           >
             <Search size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
           </button>
-         
-      
         </div>
 
         {/* Centre : Logo LE BON PARFUM */}
