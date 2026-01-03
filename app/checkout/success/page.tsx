@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -28,7 +28,7 @@ export default function CheckoutSuccessPage() {
   const { clearCart } = useCart();
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [cartCleared, setCartCleared] = useState(false);
+  const hasCleared = useRef(false); // Utiliser une ref pour éviter les appels multiples
 
   useEffect(() => {
     const pi = searchParams.get("payment_intent");
@@ -42,16 +42,16 @@ export default function CheckoutSuccessPage() {
 
     setPaymentIntentId(pi);
 
-    // Vider le panier côté client UNIQUEMENT si ce n'est pas déjà fait
+    // Vider le panier côté client UNE SEULE FOIS
     // (La commande a déjà été créée par le webhook Stripe)
-    if (!cartCleared) {
+    if (!hasCleared.current) {
       console.log("✅ Vidage du panier après paiement réussi");
       clearCart();
-      setCartCleared(true);
+      hasCleared.current = true;
     }
 
     setIsLoading(false);
-  }, [searchParams, clearCart, cartCleared]);
+  }, [searchParams, clearCart]);
 
   // Affichage en cours de chargement
   if (isLoading) {
