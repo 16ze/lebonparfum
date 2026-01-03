@@ -27,15 +27,19 @@ create index if not exists user_addresses_user_id_idx on public.user_addresses(u
 -- RLS: Un utilisateur ne voit que ses adresses
 alter table public.user_addresses enable row level security;
 
+drop policy if exists "Users can view own addresses" on public.user_addresses;
 create policy "Users can view own addresses" on public.user_addresses
   for select using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own addresses" on public.user_addresses;
 create policy "Users can insert own addresses" on public.user_addresses
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own addresses" on public.user_addresses;
 create policy "Users can update own addresses" on public.user_addresses
   for update using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own addresses" on public.user_addresses;
 create policy "Users can delete own addresses" on public.user_addresses
   for delete using (auth.uid() = user_id);
 
@@ -48,6 +52,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists user_addresses_updated_at on public.user_addresses;
 create trigger user_addresses_updated_at
   before update on public.user_addresses
   for each row
@@ -71,12 +76,15 @@ create index if not exists wishlist_product_id_idx on public.wishlist(product_id
 -- RLS: Un utilisateur ne voit que sa wishlist
 alter table public.wishlist enable row level security;
 
+drop policy if exists "Users can view own wishlist" on public.wishlist;
 create policy "Users can view own wishlist" on public.wishlist
   for select using (auth.uid() = user_id);
 
+drop policy if exists "Users can add to own wishlist" on public.wishlist;
 create policy "Users can add to own wishlist" on public.wishlist
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can remove from own wishlist" on public.wishlist;
 create policy "Users can remove from own wishlist" on public.wishlist
   for delete using (auth.uid() = user_id);
 
@@ -101,9 +109,11 @@ create index if not exists notifications_is_read_idx on public.notifications(is_
 -- RLS: Un utilisateur ne voit que ses notifications
 alter table public.notifications enable row level security;
 
+drop policy if exists "Users can view own notifications" on public.notifications;
 create policy "Users can view own notifications" on public.notifications
   for select using (auth.uid() = user_id);
 
+drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications" on public.notifications
   for update using (auth.uid() = user_id);
 
@@ -125,6 +135,7 @@ create index if not exists loyalty_points_user_id_idx on public.loyalty_points(u
 -- RLS: Un utilisateur ne voit que ses points
 alter table public.loyalty_points enable row level security;
 
+drop policy if exists "Users can view own loyalty points" on public.loyalty_points;
 create policy "Users can view own loyalty points" on public.loyalty_points
   for select using (auth.uid() = user_id);
 
@@ -148,6 +159,7 @@ create index if not exists loyalty_transactions_order_id_idx on public.loyalty_t
 -- RLS: Un utilisateur ne voit que ses transactions
 alter table public.loyalty_transactions enable row level security;
 
+drop policy if exists "Users can view own loyalty transactions" on public.loyalty_transactions;
 create policy "Users can view own loyalty transactions" on public.loyalty_transactions
   for select using (auth.uid() = user_id);
 
