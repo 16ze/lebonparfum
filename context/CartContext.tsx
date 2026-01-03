@@ -138,9 +138,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   /**
    * clearCart - Vide complètement le panier
+   * ⚠️ IMPORTANT : Vide IMMÉDIATEMENT le localStorage pour éviter toute restauration
    */
   const clearCart = () => {
+    console.log("🧹 VIDAGE COMPLET DU PANIER - State + localStorage");
     setCartItems([]);
+    // Vider IMMÉDIATEMENT le localStorage (ne pas attendre le useEffect)
+    try {
+      localStorage.removeItem("lebonparfum-cart");
+      console.log("✅ localStorage vidé avec succès");
+    } catch (error) {
+      console.error("❌ Erreur lors du vidage du localStorage:", error);
+    }
   };
 
   /**

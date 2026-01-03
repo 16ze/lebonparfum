@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCart } from "@/context/CartContext";
+import { CheckCircle, Loader2, Package } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCart } from "@/context/CartContext";
-import { CheckCircle, Package, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Page de Confirmation de Commande - Style Byredo
@@ -45,9 +45,21 @@ export default function CheckoutSuccessPage() {
     // Vider le panier côté client UNE SEULE FOIS
     // (La commande a déjà été créée par le webhook Stripe)
     if (!hasCleared.current) {
-      console.log("✅ Vidage du panier après paiement réussi");
+      console.log("🎯 PAGE SUCCESS - Début vidage du panier");
+      console.log("📦 État du panier AVANT vidage:", localStorage.getItem("lebonparfum-cart"));
       clearCart();
       hasCleared.current = true;
+      
+      // Vérification immédiate après le vidage
+      setTimeout(() => {
+        const cartAfter = localStorage.getItem("lebonparfum-cart");
+        console.log("📦 État du panier APRÈS vidage:", cartAfter);
+        if (cartAfter && cartAfter !== "[]") {
+          console.error("⚠️ Le panier n'a pas été vidé correctement !");
+        } else {
+          console.log("✅ Vidage du panier confirmé !");
+        }
+      }, 100);
     }
 
     setIsLoading(false);
@@ -58,7 +70,11 @@ export default function CheckoutSuccessPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="text-center">
-          <Loader2 className="animate-spin mx-auto mb-4 text-black" size={40} strokeWidth={1.5} />
+          <Loader2
+            className="animate-spin mx-auto mb-4 text-black"
+            size={40}
+            strokeWidth={1.5}
+          />
           <p className="text-sm uppercase tracking-widest text-gray-500">
             Chargement...
           </p>
@@ -76,7 +92,8 @@ export default function CheckoutSuccessPage() {
             Erreur
           </h1>
           <p className="text-sm text-gray-600 mb-8">
-            Impossible de confirmer votre commande. Veuillez contacter notre support.
+            Impossible de confirmer votre commande. Veuillez contacter notre
+            support.
           </p>
           <Link
             href="/"
@@ -131,7 +148,9 @@ export default function CheckoutSuccessPage() {
           <ul className="text-sm text-gray-600 space-y-2 text-left">
             <li className="flex items-start gap-2">
               <span className="text-black">•</span>
-              <span>Vous recevrez un email de confirmation sous quelques minutes</span>
+              <span>
+                Vous recevrez un email de confirmation sous quelques minutes
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-black">•</span>
