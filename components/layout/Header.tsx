@@ -159,12 +159,11 @@ export default function Header() {
               elementsRef.current[0] = el;
             }}
             onClick={toggleMenu}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-all duration-300"
+            className="p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
             aria-label="Ouvrir le menu"
           >
-            <Menu size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
-            <span>Menu</span>
+            <Menu size={20} strokeWidth={1.5} style={{ stroke: textColor }} />
           </button>
 
           {/* Recherche */}
@@ -173,11 +172,11 @@ export default function Header() {
               elementsRef.current[1] = el;
             }}
             onClick={openSearch}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            className="p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
             aria-label="Ouvrir la recherche"
           >
-            <Search size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+            <Search size={20} strokeWidth={1.5} style={{ stroke: textColor }} />
           </button>
         </div>
 
@@ -224,16 +223,20 @@ export default function Header() {
               elementsRef.current[4] = el;
             }}
             onClick={openCart}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            className="relative p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
-            aria-label="Ouvrir le panier"
+            aria-label={`Ouvrir le panier (${cartCount} article${cartCount > 1 ? "s" : ""})`}
           >
-            <span>Panier ({cartCount})</span>
             <ShoppingBag
-              size={18}
+              size={20}
               strokeWidth={1.5}
               style={{ stroke: textColor }}
             />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {cartCount > 9 ? "9+" : cartCount}
+              </span>
+            )}
           </button>
         </div>
       </nav>
