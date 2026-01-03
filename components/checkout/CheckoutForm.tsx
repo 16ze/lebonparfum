@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCheckout } from "@/context/CheckoutContext";
 import PaymentForm from "./PaymentForm";
 
 /**
@@ -11,31 +11,22 @@ import PaymentForm from "./PaymentForm";
  * - Labels flottants ou discrets
  * - Beaucoup d'espace blanc
  * - Style minimaliste
- * - Intégration Stripe Elements pour le paiement
+ * - Validation en temps réel
+ * - Connecté au CheckoutContext
  */
 interface CheckoutFormProps {
   paymentForm?: React.ReactNode; // PaymentForm sera passé en props depuis la page
 }
 
 export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
-  const [formData, setFormData] = useState({
-    email: "",
-    firstName: "",
-    lastName: "",
-    address: "",
-    city: "",
-    postalCode: "",
-  });
+  const { shippingAddress, updateField } = useCheckout();
 
   /**
-   * handleChange - Met à jour les valeurs du formulaire
+   * handleChange - Met à jour les valeurs du formulaire via le Context
    */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    updateField(name as keyof typeof shippingAddress, value);
   };
 
   return (
@@ -53,14 +44,15 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
               htmlFor="email"
               className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
             >
-              Email
+              Email *
             </label>
             <input
               type="email"
               id="email"
               name="email"
-              value={formData.email}
+              value={shippingAddress.email}
               onChange={handleChange}
+              required
               className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
               placeholder="exemple@email.com"
             />
@@ -73,14 +65,15 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
                 htmlFor="firstName"
                 className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
               >
-                Prénom
+                Prénom *
               </label>
               <input
                 type="text"
                 id="firstName"
                 name="firstName"
-                value={formData.firstName}
+                value={shippingAddress.firstName}
                 onChange={handleChange}
+                required
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
                 placeholder="Jean"
               />
@@ -91,14 +84,15 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
                 htmlFor="lastName"
                 className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
               >
-                Nom
+                Nom *
               </label>
               <input
                 type="text"
                 id="lastName"
                 name="lastName"
-                value={formData.lastName}
+                value={shippingAddress.lastName}
                 onChange={handleChange}
+                required
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
                 placeholder="Dupont"
               />
@@ -111,14 +105,15 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
               htmlFor="address"
               className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
             >
-              Adresse
+              Adresse *
             </label>
             <input
               type="text"
               id="address"
               name="address"
-              value={formData.address}
+              value={shippingAddress.address}
               onChange={handleChange}
+              required
               className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
               placeholder="123 rue de la République"
             />
@@ -131,14 +126,15 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
                 htmlFor="city"
                 className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
               >
-                Ville
+                Ville *
               </label>
               <input
                 type="text"
                 id="city"
                 name="city"
-                value={formData.city}
+                value={shippingAddress.city}
                 onChange={handleChange}
+                required
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
                 placeholder="Paris"
               />
@@ -149,18 +145,61 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
                 htmlFor="postalCode"
                 className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
               >
-                Code postal
+                Code postal *
               </label>
               <input
                 type="text"
                 id="postalCode"
                 name="postalCode"
-                value={formData.postalCode}
+                value={shippingAddress.postalCode}
                 onChange={handleChange}
+                required
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
                 placeholder="75001"
               />
             </div>
+          </div>
+
+          {/* Pays */}
+          <div>
+            <label
+              htmlFor="country"
+              className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
+            >
+              Pays *
+            </label>
+            <select
+              id="country"
+              name="country"
+              value={shippingAddress.country}
+              onChange={handleChange}
+              required
+              className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
+            >
+              <option value="France">France</option>
+              <option value="Belgique">Belgique</option>
+              <option value="Suisse">Suisse</option>
+              <option value="Luxembourg">Luxembourg</option>
+            </select>
+          </div>
+
+          {/* Téléphone (optionnel) */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
+            >
+              Téléphone (optionnel)
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={shippingAddress.phone || ""}
+              onChange={handleChange}
+              className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
+              placeholder="+33 6 12 34 56 78"
+            />
           </div>
         </div>
       </section>
