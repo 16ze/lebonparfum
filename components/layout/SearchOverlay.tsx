@@ -278,7 +278,7 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
                             {product.name}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            {formatPrice(product.price)}
+                            {formatPrice(product.price / 100)}
                           </p>
                         </div>
                       </Link>
