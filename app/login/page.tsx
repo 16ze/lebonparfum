@@ -59,23 +59,18 @@ export default function LoginPage() {
           return;
         }
 
-        // Compte créé → auto-login
-        const loginResult = await loginAction(data.email, data.password);
-
-        if (!loginResult.success) {
-          setError(
-            "Compte créé mais erreur de connexion. Essayez de vous connecter manuellement."
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        // Redirection selon le rôle
-        if (loginResult.isAdmin) {
-          router.push("/admin/dashboard");
-        } else {
-          router.push("/account/profile");
-        }
+        // Compte créé avec succès
+        console.log("✅ Compte créé avec succès");
+        
+        // Afficher un message de succès et demander de vérifier l'email
+        setSuccessMessage(
+          "✅ Compte créé avec succès ! Un email de confirmation vous a été envoyé. Veuillez cliquer sur le lien dans l'email pour activer votre compte."
+        );
+        setError(null);
+        setIsLoading(false);
+        
+        // Ne pas essayer de se connecter automatiquement
+        // L'utilisateur doit d'abord confirmer son email
       } else {
         // Se connecter
         const result = await loginAction(data.email, data.password);
