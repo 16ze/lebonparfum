@@ -1,16 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import AccountNav from "@/components/account/AccountNav";
+import { createClient } from "@/utils/supabase/server";
+import AccountSidebar from "@/components/account/AccountSidebar";
 
 /**
- * Layout Espace Client
+ * Layout Account - Espace client
  *
- * Protégé par authentification
- * Sidebar navigation + Zone de contenu
- *
- * Design Byredo : Layout minimal avec navigation latérale
+ * Design Byredo :
+ * - Sidebar fixe à gauche (navigation)
+ * - Content à droite (scrollable)
+ * - Mobile : Stack vertical
  */
-
 export default async function AccountLayout({
   children,
 }: {
@@ -21,35 +20,42 @@ export default async function AccountLayout({
   // Vérifier l'authentification
   const {
     data: { user },
-    error,
+    error: authError,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  // Si pas connecté, rediriger vers login
+  if (!user || authError) {
     redirect("/login");
   }
 
-  // Récupérer les infos du profil
-  const { data: profile } = await supabase
+  // Récupérer le profil
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("id, email, full_name, is_admin")
     .eq("id", user.id)
     .single();
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Container principal */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <AccountNav
-              userName={profile?.full_name || profile?.email || "Mon compte"}
-            />
-          </div>
+  // En cas d'erreur profil, rediriger vers login
+  if (profileError || !profile) {
+    console.error("❌ Erreur récupération profil:", profileError?.message);
+    redirect("/login");
+  }
 
-          {/* Contenu principal */}
-          <div className="lg:col-span-3">{children}</div>
-        </div>
+  // Si admin, rediriger vers admin dashboard
+  if (profile.is_admin) {
+    redirect("/admin/dashboard");
+  }
+
+  return (
+    <div className="min-h-screen bg-white pt-20">
+      {" "}
+      {/* pt-20 pour compenser le header fixe */}
+      <div className="flex flex-col md:flex-row">
+        {/* Sidebar Navigation */}
+        <AccountSidebar user={profile} />
+
+        {/* Main Content */}
+        <main className="flex-1 p-6 md:p-12">{children}</main>
       </div>
     </div>
   );
