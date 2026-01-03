@@ -236,6 +236,43 @@ async function createOrderFromPaymentIntent(
     }
   }
 
+  // 7. Attribuer des points de fidélité si l'utilisateur est connecté
+  if (order.user_id) {
+    try {
+      const { error: loyaltyError } = await supabase.rpc(
+        "add_loyalty_points_from_order",
+        {
+          p_user_id: order.user_id,
+          p_order_id: order.id,
+          p_amount: totalAmountCents,
+        }
+      );
+
+      if (loyaltyError) {
+        console.error("⚠️ Erreur attribution points:", loyaltyError.message);
+        // On continue quand même (la commande est créée)
+      } else {
+        const pointsEarned = Math.floor(totalAmountCents / 10);
+        console.log(`🎁 Points de fidélité attribués: ${pointsEarned} points`);
+
+        // 8. Créer une notification pour informer l'utilisateur
+        await supabase.from("notifications").insert({
+          user_id: order.user_id,
+          type: "order_status",
+          title: "Commande confirmée",
+          message: `Votre commande de ${(totalAmountCents / 100).toFixed(2)}€ a été confirmée. Vous avez gagné ${pointsEarned} points de fidélité !`,
+          link: `/account/orders`,
+          is_read: false,
+        });
+
+        console.log("📬 Notification de commande envoyée");
+      }
+    } catch (err) {
+      console.error("⚠️ Erreur lors de l'attribution des points:", err);
+      // On continue quand même
+    }
+  }
+
   console.log("🎉 Commande traitée avec succès:", {
     orderId: order.id,
     paymentIntentId: paymentIntent.id,

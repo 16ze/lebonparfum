@@ -1,14 +1,41 @@
-import { MapPin } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+import AddressesList from "@/components/account/AddressesList";
 
 /**
  * Page Addresses - Gestion des adresses de livraison
  *
- * TODO: Implémenter la gestion complète des adresses
- * - CRUD adresses
+ * Features :
+ * - Liste des adresses
+ * - CRUD complet (create, update, delete)
  * - Définir adresse par défaut
- * - Validation formulaire
+ * - Modal de formulaire
  */
-export default function AddressesPage() {
+export default async function AddressesPage() {
+  const supabase = await createClient();
+
+  // Récupérer l'utilisateur
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (!user || authError) {
+    redirect("/login");
+  }
+
+  // Récupérer les adresses de l'utilisateur
+  const { data: addresses, error: addressesError } = await supabase
+    .from("user_addresses")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (addressesError) {
+    console.error("❌ Erreur récupération adresses:", addressesError.message);
+  }
+
   return (
     <div className="max-w-4xl">
       {/* Header */}
@@ -21,16 +48,8 @@ export default function AddressesPage() {
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="border border-black/10 p-12 text-center">
-        <MapPin size={48} strokeWidth={1} className="mx-auto mb-4 text-gray-300" />
-        <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-2">
-          Bientôt disponible
-        </h3>
-        <p className="text-sm text-gray-400">
-          La gestion des adresses sera disponible prochainement
-        </p>
-      </div>
+      {/* Liste des adresses */}
+      <AddressesList addresses={addresses || []} />
     </div>
   );
 }
