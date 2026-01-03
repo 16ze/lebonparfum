@@ -184,8 +184,7 @@ export async function POST(request: NextRequest) {
       items.map((i) => ({ id: i.id, qty: i.quantity }))
     );
 
-    // Récupérer l'utilisateur connecté (si connecté)
-    const supabase = await createClient();
+    // Récupérer l'utilisateur connecté (si connecté) - réutilise le supabase déjà créé ligne 70
     const { data: { user } } = await supabase.auth.getUser();
 
     // Créer les metadata
