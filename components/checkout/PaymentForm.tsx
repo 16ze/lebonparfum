@@ -6,6 +6,8 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { useCheckout } from "@/context/CheckoutContext";
+import { AlertCircle } from "lucide-react";
 
 /**
  * PaymentForm - Formulaire de paiement Stripe Elements
@@ -14,10 +16,13 @@ import {
  * - PaymentElement intégré (champ CB sécurisé)
  * - Bouton noir, large, uppercase
  * - Gestion des erreurs et du loading
+ * - Validation de l'adresse avant paiement
+ * - Envoi de l'adresse dans les metadata Stripe
  */
 export default function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
+  const { shippingAddress, isAddressComplete } = useCheckout();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -31,21 +36,49 @@ export default function PaymentForm() {
       return;
     }
 
+    // VALIDATION : Vérifier que l'adresse est complète
+    if (!isAddressComplete()) {
+      setErrorMessage(
+        "Veuillez remplir tous les champs d'adresse obligatoires avant de payer."
+      );
+      // Scroll vers le haut pour que l'utilisateur voit les champs manquants
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
+      console.log("📦 Adresse de livraison à envoyer:", shippingAddress);
+
       // Confirmer le paiement avec Stripe
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           // Redirection après paiement réussi
           return_url: `${window.location.origin}/checkout/success`,
+          // Envoyer l'adresse de livraison dans les metadata
+          // Note: Les metadata Stripe sont stockées au niveau du PaymentIntent
+          // et seront récupérées par le webhook
+          shipping: {
+            name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+            address: {
+              line1: shippingAddress.address,
+              city: shippingAddress.city,
+              postal_code: shippingAddress.postalCode,
+              country: shippingAddress.country === "France" ? "FR" : "FR", // Code ISO pays
+            },
+            phone: shippingAddress.phone || undefined,
+          },
+          // Ajouter l'email dans receipt_email pour envoyer le reçu Stripe
+          receipt_email: shippingAddress.email,
         },
       });
 
       // Si erreur, l'afficher
       if (error) {
+        console.error("❌ Erreur Stripe:", error);
         setErrorMessage(
           error.message || "Une erreur est survenue lors du paiement"
         );
@@ -53,14 +86,34 @@ export default function PaymentForm() {
       }
       // Si succès, l'utilisateur sera redirigé vers /checkout/success
     } catch (err) {
-      console.error("Erreur lors du paiement:", err);
+      console.error("❌ Erreur lors du paiement:", err);
       setErrorMessage("Une erreur inattendue est survenue");
       setIsLoading(false);
     }
   };
 
+  // Vérifier si le bouton doit être désactivé
+  const isButtonDisabled =
+    !stripe || !elements || isLoading || !isAddressComplete();
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Alerte si l'adresse est incomplète */}
+      {!isAddressComplete() && (
+        <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-amber-800 font-medium mb-1">
+              Adresse de livraison requise
+            </p>
+            <p className="text-xs text-amber-700">
+              Veuillez remplir tous les champs obligatoires ci-dessus pour
+              continuer.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* PaymentElement - Champ CB sécurisé de Stripe */}
       <div className="mb-6">
         <PaymentElement />
@@ -76,15 +129,24 @@ export default function PaymentForm() {
       {/* Bouton de paiement */}
       <button
         type="submit"
-        disabled={!stripe || !elements || isLoading}
+        disabled={isButtonDisabled}
         className={`w-full py-4 uppercase tracking-widest text-xs font-bold transition-colors ${
-          isLoading || !stripe || !elements
+          isButtonDisabled
             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
             : "bg-black text-white hover:bg-gray-800"
         }`}
       >
-        {isLoading ? "Traitement en cours..." : "Payer maintenant"}
+        {isLoading
+          ? "Traitement en cours..."
+          : !isAddressComplete()
+          ? "Remplissez l'adresse"
+          : "Payer maintenant"}
       </button>
+
+      {/* Indication de sécurité */}
+      <p className="text-xs text-gray-400 text-center uppercase tracking-wider">
+        Paiement sécurisé par Stripe
+      </p>
     </form>
   );
 }
