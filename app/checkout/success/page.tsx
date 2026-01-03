@@ -55,7 +55,7 @@ export default function CheckoutSuccessPage() {
         "📦 État du panier AVANT vidage:",
         localStorage.getItem("lebonparfum-cart")
       );
-      
+
       clearCart();
       hasCleared.current = true;
 
