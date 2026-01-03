@@ -58,8 +58,7 @@ export default function MenuOverlay({
   const { isOpen, closeMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const collectionsViewRef = useRef<HTMLDivElement>(null);
-  const productsViewRef = useRef<HTMLDivElement>(null);
+  const mobileContentRef = useRef<HTMLDivElement>(null);
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -74,46 +73,36 @@ export default function MenuOverlay({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Animation de transition entre Collections et Produits (mobile uniquement)
+  // Animation de transition entre Collections et Produits (mobile)
   useEffect(() => {
-    if (!isMobile || !collectionsViewRef.current || !productsViewRef.current) return;
+    if (!isMobile || !mobileContentRef.current) return;
 
     const ctx = gsap.context(() => {
-      if (activeBrand) {
-        // Transition vers les produits : Slide left
-        gsap.fromTo(
-          collectionsViewRef.current,
-          { x: 0, opacity: 1 },
-          { x: "-30%", opacity: 0, duration: 0.3, ease: "power2.out" }
-        );
-        gsap.fromTo(
-          productsViewRef.current,
-          { x: "100%", opacity: 0, display: "flex" },
-          { x: 0, opacity: 1, duration: 0.4, ease: "power3.out", delay: 0.1 }
-        );
-      } else {
-        // Transition vers les collections : Slide right
-        gsap.to(productsViewRef.current, {
-          x: "100%",
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.in",
-          onComplete: () => {
-            if (productsViewRef.current) {
-              productsViewRef.current.style.display = "none";
-            }
-          },
-        });
-        gsap.fromTo(
-          collectionsViewRef.current,
-          { x: "-30%", opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.4, ease: "power3.out", delay: 0.1 }
-        );
-      }
+      gsap.fromTo(
+        mobileContentRef.current,
+        { opacity: 0, x: activeBrand ? 20 : -20 },
+        { 
+          opacity: 1, 
+          x: 0, 
+          duration: 0.4, 
+          ease: "power2.out" 
+        }
+      );
     });
 
     return () => ctx.revert();
   }, [activeBrand, isMobile]);
+
+  // DEBUG: Log des données reçues
+  console.log("🔍 MenuOverlay - Props reçues:", {
+    collections,
+    productsCount: products.length,
+    products: products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      count: p.products.length,
+    })),
+  });
 
   // Animation GSAP : Slide depuis la gauche
   useEffect(() => {
@@ -239,6 +228,18 @@ export default function MenuOverlay({
     (p) => p.id === activeBrand || p.name === activeBrand
   );
 
+  // DEBUG: Log de la collection active
+  console.log("🔍 MenuOverlay - État actuel:", {
+    activeBrand,
+    activeCollectionData: activeCollectionData
+      ? {
+          id: activeCollectionData.id,
+          name: activeCollectionData.name,
+          productsCount: activeCollectionData.products.length,
+        }
+      : null,
+  });
+
   return (
     <>
       {/* Overlay Backdrop (assombrit et floute le fond pour focus sur le menu) */}
@@ -297,29 +298,17 @@ export default function MenuOverlay({
           {/* MODE MOBILE : Navigation simplifiée (Marques OU Produits) */}
           {isMobile ? (
             <div
+              ref={mobileContentRef}
               style={{
                 width: "100%",
-                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 minHeight: 0,
-                overflow: "hidden",
               }}
             >
-              {/* Vue Marques */}
-              <div
-                ref={collectionsViewRef}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  minHeight: 0,
-                }}
-              >
+              {!activeBrand ? (
+                // Vue Marques
+                <>
                   <div
                     className="px-6 py-6"
                     style={{
@@ -402,22 +391,9 @@ export default function MenuOverlay({
                     </Link>
                   </div>
                 </>
-              </div>
-
-              {/* Vue Produits (après avoir cliqué sur une marque) */}
-              <div
-                ref={productsViewRef}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: "none",
-                  flexDirection: "column",
-                  minHeight: 0,
-                }}
-              >
+              ) : (
+                // Vue Produits (après avoir cliqué sur une marque)
+                <>
                   <div
                     className="px-6 py-6"
                     style={{
@@ -457,7 +433,7 @@ export default function MenuOverlay({
                     )}
                   </div>
                 </>
-              </div>
+              )}
             </div>
           ) : (
             // MODE DESKTOP : Grille à 3 colonnes (existant)
@@ -493,7 +469,8 @@ export default function MenuOverlay({
                         .toLowerCase()
                         .replace(/\s+/g, "-");
                       const isActive =
-                        activeBrand === collectionId || activeBrand === collection;
+                        activeBrand === collectionId ||
+                        activeBrand === collection;
                       return (
                         <li key={collection}>
                           <button
