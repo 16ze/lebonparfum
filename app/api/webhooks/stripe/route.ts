@@ -1,7 +1,7 @@
+import type { OrderItem, StripeMetadataCart } from "@/types/payment";
+import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
-import type { StripeMetadataCart, OrderItem } from "@/types/payment";
 
 /**
  * Webhook Stripe - Gestion des événements de paiement
@@ -56,10 +56,7 @@ export async function POST(request: NextRequest) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error("❌ Erreur de vérification de signature:", err);
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     console.log("✅ Webhook Stripe reçu:", event.type);
@@ -82,10 +79,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("❌ Erreur dans le webhook Stripe:", error);
-    return NextResponse.json(
-      { error: "Webhook error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Webhook error" }, { status: 500 });
   }
 }
 
@@ -120,6 +114,15 @@ async function createOrderFromPaymentIntent(
 
   const cartItems: StripeMetadataCart[] = JSON.parse(cartItemsJson);
 
+  // Récupérer le user_id depuis les metadata (si présent)
+  const userId = paymentIntent.metadata.user_id || null;
+
+  console.log("📦 Traitement commande:", {
+    paymentIntentId: paymentIntent.id,
+    userId: userId || "invité",
+    itemsCount: cartItems.length,
+  });
+
   // 2. Récupérer les IDs des produits
   const productIds = cartItems.map((item) => item.id);
 
@@ -151,8 +154,8 @@ async function createOrderFromPaymentIntent(
   }
 
   // Créer un map pour accès rapide aux produits
-  const productMapById = new Map<string, typeof products[0]>();
-  const productMapBySlug = new Map<string, typeof products[0]>();
+  const productMapById = new Map<string, (typeof products)[0]>();
+  const productMapBySlug = new Map<string, (typeof products)[0]>();
 
   products.forEach((p) => {
     productMapById.set(p.id, p);
@@ -164,7 +167,8 @@ async function createOrderFromPaymentIntent(
   const stockUpdates: { id: string; quantity: number }[] = [];
 
   for (const item of cartItems) {
-    const product = productMapById.get(item.id) || productMapBySlug.get(item.id);
+    const product =
+      productMapById.get(item.id) || productMapBySlug.get(item.id);
 
     if (!product) {
       console.error(`⚠️ Produit introuvable: ${item.id}`);
@@ -192,8 +196,7 @@ async function createOrderFromPaymentIntent(
     0
   );
 
-  const shippingFeeCents =
-    subtotalCents < 10000 ? 500 : 0; // 5€ si < 100€
+  const shippingFeeCents = subtotalCents < 10000 ? 500 : 0; // 5€ si < 100€
 
   const totalAmountCents = subtotalCents + shippingFeeCents;
 
@@ -202,11 +205,11 @@ async function createOrderFromPaymentIntent(
     .from("orders")
     .insert({
       stripe_payment_id: paymentIntent.id,
-      user_id: null, // TODO: Récupérer l'user_id si connecté
+      user_id: userId, // ✅ Utiliser le user_id récupéré des metadata
       amount: totalAmountCents,
       status: "paid",
-      items: orderItems, // ← CORRECTION: items au lieu de order_items
-      shipping_address: null, // TODO: Ajouter l'adresse de livraison depuis les metadata
+      items: orderItems,
+      shipping_address: null, // TODO: Ajouter l'adresse de livraison
     })
     .select()
     .single();
@@ -232,7 +235,9 @@ async function createOrderFromPaymentIntent(
       );
       // On continue quand même (la commande est déjà créée)
     } else {
-      console.log(`✅ Stock décrémenté pour ${update.id} (-${update.quantity})`);
+      console.log(
+        `✅ Stock décrémenté pour ${update.id} (-${update.quantity})`
+      );
     }
   }
 
@@ -260,7 +265,9 @@ async function createOrderFromPaymentIntent(
           user_id: order.user_id,
           type: "order_status",
           title: "Commande confirmée",
-          message: `Votre commande de ${(totalAmountCents / 100).toFixed(2)}€ a été confirmée. Vous avez gagné ${pointsEarned} points de fidélité !`,
+          message: `Votre commande de ${(totalAmountCents / 100).toFixed(
+            2
+          )}€ a été confirmée. Vous avez gagné ${pointsEarned} points de fidélité !`,
           link: `/account/orders`,
           is_read: false,
         });

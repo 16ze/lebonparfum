@@ -184,6 +184,25 @@ export async function POST(request: NextRequest) {
       items.map((i) => ({ id: i.id, qty: i.quantity }))
     );
 
+    // Récupérer l'utilisateur connecté (si connecté)
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Créer les metadata
+    const metadata: Record<string, string> = {
+      // Métadonnées utiles pour le suivi
+      items_count: items.length.toString(),
+      subtotal_euros: (subtotalCents / 100).toFixed(2),
+      shipping_fee_euros: (shippingFeeCents / 100).toFixed(2),
+      // Stockage du panier dans metadata (source de vérité pour la décrémentation)
+      cart_items: cartMetadata,
+    };
+
+    // Ajouter le user_id si l'utilisateur est connecté
+    if (user) {
+      metadata.user_id = user.id;
+    }
+
     // Création du Payment Intent Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmountCents, // Montant en centimes
@@ -191,14 +210,7 @@ export async function POST(request: NextRequest) {
       automatic_payment_methods: {
         enabled: true,
       },
-      metadata: {
-        // Métadonnées utiles pour le suivi
-        items_count: items.length.toString(),
-        subtotal_euros: (subtotalCents / 100).toFixed(2),
-        shipping_fee_euros: (shippingFeeCents / 100).toFixed(2),
-        // Stockage du panier dans metadata (source de vérité pour la décrémentation)
-        cart_items: cartMetadata,
-      },
+      metadata,
     });
 
     // Retourner le clientSecret au frontend
