@@ -1,11 +1,13 @@
 import SmoothScroll from "@/components/SmoothScroll";
+import AuthDrawer from "@/components/auth/AuthDrawer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
 import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
+import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
-import { MenuProvider } from "@/context/MenuContext";
 import { CheckoutProvider } from "@/context/CheckoutContext";
+import { MenuProvider } from "@/context/MenuContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -30,20 +32,23 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
-        <CartProvider>
-          <CheckoutProvider>
-            <MenuProvider>
-              <SmoothScroll>
-                <ConditionalLayout>
-                  <MenuOverlayWrapper />
-                  <SearchOverlayWrapper />
-                  <CartDrawer />
-                  {children}
-                </ConditionalLayout>
-              </SmoothScroll>
-            </MenuProvider>
-          </CheckoutProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <CheckoutProvider>
+              <MenuProvider>
+                <SmoothScroll>
+                  <ConditionalLayout>
+                    <MenuOverlayWrapper />
+                    <SearchOverlayWrapper />
+                    <AuthDrawer />
+                    <CartDrawer />
+                    {children}
+                  </ConditionalLayout>
+                </SmoothScroll>
+              </MenuProvider>
+            </CheckoutProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
