@@ -186,22 +186,25 @@ create trigger on_auth_user_created_loyalty
   execute function public.handle_new_user_loyalty();
 
 -- =============================================
--- 7. FONCTION: Ajouter des points après un achat
+-- 7. FONCTION: Ajouter des points apres un achat
 -- =============================================
--- Règle: 1€ = 10 points
+-- Regle: 1 euro = 10 points
 create or replace function public.add_loyalty_points_from_order(
   p_user_id uuid,
   p_order_id uuid,
-  p_amount integer -- en centimes
+  p_amount integer
 )
-returns void as $$
+returns void
+language plpgsql
+security definer
+as $$
 declare
   v_points integer;
 begin
-  -- Calculer les points (1€ = 10 points, donc 100 centimes = 10 points)
+  -- Calculer les points (1 euro = 10 points, donc 100 centimes = 10 points)
   v_points := (p_amount / 10);
   
-  -- Mettre à jour le compte de points
+  -- Mettre a jour le compte de points
   update public.loyalty_points
   set 
     points = points + v_points,
@@ -209,23 +212,23 @@ begin
     last_updated = now()
   where user_id = p_user_id;
   
-  -- Si le compte n'existe pas, le créer
+  -- Si le compte n existe pas, le creer
   if not found then
     insert into public.loyalty_points (user_id, points, total_earned)
     values (p_user_id, v_points, v_points);
   end if;
   
-  -- Créer une transaction
+  -- Creer une transaction
   insert into public.loyalty_transactions (user_id, points, type, description, order_id)
   values (
     p_user_id,
     v_points,
     'earned_purchase',
-    format('Achat de %s€', (p_amount::numeric / 100)::text),
+    format('Achat de %s euros', (p_amount::numeric / 100)::text),
     p_order_id
   );
 end;
-$$ language plpgsql security definer;
+$$;
 
 -- =============================================
 -- 8. DONNÉES INITIALES
