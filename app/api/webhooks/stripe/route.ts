@@ -117,11 +117,32 @@ async function createOrderFromPaymentIntent(
   // Récupérer le user_id depuis les metadata (si présent)
   const userId = paymentIntent.metadata.user_id || null;
 
+  // Récupérer l'adresse de livraison depuis Stripe
+  const shippingAddress = paymentIntent.shipping
+    ? {
+        first_name: paymentIntent.shipping.name?.split(" ")[0] || "",
+        last_name: paymentIntent.shipping.name?.split(" ").slice(1).join(" ") || "",
+        address: paymentIntent.shipping.address?.line1 || "",
+        city: paymentIntent.shipping.address?.city || "",
+        postal_code: paymentIntent.shipping.address?.postal_code || "",
+        country: paymentIntent.shipping.address?.country || "",
+        phone: paymentIntent.shipping.phone || "",
+        email: paymentIntent.receipt_email || "",
+      }
+    : null;
+
   console.log("📦 Traitement commande:", {
     paymentIntentId: paymentIntent.id,
     userId: userId || "invité",
     itemsCount: cartItems.length,
+    hasShippingAddress: !!shippingAddress,
   });
+
+  if (shippingAddress) {
+    console.log("📍 Adresse de livraison récupérée:", shippingAddress);
+  } else {
+    console.warn("⚠️ Aucune adresse de livraison fournie");
+  }
 
   // 2. Récupérer les IDs des produits
   const productIds = cartItems.map((item) => item.id);
@@ -209,7 +230,7 @@ async function createOrderFromPaymentIntent(
       amount: totalAmountCents,
       status: "paid",
       items: orderItems,
-      shipping_address: null, // TODO: Ajouter l'adresse de livraison
+      shipping_address: shippingAddress, // ✅ Sauvegarder l'adresse de livraison
     })
     .select()
     .single();
