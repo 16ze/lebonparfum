@@ -89,7 +89,7 @@ export default function ProfileDrawer() {
     if (!drawerRef.current || !isProfileDrawerOpen) return;
 
     gsap.to(drawerRef.current, {
-      width: isProfileExpanded ? "100vw" : "480px",
+      width: isProfileExpanded ? "99vw" : "480px",
       duration: 0.4,
       ease: "power2.inOut",
     });
