@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
-import { loginAction, signupAction, loginWithGoogleAction } from "./actions";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { loginAction, loginWithGoogleAction, signupAction } from "./actions";
 
 /**
  * Page Login - Authentification utilisateur
@@ -61,16 +61,29 @@ export default function LoginPage() {
 
         // Compte créé avec succès
         console.log("✅ Compte créé avec succès");
-        
-        // Afficher un message de succès et demander de vérifier l'email
-        setSuccessMessage(
-          "✅ Compte créé avec succès ! Un email de confirmation vous a été envoyé. Veuillez cliquer sur le lien dans l'email pour activer votre compte."
-        );
-        setError(null);
-        setIsLoading(false);
-        
-        // Ne pas essayer de se connecter automatiquement
-        // L'utilisateur doit d'abord confirmer son email
+
+        // Si la confirmation email est désactivée, on peut se connecter automatiquement
+        // Attendre un peu que le profil soit bien créé
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Tenter de se connecter automatiquement
+        const loginResult = await loginAction(data.email, data.password);
+
+        if (!loginResult.success) {
+          // Si la connexion échoue, afficher un message pour connexion manuelle
+          setError(
+            "Compte créé mais erreur de connexion. Essayez de vous connecter manuellement."
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        // Connexion automatique réussie, rediriger selon le rôle
+        if (loginResult.isAdmin) {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/account/profile");
+        }
       } else {
         // Se connecter
         const result = await loginAction(data.email, data.password);
@@ -118,7 +131,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white flex flex-col md:flex-row">
+    <main className="min-h-screen bg-white flex flex-col md:flex-row pt-20 md:pt-0">
       {/* ZONE GAUCHE : Image (50% desktop, 40vh mobile) */}
       <div className="relative w-full md:w-1/2 h-[40vh] md:h-screen bg-black">
         {/* Image de fond */}
@@ -147,7 +160,7 @@ export default function LoginPage() {
       </div>
 
       {/* ZONE DROITE : Formulaire (50% desktop, auto mobile) */}
-      <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-12 md:py-0">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-24 md:py-0">
         <div className="w-full max-w-md">
           {/* Message de succès après reset password */}
           {successMessage && (

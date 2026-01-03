@@ -160,8 +160,26 @@ export async function signupAction(
       };
     }
 
-    // Le trigger handle_new_user() crée automatiquement le profil
-    // Pas besoin de créer manuellement l'entrée dans profiles
+    // Créer le profil manuellement (plus fiable que le trigger)
+    // Attendre un peu que l'utilisateur soit bien créé dans auth.users
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: data.user.id,
+        email: data.user.email!,
+        full_name: fullName.trim(),
+        is_admin: false,
+      });
+
+    if (profileError) {
+      // Si le profil existe déjà (par exemple via le trigger), ignorer l'erreur
+      if (!profileError.message.includes("duplicate key")) {
+        console.error("❌ Erreur création profil:", profileError.message);
+        // Ne pas échouer le signup si le profil existe déjà
+      }
+    }
 
     return {
       success: true,
