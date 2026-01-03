@@ -60,6 +60,17 @@ export default function MenuOverlay({
   const overlayRef = useRef<HTMLDivElement>(null);
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Détection du mobile au montage et au resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile(); // Initial check
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // DEBUG: Log des données reçues
   console.log("🔍 MenuOverlay - Props reçues:", {
@@ -225,7 +236,7 @@ export default function MenuOverlay({
         style={{
           top: "90px",
           bottom: "1rem",
-          width: activeBrand ? "calc(100vw - 2rem)" : "350px",
+          width: activeBrand || isMobile ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
           // CRITIQUE: overflow hidden pour contraindre les enfants

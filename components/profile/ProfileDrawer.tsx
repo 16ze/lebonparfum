@@ -88,11 +88,24 @@ export default function ProfileDrawer() {
   useEffect(() => {
     if (!drawerRef.current || !isProfileDrawerOpen) return;
 
-    gsap.to(drawerRef.current, {
-      width: isProfileExpanded ? "98vw" : "480px",
-      duration: 0.4,
-      ease: "power2.inOut",
-    });
+    const updateWidth = () => {
+      if (!drawerRef.current) return;
+      const isMobile = window.innerWidth < 768;
+      const normalWidth = isMobile ? "95vw" : "480px";
+      const expandedWidth = "98vw";
+
+      gsap.to(drawerRef.current, {
+        width: isProfileExpanded ? expandedWidth : normalWidth,
+        duration: 0.4,
+        ease: "power2.inOut",
+      });
+    };
+
+    updateWidth();
+
+    // Re-calculer au resize
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, [isProfileExpanded, isProfileDrawerOpen]);
 
   /**
