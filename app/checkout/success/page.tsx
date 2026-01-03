@@ -32,6 +32,12 @@ export default function CheckoutSuccessPage() {
 
   useEffect(() => {
     const pi = searchParams.get("payment_intent");
+    const redirectStatus = searchParams.get("redirect_status");
+
+    console.log("🔍 PAGE SUCCESS - Paramètres URL:", {
+      payment_intent: pi,
+      redirect_status: redirectStatus,
+    });
 
     if (!pi) {
       // Si pas de payment_intent, quelque chose ne va pas
@@ -42,14 +48,17 @@ export default function CheckoutSuccessPage() {
 
     setPaymentIntentId(pi);
 
-    // Vider le panier côté client UNE SEULE FOIS
-    // (La commande a déjà été créée par le webhook Stripe)
-    if (!hasCleared.current) {
-      console.log("🎯 PAGE SUCCESS - Début vidage du panier");
-      console.log("📦 État du panier AVANT vidage:", localStorage.getItem("lebonparfum-cart"));
+    // ✅ CONDITION CRITIQUE : Vider le panier UNIQUEMENT si le paiement a réussi
+    if (redirectStatus === "succeeded" && !hasCleared.current) {
+      console.log("✅ Paiement réussi - Vidage du panier autorisé");
+      console.log(
+        "📦 État du panier AVANT vidage:",
+        localStorage.getItem("lebonparfum-cart")
+      );
+      
       clearCart();
       hasCleared.current = true;
-      
+
       // Vérification immédiate après le vidage
       setTimeout(() => {
         const cartAfter = localStorage.getItem("lebonparfum-cart");
@@ -60,6 +69,12 @@ export default function CheckoutSuccessPage() {
           console.log("✅ Vidage du panier confirmé !");
         }
       }, 100);
+    } else if (redirectStatus !== "succeeded") {
+      console.warn(
+        "⚠️ Paiement non réussi (redirect_status:",
+        redirectStatus,
+        ") - Le panier est conservé"
+      );
     }
 
     setIsLoading(false);

@@ -62,11 +62,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   /**
    * Sauvegarder le panier dans localStorage à chaque changement
+   * ⚠️ SAUF si le panier est vide (clearCart() a déjà supprimé le localStorage)
    */
   useEffect(() => {
     if (isMounted) {
       try {
+        // Si le panier est vide, ne rien faire (clearCart() a déjà supprimé le localStorage)
+        if (cartItems.length === 0) {
+          console.log("🔇 Panier vide - Pas de sauvegarde dans localStorage");
+          return;
+        }
         localStorage.setItem("lebonparfum-cart", JSON.stringify(cartItems));
+        console.log("💾 Panier sauvegardé:", cartItems.length, "article(s)");
       } catch (error) {
         console.error("Erreur lors de la sauvegarde du panier:", error);
       }
