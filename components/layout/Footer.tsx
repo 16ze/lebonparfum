@@ -17,7 +17,7 @@ export default function Footer() {
       <div className="text-center text-white text-xs uppercase tracking-widest ">
         Inscrivez-vous pour suivre l'actualité{" "}
       </div>
-      <div className="text-center text-white text-2xl uppercase tracking-widest mb-8 py-4 col-auto mx-auto max-w-2xl font-bold">
+      <div className="text-center text-white text-sm md:text-lg lg:text-2xl uppercase tracking-widest mb-8 py-4 px-4 md:px-6 mx-auto max-w-2xl font-bold">
         Recevez des informations exclusives sur le lancement de la collection,
         des communications personnalisées et les dernières actualités{" "}
       </div>
