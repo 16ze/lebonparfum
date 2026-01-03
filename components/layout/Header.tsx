@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useMenu } from "@/context/MenuContext";
 import clsx from "clsx";
@@ -31,6 +32,7 @@ export default function Header() {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
   const { toggleMenu, isOpen, openSearch } = useMenu();
   const { cartCount, openCart } = useCart();
+  const { user, openProfileDrawer } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(!isHome); // Sur les autres pages, on considère qu'on est "scrollé"
@@ -196,18 +198,20 @@ export default function Header() {
 
         {/* Droite : Profil + Panier */}
         <div className="flex items-center gap-4">
-          {/* Profil */}
-          <Link
-            href="/account"
-            ref={(el) => {
-              elementsRef.current[3] = el;
-            }}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-            style={{ color: textColor }}
-            aria-label="Accéder au compte"
-          >
-            <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
-          </Link>
+          {/* Profil (visible uniquement si connecté) */}
+          {user && (
+            <button
+              ref={(el) => {
+                elementsRef.current[3] = el;
+              }}
+              onClick={() => openProfileDrawer()}
+              className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+              style={{ color: textColor }}
+              aria-label="Ouvrir le profil"
+            >
+              <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+            </button>
+          )}
 
           {/* Panier */}
           <button
