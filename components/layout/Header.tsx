@@ -230,21 +230,23 @@ export default function Header() {
             style={{ color: textColor }}
             aria-label={`Ouvrir le panier (${cartCount} article${cartCount > 1 ? "s" : ""})`}
           >
-            <ShoppingBag
-              size={20}
-              strokeWidth={1.5}
-              style={{ stroke: textColor }}
-            />
-            {/* Badge uniquement sur mobile */}
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center md:hidden">
-                {cartCount > 9 ? "9+" : cartCount}
-              </span>
-            )}
             {/* Texte uniquement sur desktop */}
             <span className="hidden md:inline text-[10px] md:text-xs uppercase tracking-widest font-medium">
               Panier {cartCount > 0 && `(${cartCount})`}
             </span>
+            <div className="relative">
+              <ShoppingBag
+                size={20}
+                strokeWidth={1.5}
+                style={{ stroke: textColor }}
+              />
+              {/* Badge uniquement sur mobile */}
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center md:hidden">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </div>
           </button>
         </div>
       </nav>
