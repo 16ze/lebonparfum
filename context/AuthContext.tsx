@@ -10,9 +10,12 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
  * Fonctionnalités :
  * - Récupération de l'utilisateur connecté
  * - Gestion de l'overlay d'authentification (AuthDrawer)
+ * - Gestion de l'overlay de profil (ProfileDrawer)
  * - Écoute des changements d'état d'authentification
  * - Rafraîchissement automatique de la session
  */
+
+type ProfileView = "profile" | "orders" | "wishlist";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +23,13 @@ interface AuthContextType {
   isAuthDrawerOpen: boolean;
   openAuthDrawer: () => void;
   closeAuthDrawer: () => void;
+  isProfileDrawerOpen: boolean;
+  isProfileExpanded: boolean;
+  currentProfileView: ProfileView;
+  openProfileDrawer: (view?: ProfileView) => void;
+  closeProfileDrawer: () => void;
+  toggleExpand: () => void;
+  setProfileView: (view: ProfileView) => void;
   refreshUser: () => Promise<void>;
 }
 
@@ -29,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
+  const [isProfileExpanded, setIsProfileExpanded] = useState(false);
+  const [currentProfileView, setCurrentProfileView] = useState<ProfileView>("profile");
 
   /**
    * Récupérer l'utilisateur connecté au montage du composant
@@ -105,6 +118,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthDrawerOpen(false);
   };
 
+  /**
+   * Ouvrir le ProfileDrawer
+   * @param view - Vue à afficher (profile, orders, wishlist)
+   */
+  const openProfileDrawer = (view: ProfileView = "profile") => {
+    console.log("👤 Ouverture du ProfileDrawer -", view);
+    setCurrentProfileView(view);
+    setIsProfileDrawerOpen(true);
+    setIsProfileExpanded(false); // Toujours ouvrir en mode normal
+  };
+
+  /**
+   * Fermer le ProfileDrawer
+   */
+  const closeProfileDrawer = () => {
+    console.log("👤 Fermeture du ProfileDrawer");
+    setIsProfileDrawerOpen(false);
+    setIsProfileExpanded(false);
+  };
+
+  /**
+   * Toggle entre mode normal et plein écran
+   */
+  const toggleExpand = () => {
+    console.log("🔲 Toggle expand:", !isProfileExpanded);
+    setIsProfileExpanded(!isProfileExpanded);
+  };
+
+  /**
+   * Changer la vue du profil
+   */
+  const setProfileView = (view: ProfileView) => {
+    console.log("👤 Changement de vue:", view);
+    setCurrentProfileView(view);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,6 +162,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthDrawerOpen,
         openAuthDrawer,
         closeAuthDrawer,
+        isProfileDrawerOpen,
+        isProfileExpanded,
+        currentProfileView,
+        openProfileDrawer,
+        closeProfileDrawer,
+        toggleExpand,
+        setProfileView,
         refreshUser,
       }}
     >
