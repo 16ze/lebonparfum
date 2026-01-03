@@ -4,6 +4,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
 import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
+import ProfileDrawer from "@/components/profile/ProfileDrawer";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { CheckoutProvider } from "@/context/CheckoutContext";
@@ -41,6 +42,7 @@ export default function RootLayout({
                     <MenuOverlayWrapper />
                     <SearchOverlayWrapper />
                     <AuthDrawer />
+                    <ProfileDrawer />
                     <CartDrawer />
                     {children}
                   </ConditionalLayout>
