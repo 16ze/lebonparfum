@@ -221,12 +221,14 @@ Après avoir appliqué la migration :
 ### Erreur : "relation already exists"
 
 ➡️ Certaines tables existent déjà. Tu peux :
+
 - Les supprimer manuellement (`DROP TABLE IF EXISTS nom_table CASCADE;`)
 - Ou ignorer l'erreur si elles sont identiques
 
 ### Erreur : "duplicate key value"
 
 ➡️ Un trigger ou une contrainte unique existe déjà.
+
 - Vérifie dans **Database** > **Triggers** si `on_auth_user_created_loyalty` existe
 - Si oui, supprime-le avant de relancer la migration
 
@@ -250,4 +252,3 @@ SELECT * FROM pg_trigger WHERE tgname = 'on_auth_user_created_loyalty';
 ---
 
 ✅ **Migration prête à être appliquée !**
-

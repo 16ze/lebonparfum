@@ -135,12 +135,12 @@ export default async function ProductPage({
     .neq("slug", slug)
     .limit(4);
 
-  // Formater le prix (ex: 15.00 -> "15,00 €")
+  // Formater le prix (ex: 3000 centimes -> "30,00 €")
   const formattedPrice = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
-  }).format(Number(typedProduct.price));
+  }).format(Number(typedProduct.price) / 100);
 
   // Préparer les images (pour l'instant, on utilise une image placeholder si image_url est null)
   const images = typedProduct.image_url
@@ -174,7 +174,7 @@ export default async function ProductPage({
             collection={typedProduct.collection}
             title={typedProduct.name}
             price={formattedPrice}
-            priceNumeric={Number(typedProduct.price)}
+            priceNumeric={Number(typedProduct.price) / 100}
             description={typedProduct.description || ""}
             variants={variants}
             image={typedProduct.image_url || images[0]}

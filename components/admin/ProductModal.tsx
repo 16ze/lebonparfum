@@ -1,476 +1,329 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Upload, Loader2 } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import Drawer from "@/components/ui/Drawer";
+import ImageUpload from "./ImageUpload";
+import { createProduct, updateProduct } from "@/app/admin/products/actions";
 
-/**
- * ProductModal - Modal CRUD pour Produits
- *
- * Modes :
- * - "create" : Création nouveau produit
- * - "edit" : Édition produit existant
- * - null : Modal fermée
- *
- * Design Byredo : Modal plein écran avec formulaire minimal
- */
-
-type Product = {
-  id?: string;
+interface Product {
+  id: string;
   name: string;
   slug: string;
   brand: string;
-  price: number; // en centimes
+  description: string;
+  price: number;
   stock: number;
-  description?: string;
-  notes_top?: string;
-  notes_heart?: string;
-  notes_base?: string;
-  category?: string;
-  image_url?: string;
-};
+  image_url?: string | null;
+}
 
-type ProductModalProps = {
-  mode: "create" | "edit" | null;
-  product?: Product | null;
+interface ProductModalProps {
+  isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-};
+  product?: Product | null;
+  onSuccess?: () => void;
+}
 
 export default function ProductModal({
-  mode,
-  product,
+  isOpen,
   onClose,
+  product = null,
   onSuccess,
 }: ProductModalProps) {
-  const [formData, setFormData] = useState<Product>({
+  const isEditMode = !!product;
+
+  const [formData, setFormData] = useState({
     name: "",
     slug: "",
     brand: "",
-    price: 0,
-    stock: 0,
     description: "",
-    notes_top: "",
-    notes_heart: "",
-    notes_base: "",
-    category: "Parfum",
-    image_url: "",
+    price: "",
+    stock: "0",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Charger les données du produit en mode édition
   useEffect(() => {
-    if (mode === "edit" && product) {
-      setFormData(product);
-      if (product.image_url) {
-        setImagePreview(product.image_url);
-      }
-    } else if (mode === "create") {
-      // Reset form
+    if (isEditMode && product) {
+      setFormData({
+        name: product.name || "",
+        slug: product.slug || "",
+        brand: product.brand || "",
+        description: product.description || "",
+        price: (product.price / 100).toString(),
+        stock: product.stock.toString(),
+      });
+    } else {
       setFormData({
         name: "",
         slug: "",
         brand: "",
-        price: 0,
-        stock: 0,
         description: "",
-        notes_top: "",
-        notes_heart: "",
-        notes_base: "",
-        category: "Parfum",
-        image_url: "",
+        price: "",
+        stock: "0",
       });
-      setImagePreview("");
       setImageFile(null);
     }
-  }, [mode, product]);
+    setError(null);
+  }, [isEditMode, product, isOpen]);
 
-  // Auto-générer le slug depuis le nom
   const handleNameChange = (name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      name,
-      slug: name
+    setFormData((prev) => ({ ...prev, name }));
+
+    if (!isEditMode) {
+      const slug = name
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, ""),
-    }));
-  };
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-");
 
-  // Gestion de l'upload d'image
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setFormData((prev) => ({ ...prev, slug }));
     }
   };
 
-  // Soumission du formulaire
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // 1. Upload de l'image si nouvelle
-      let imageUrl = formData.image_url;
-
-      if (imageFile) {
-        const formDataImg = new FormData();
-        formDataImg.append("file", imageFile);
-
-        const uploadRes = await fetch("/api/admin/upload", {
-          method: "POST",
-          body: formDataImg,
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error("Échec de l'upload d'image");
-        }
-
-        const { url } = await uploadRes.json();
-        imageUrl = url;
+      if (!formData.name || !formData.slug || !formData.brand) {
+        setError("Veuillez remplir tous les champs obligatoires");
+        setIsLoading(false);
+        return;
       }
 
-      // 2. Créer/Mettre à jour le produit
-      const endpoint =
-        mode === "create"
-          ? "/api/admin/products"
-          : `/api/admin/products/${product?.id}`;
-
-      const method = mode === "create" ? "POST" : "PUT";
-
-      const res = await fetch(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          image_url: imageUrl,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Erreur lors de l'opération");
+      const priceInCents = Math.round(parseFloat(formData.price) * 100);
+      if (isNaN(priceInCents) || priceInCents <= 0) {
+        setError("Prix invalide");
+        setIsLoading(false);
+        return;
       }
 
-      // Succès
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message || "Une erreur est survenue");
-    } finally {
-      setLoading(false);
+      const stock = parseInt(formData.stock);
+      if (isNaN(stock) || stock < 0) {
+        setError("Stock invalide");
+        setIsLoading(false);
+        return;
+      }
+
+      const productData = {
+        name: formData.name,
+        slug: formData.slug,
+        brand: formData.brand,
+        description: formData.description,
+        price: priceInCents,
+        stock,
+        image_url: product?.image_url || null,
+      };
+
+      let result;
+      if (isEditMode && product) {
+        result = await updateProduct(product.id, productData, imageFile || undefined);
+      } else {
+        result = await createProduct(productData, imageFile || undefined);
+      }
+
+      if (!result.success) {
+        setError(result.error || "Erreur lors de l'enregistrement");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(false);
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      console.error("❌ Erreur inattendue:", err);
+      setError("Une erreur inattendue s'est produite");
+      setIsLoading(false);
     }
   };
 
-  if (!mode) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-black/10">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-black/10 px-8 py-6 flex items-center justify-between">
-          <h2 className="text-2xl uppercase tracking-widest font-bold">
-            {mode === "create" ? "Nouveau Produit" : "Éditer Produit"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-black/5 transition-colors"
-            disabled={loading}
-          >
-            <X className="w-5 h-5" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {/* Erreur */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Image */}
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
+    <Drawer
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditMode ? "Modifier le produit" : "Ajouter un produit"}
+      subtitle={isEditMode ? "Éditer les informations" : "Nouveau produit"}
+    >
+      <form onSubmit={handleSubmit} className="h-full flex flex-col">
+        {/* Layout Grid : 3 colonnes - Image | Infos de base | Description + Prix/Stock */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 flex-1">
+          {/* Colonne 1 : Image */}
+          <div className="border-r border-black/10 p-8 flex flex-col">
+            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-4">
               Image du produit
             </label>
-            <div className="flex items-start gap-6">
-              {/* Prévisualisation */}
-              <div className="relative w-40 h-40 bg-gray-100 border border-black/10 flex items-center justify-center">
-                {imagePreview ? (
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <Upload className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
-                )}
-              </div>
-
-              {/* Bouton upload */}
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="inline-block cursor-pointer bg-black text-white px-6 py-3 text-sm uppercase tracking-wider hover:bg-black/80 transition-colors"
-                >
-                  Choisir une image
-                </label>
-                <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-                  Format : JPG, PNG • Max 5 Mo
-                </p>
-              </div>
+            <div className="flex-1 flex items-center justify-center">
+              <ImageUpload
+                onImageChange={setImageFile}
+                currentImageUrl={product?.image_url}
+                isLoading={isLoading}
+              />
             </div>
           </div>
 
-          {/* Nom et Slug */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+          {/* Colonne 2 : Nom, Slug, Marque */}
+          <div className="border-r border-black/10 flex flex-col">
+            {/* Section Nom */}
+            <div className="border-b border-black/10 px-6 py-6">
+              <label htmlFor="name" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Nom du produit *
               </label>
               <input
                 type="text"
+                id="name"
+                name="name"
                 value={formData.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors"
+                disabled={isLoading}
+                className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
                 placeholder="Ex: Bal d'Afrique"
               />
             </div>
 
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+            {/* Section Slug */}
+            <div className="border-b border-black/10 px-6 py-6">
+              <label htmlFor="slug" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Slug (URL) *
               </label>
               <input
                 type="text"
+                id="slug"
+                name="slug"
                 value={formData.slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                }
+                onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors bg-gray-50"
-                placeholder="bal-dafrique"
+                disabled={isLoading}
+                className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                placeholder="Ex: bal-d-afrique"
               />
+              <p className="text-xs text-gray-400 mt-2">
+                {isEditMode ? "Modifiable mais changera l'URL du produit" : "Généré automatiquement depuis le nom"}
+              </p>
             </div>
-          </div>
 
-          {/* Marque et Catégorie */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+            {/* Section Marque */}
+            <div className="px-6 py-6 flex-1">
+              <label htmlFor="brand" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Marque *
               </label>
               <input
                 type="text"
+                id="brand"
+                name="brand"
                 value={formData.brand}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, brand: e.target.value }))
-                }
+                onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors"
-                placeholder="Ex: BYREDO"
+                disabled={isLoading}
+                className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                placeholder="Ex: Byredo"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                Catégorie
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    category: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors"
-              >
-                <option value="Parfum">Parfum</option>
-                <option value="Eau de Parfum">Eau de Parfum</option>
-                <option value="Eau de Toilette">Eau de Toilette</option>
-                <option value="Cologne">Cologne</option>
-              </select>
             </div>
           </div>
 
-          {/* Prix et Stock */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                Prix (en €) *
+          {/* Colonne 3 : Description, Prix, Stock */}
+          <div className="flex flex-col">
+            {/* Section Description */}
+            <div className="border-b border-black/10 px-6 py-6 flex-1">
+              <label htmlFor="description" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                Description
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.price / 100}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    price: Math.round(parseFloat(e.target.value) * 100),
-                  }))
-                }
-                required
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors"
-                placeholder="145.00"
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                disabled={isLoading}
+                rows={6}
+                className="w-full border border-black/20 p-3 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50 resize-none h-full"
+                placeholder="Description du produit..."
               />
             </div>
 
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                Stock (unités) *
+            {/* Section Prix */}
+            <div className="border-b border-black/10 px-6 py-6">
+              <label htmlFor="price" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                Prix (€) *
               </label>
               <input
                 type="number"
+                id="price"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                step="0.01"
+                min="0"
+                disabled={isLoading}
+                className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                placeholder="Ex: 195.00"
+              />
+            </div>
+
+            {/* Section Stock */}
+            <div className="px-6 py-6">
+              <label htmlFor="stock" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                Stock *
+              </label>
+              <input
+                type="number"
+                id="stock"
+                name="stock"
                 value={formData.stock}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    stock: parseInt(e.target.value),
-                  }))
-                }
+                onChange={handleChange}
                 required
                 min="0"
-                className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors"
-                placeholder="50"
+                disabled={isLoading}
+                className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                placeholder="Ex: 50"
               />
             </div>
           </div>
+        </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              rows={4}
-              className="w-full px-4 py-3 border border-black/10 focus:outline-none focus:border-black transition-colors resize-none"
-              placeholder="Description du produit..."
-            />
-          </div>
+        {/* Message d'erreur + Boutons - Barre fixe en bas */}
+        <div className="border-t border-black/10 bg-white">
+          {error && (
+            <div className="px-8 py-4 bg-red-50 border-b border-red-200">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
-          {/* Notes olfactives */}
-          <div className="space-y-4">
-            <h3 className="text-sm uppercase tracking-widest text-gray-700 font-medium">
-              Notes Olfactives
-            </h3>
+          <div className="px-8 py-6">
+            <div className="flex items-center gap-4 max-w-md ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="flex-1 px-6 py-3 border border-black/20 uppercase tracking-wider text-sm hover:bg-black/5 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
-                  Notes de tête
-                </label>
-                <input
-                  type="text"
-                  value={formData.notes_top}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      notes_top: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-black/10 focus:outline-none focus:border-black transition-colors text-sm"
-                  placeholder="Agrumes, Bergamote"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
-                  Notes de cœur
-                </label>
-                <input
-                  type="text"
-                  value={formData.notes_heart}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      notes_heart: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-black/10 focus:outline-none focus:border-black transition-colors text-sm"
-                  placeholder="Rose, Jasmin"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
-                  Notes de fond
-                </label>
-                <input
-                  type="text"
-                  value={formData.notes_base}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      notes_base: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-black/10 focus:outline-none focus:border-black transition-colors text-sm"
-                  placeholder="Musc, Bois"
-                />
-              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-black text-white px-6 py-3 uppercase tracking-wider text-sm hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isLoading ? "Enregistrement..." : isEditMode ? "Enregistrer" : "Créer"}
+              </button>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-4 pt-4 border-t border-black/10">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="px-6 py-3 text-sm uppercase tracking-wider text-gray-600 hover:bg-black/5 transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-black text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-black/80 transition-colors flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : mode === "create" ? (
-                "Créer le produit"
-              ) : (
-                "Sauvegarder"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Drawer>
   );
 }

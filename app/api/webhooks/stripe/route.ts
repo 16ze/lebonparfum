@@ -121,7 +121,8 @@ async function createOrderFromPaymentIntent(
   const shippingAddress = paymentIntent.shipping
     ? {
         first_name: paymentIntent.shipping.name?.split(" ")[0] || "",
-        last_name: paymentIntent.shipping.name?.split(" ").slice(1).join(" ") || "",
+        last_name:
+          paymentIntent.shipping.name?.split(" ").slice(1).join(" ") || "",
         address: paymentIntent.shipping.address?.line1 || "",
         city: paymentIntent.shipping.address?.city || "",
         postal_code: paymentIntent.shipping.address?.postal_code || "",

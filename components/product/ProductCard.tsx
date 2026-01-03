@@ -35,12 +35,12 @@ export default function ProductCard({
     imageUrl ||
     "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop";
 
-  // Formatage du prix
+  // Formatage du prix (centimes -> euros)
   const formattedPrice = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
-  }).format(price);
+  }).format(price / 100);
 
   // Rupture de stock ?
   const isOutOfStock = stock === 0;
