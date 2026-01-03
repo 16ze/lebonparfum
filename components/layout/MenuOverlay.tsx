@@ -270,187 +270,327 @@ export default function MenuOverlay({
             overflow: "hidden",
           }}
         >
-          {/* COLONNE 1 : Liste des Marques */}
-          <div
-            className="border-r border-black/10"
-            style={{
-              width: "350px",
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-            }}
-          >
-            {/* Zone scrollable des collections */}
+          {/* MODE MOBILE : Navigation simplifiée (Marques OU Produits) */}
+          {isMobile ? (
             <div
-              className="px-6 py-6"
               style={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                overscrollBehavior: "contain", // Empêche propagation du scroll
-              }}
-              data-lenis-prevent // Indique à Lenis d'ignorer cette zone
-            >
-              <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
-                Collections
-              </h3>
-              <ul className="space-y-1">
-                {collections.map((collection) => {
-                  const collectionId = collection
-                    .toLowerCase()
-                    .replace(/\s+/g, "-");
-                  const isActive =
-                    activeBrand === collectionId || activeBrand === collection;
-                  return (
-                    <li key={collection}>
-                      <button
-                        onClick={() =>
-                          setActiveBrand(isActive ? null : collectionId)
-                        }
-                        className={`w-full text-left px-4 py-3 text-sm uppercase tracking-wide font-medium transition-colors underline-offset-4 ${
-                          isActive
-                            ? "text-black underline"
-                            : "text-black hover:underline"
-                        }`}
-                      >
-                        {collection}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* Bas de Col 1 : Liens fixes */}
-            <div
-              className="px-6 py-6 border-t border-black/10 space-y-3"
-              style={{ flexShrink: 0 }}
-            >
-              {/* Lien Connexion / Mon Compte */}
-              {user ? (
-                <Link
-                  href="/account"
-                  onClick={closeMenu}
-                  className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
-                >
-                  Mon compte
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={closeMenu}
-                  className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
-                >
-                  Connexion
-                </Link>
-              )}
-
-              {/* Lien Commandes */}
-              <Link
-                href={user ? "/account/orders" : "/login"}
-                onClick={closeMenu}
-                className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
-              >
-                Mes commandes
-              </Link>
-
-              {/* Lien Dashboard Admin (si admin) */}
-              {user?.isAdmin && (
-                <Link
-                  href="/admin/dashboard"
-                  onClick={closeMenu}
-                  className="block text-[10px] text-red-600 font-bold uppercase tracking-widest hover:text-red-700 hover:underline transition-colors underline-offset-4"
-                >
-                  Dashboard Admin
-                </Link>
-              )}
-
-              {/* Lien Contact */}
-              <Link
-                href="/contact"
-                onClick={closeMenu}
-                className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-
-          {/* COLONNE 2 : Produits de la collection active */}
-          {activeCollectionData && (
-            <div
-              className="border-r border-black/10"
-              style={{
-                flex: 1,
-                minHeight: 0,
-                minWidth: 0,
+                width: "100%",
                 display: "flex",
                 flexDirection: "column",
+                minHeight: 0,
               }}
             >
-              {/* Header de colonne - fixe */}
-              <div className="px-6 pt-6 pb-4" style={{ flexShrink: 0 }}>
-                <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500">
-                  Produits ({activeCollectionData.products.length})
-                </h3>
-              </div>
+              {!activeBrand ? (
+                // Vue Marques
+                <>
+                  <div
+                    className="px-6 py-6"
+                    style={{
+                      flex: 1,
+                      minHeight: 0,
+                      overflowY: "auto",
+                      overscrollBehavior: "contain",
+                    }}
+                    data-lenis-prevent
+                  >
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
+                      Collections
+                    </h3>
+                    <ul className="space-y-1">
+                      {collections.map((collection) => {
+                        const collectionId = collection
+                          .toLowerCase()
+                          .replace(/\s+/g, "-");
+                        return (
+                          <li key={collection}>
+                            <button
+                              onClick={() => setActiveBrand(collectionId)}
+                              className="w-full text-left px-4 py-4 text-sm uppercase tracking-wide font-medium text-black hover:underline transition-colors underline-offset-4"
+                            >
+                              {collection}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
 
-              {/* Zone de scroll des produits - CRITIQUE */}
-              <div
-                className="px-6 pb-24"
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: "auto",
-                  overscrollBehavior: "contain", // Empêche propagation du scroll
-                }}
-                data-lenis-prevent // Indique à Lenis d'ignorer cette zone
-              >
-                <ul className="space-y-2">
-                  {activeCollectionData.products.map((product) => (
-                    <li key={product.id}>
+                  {/* Liens fixes (mobile) */}
+                  <div
+                    className="px-6 py-6 border-t border-black/10 space-y-3"
+                    style={{ flexShrink: 0 }}
+                  >
+                    {user ? (
                       <Link
-                        href={`/product/${product.slug}`}
+                        href="/account"
                         onClick={closeMenu}
-                        onMouseEnter={() => setHoveredProduct(product.id)}
-                        onMouseLeave={() => setHoveredProduct(null)}
-                        className="block px-4 py-3 text-sm uppercase tracking-wide font-medium hover:underline transition-colors underline-offset-4"
+                        className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
                       >
-                        {product.name}
+                        Mon compte
                       </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
+                    ) : (
+                      <Link
+                        href="/login"
+                        onClick={closeMenu}
+                        className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                      >
+                        Connexion
+                      </Link>
+                    )}
 
-          {/* COLONNE 3 : Photo du produit au survol */}
-          {activeCollectionData && hoveredProduct && (
-            <div className="w-[400px] overflow-hidden bg-gray-50 flex items-center justify-center">
-              {activeCollectionData.products.find(
-                (p) => p.id === hoveredProduct
-              )?.image ? (
-                <img
-                  src={
-                    activeCollectionData.products.find(
-                      (p) => p.id === hoveredProduct
-                    )?.image
-                  }
-                  alt={
-                    activeCollectionData.products.find(
-                      (p) => p.id === hoveredProduct
-                    )?.name
-                  }
-                  className="w-full h-full object-cover"
-                />
+                    <Link
+                      href={user ? "/account/orders" : "/login"}
+                      onClick={closeMenu}
+                      className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                    >
+                      Mes commandes
+                    </Link>
+
+                    {user?.isAdmin && (
+                      <Link
+                        href="/admin/dashboard"
+                        onClick={closeMenu}
+                        className="block text-[10px] text-red-600 font-bold uppercase tracking-widest hover:text-red-700 hover:underline transition-colors underline-offset-4"
+                      >
+                        Dashboard Admin
+                      </Link>
+                    )}
+
+                    <Link
+                      href="/contact"
+                      onClick={closeMenu}
+                      className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                    >
+                      Contact
+                    </Link>
+                  </div>
+                </>
               ) : (
-                <div className="text-xs text-gray-400 uppercase tracking-widest">
-                  Image à venir
-                </div>
+                // Vue Produits (après avoir cliqué sur une marque)
+                <>
+                  <div
+                    className="px-6 py-6"
+                    style={{
+                      flex: 1,
+                      minHeight: 0,
+                      overflowY: "auto",
+                      overscrollBehavior: "contain",
+                    }}
+                    data-lenis-prevent
+                  >
+                    {/* Bouton Retour */}
+                    <button
+                      onClick={() => setActiveBrand(null)}
+                      className="flex items-center gap-2 mb-6 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-black transition-colors"
+                    >
+                      <span>←</span> Retour aux collections
+                    </button>
+
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
+                      Produits ({activeCollectionData?.products.length || 0})
+                    </h3>
+
+                    {activeCollectionData && (
+                      <ul className="space-y-1">
+                        {activeCollectionData.products.map((product) => (
+                          <li key={product.id}>
+                            <Link
+                              href={`/product/${product.slug}`}
+                              onClick={closeMenu}
+                              className="block px-4 py-4 text-sm uppercase tracking-wide font-medium text-black hover:underline transition-colors underline-offset-4"
+                            >
+                              {product.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
               )}
             </div>
+          ) : (
+            // MODE DESKTOP : Grille à 3 colonnes (existant)
+            <>
+              {/* COLONNE 1 : Liste des Marques */}
+              <div
+                className="border-r border-black/10"
+                style={{
+                  width: "350px",
+                  flexShrink: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  minHeight: 0,
+                }}
+              >
+                {/* Zone scrollable des collections */}
+                <div
+                  className="px-6 py-6"
+                  style={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: "auto",
+                    overscrollBehavior: "contain",
+                  }}
+                  data-lenis-prevent
+                >
+                  <h3 className="text-[10px] uppercase tracking-widest font-bold mb-6 text-gray-500">
+                    Collections
+                  </h3>
+                  <ul className="space-y-1">
+                    {collections.map((collection) => {
+                      const collectionId = collection
+                        .toLowerCase()
+                        .replace(/\s+/g, "-");
+                      const isActive =
+                        activeBrand === collectionId || activeBrand === collection;
+                      return (
+                        <li key={collection}>
+                          <button
+                            onClick={() =>
+                              setActiveBrand(isActive ? null : collectionId)
+                            }
+                            className={`w-full text-left px-4 py-3 text-sm uppercase tracking-wide font-medium transition-colors underline-offset-4 ${
+                              isActive
+                                ? "text-black underline"
+                                : "text-black hover:underline"
+                            }`}
+                          >
+                            {collection}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                {/* Bas de Col 1 : Liens fixes */}
+                <div
+                  className="px-6 py-6 border-t border-black/10 space-y-3"
+                  style={{ flexShrink: 0 }}
+                >
+                  {user ? (
+                    <Link
+                      href="/account"
+                      onClick={closeMenu}
+                      className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                    >
+                      Mon compte
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/login"
+                      onClick={closeMenu}
+                      className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                    >
+                      Connexion
+                    </Link>
+                  )}
+
+                  <Link
+                    href={user ? "/account/orders" : "/login"}
+                    onClick={closeMenu}
+                    className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                  >
+                    Mes commandes
+                  </Link>
+
+                  {user?.isAdmin && (
+                    <Link
+                      href="/admin/dashboard"
+                      onClick={closeMenu}
+                      className="block text-[10px] text-red-600 font-bold uppercase tracking-widest hover:text-red-700 hover:underline transition-colors underline-offset-4"
+                    >
+                      Dashboard Admin
+                    </Link>
+                  )}
+
+                  <Link
+                    href="/contact"
+                    onClick={closeMenu}
+                    className="block text-[10px] text-gray-500 uppercase tracking-widest hover:text-black hover:underline transition-colors underline-offset-4"
+                  >
+                    Contact
+                  </Link>
+                </div>
+              </div>
+
+              {/* COLONNE 2 : Produits de la collection active */}
+              {activeCollectionData && (
+                <div
+                  className="border-r border-black/10"
+                  style={{
+                    flex: 1,
+                    minHeight: 0,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {/* Header de colonne - fixe */}
+                  <div className="px-6 pt-6 pb-4" style={{ flexShrink: 0 }}>
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500">
+                      Produits ({activeCollectionData.products.length})
+                    </h3>
+                  </div>
+
+                  {/* Zone de scroll des produits */}
+                  <div
+                    className="px-6 pb-24"
+                    style={{
+                      flex: 1,
+                      minHeight: 0,
+                      overflowY: "auto",
+                      overscrollBehavior: "contain",
+                    }}
+                    data-lenis-prevent
+                  >
+                    <ul className="space-y-2">
+                      {activeCollectionData.products.map((product) => (
+                        <li key={product.id}>
+                          <Link
+                            href={`/product/${product.slug}`}
+                            onClick={closeMenu}
+                            onMouseEnter={() => setHoveredProduct(product.id)}
+                            onMouseLeave={() => setHoveredProduct(null)}
+                            className="block px-4 py-3 text-sm uppercase tracking-wide font-medium hover:underline transition-colors underline-offset-4"
+                          >
+                            {product.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* COLONNE 3 : Photo du produit au survol */}
+              {activeCollectionData && hoveredProduct && (
+                <div className="w-[400px] overflow-hidden bg-gray-50 flex items-center justify-center">
+                  {activeCollectionData.products.find(
+                    (p) => p.id === hoveredProduct
+                  )?.image ? (
+                    <img
+                      src={
+                        activeCollectionData.products.find(
+                          (p) => p.id === hoveredProduct
+                        )?.image
+                      }
+                      alt={
+                        activeCollectionData.products.find(
+                          (p) => p.id === hoveredProduct
+                        )?.name
+                      }
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-xs text-gray-400 uppercase tracking-widest">
+                      Image à venir
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
