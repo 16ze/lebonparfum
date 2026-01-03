@@ -210,11 +210,11 @@ export default function Header() {
                 openAuthDrawer();
               }
             }}
-            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            className="p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
             aria-label={user ? "Ouvrir le profil" : "Se connecter"}
           >
-            <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+            <User size={20} strokeWidth={1.5} style={{ stroke: textColor }} />
           </button>
 
           {/* Panier */}
