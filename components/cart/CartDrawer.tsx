@@ -7,6 +7,7 @@ import Image from "next/image";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import gsap from "gsap";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * CartDrawer - Volet latéral droit pour le panier (style carte flottante)
@@ -27,6 +28,7 @@ export default function CartDrawer() {
     removeFromCart,
     updateQuantity,
   } = useCart();
+  const { user, openAuthDrawer } = useAuth();
   const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -311,13 +313,23 @@ export default function CartDrawer() {
             {/* Bouton Paiement */}
             <button
               onClick={() => {
-                // Fermer le drawer et rediriger vers la page de checkout
-                closeCart();
-                router.push("/checkout");
+                // Vérifier si l'utilisateur est connecté
+                if (!user) {
+                  console.log("⚠️ Tentative de checkout sans authentification");
+                  // Fermer le panier et ouvrir l'AuthDrawer
+                  closeCart();
+                  setTimeout(() => {
+                    openAuthDrawer();
+                  }, 300); // Délai pour permettre l'animation de fermeture du panier
+                } else {
+                  // Utilisateur connecté → Rediriger vers checkout
+                  closeCart();
+                  router.push("/checkout");
+                }
               }}
               className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors"
             >
-              Paiement
+              {user ? "Passer commande" : "🔒 Se connecter pour commander"}
             </button>
           </div>
         )}
