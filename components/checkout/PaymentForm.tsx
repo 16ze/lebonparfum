@@ -7,7 +7,8 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useCheckout } from "@/context/CheckoutContext";
-import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { AlertCircle, Lock } from "lucide-react";
 
 /**
  * PaymentForm - Formulaire de paiement Stripe Elements
@@ -17,12 +18,14 @@ import { AlertCircle } from "lucide-react";
  * - Bouton noir, large, uppercase
  * - Gestion des erreurs et du loading
  * - Validation de l'adresse avant paiement
+ * - Validation de l'authentification avant paiement
  * - Envoi de l'adresse dans les metadata Stripe
  */
 export default function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
   const { shippingAddress, isAddressComplete } = useCheckout();
+  const { user, isLoading: isAuthLoading, openAuthDrawer } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -36,7 +39,15 @@ export default function PaymentForm() {
       return;
     }
 
-    // VALIDATION : Vérifier que l'adresse est complète
+    // VALIDATION 1 : Vérifier que l'utilisateur est connecté
+    if (!user) {
+      console.warn("⚠️ Tentative de paiement sans authentification");
+      openAuthDrawer();
+      setErrorMessage("Vous devez être connecté pour passer commande.");
+      return;
+    }
+
+    // VALIDATION 2 : Vérifier que l'adresse est complète
     if (!isAddressComplete()) {
       setErrorMessage(
         "Veuillez remplir tous les champs d'adresse obligatoires avant de payer."
@@ -51,6 +62,7 @@ export default function PaymentForm() {
 
     try {
       console.log("📦 Adresse de livraison à envoyer:", shippingAddress);
+      console.log("👤 Utilisateur connecté:", user.email);
 
       // Confirmer le paiement avec Stripe
       const { error } = await stripe.confirmPayment({
@@ -92,14 +104,44 @@ export default function PaymentForm() {
     }
   };
 
+  /**
+   * handleAuthRequired - Ouvre l'AuthDrawer si non connecté
+   */
+  const handleAuthRequired = () => {
+    openAuthDrawer();
+  };
+
   // Vérifier si le bouton doit être désactivé
   const isButtonDisabled =
-    !stripe || !elements || isLoading || !isAddressComplete();
+    !stripe || !elements || isLoading || !isAddressComplete() || !user || isAuthLoading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Alerte si l'utilisateur n'est pas connecté */}
+      {!isAuthLoading && !user && (
+        <div className="bg-red-50 border border-red-200 rounded-sm p-4 flex items-start gap-3">
+          <Lock className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-red-800 font-medium mb-2">
+              Authentification requise
+            </p>
+            <p className="text-xs text-red-700 mb-3">
+              Vous devez être connecté pour passer commande et suivre votre
+              livraison.
+            </p>
+            <button
+              type="button"
+              onClick={handleAuthRequired}
+              className="text-xs uppercase tracking-widest font-bold underline hover:no-underline transition-all text-red-800"
+            >
+              Se connecter / Créer un compte
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Alerte si l'adresse est incomplète */}
-      {!isAddressComplete() && (
+      {!isAddressComplete() && user && (
         <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -115,7 +157,7 @@ export default function PaymentForm() {
       )}
 
       {/* PaymentElement - Champ CB sécurisé de Stripe */}
-      <div className="mb-6">
+      <div className={`mb-6 ${!user ? "opacity-50 pointer-events-none" : ""}`}>
         <PaymentElement />
       </div>
 
@@ -138,6 +180,8 @@ export default function PaymentForm() {
       >
         {isLoading
           ? "Traitement en cours..."
+          : !user
+          ? "🔒 Connectez-vous pour payer"
           : !isAddressComplete()
           ? "Remplissez l'adresse"
           : "Payer maintenant"}
@@ -150,4 +194,3 @@ export default function PaymentForm() {
     </form>
   );
 }
-
