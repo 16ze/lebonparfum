@@ -32,7 +32,7 @@ export default function Header() {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
   const { toggleMenu, isOpen, openSearch } = useMenu();
   const { cartCount, openCart } = useCart();
-  const { user, openProfileDrawer } = useAuth();
+  const { user, openProfileDrawer, openAuthDrawer } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(!isHome); // Sur les autres pages, on considère qu'on est "scrollé"
@@ -198,20 +198,25 @@ export default function Header() {
 
         {/* Droite : Profil + Panier */}
         <div className="flex items-center gap-4">
-          {/* Profil (visible uniquement si connecté) */}
-          {user && (
-            <button
-              ref={(el) => {
-                elementsRef.current[3] = el;
-              }}
-              onClick={() => openProfileDrawer()}
-              className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
-              style={{ color: textColor }}
-              aria-label="Ouvrir le profil"
-            >
-              <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
-            </button>
-          )}
+          {/* Profil (toujours visible) */}
+          <button
+            ref={(el) => {
+              elementsRef.current[3] = el;
+            }}
+            onClick={() => {
+              // Si connecté → ProfileDrawer, sinon → AuthDrawer
+              if (user) {
+                openProfileDrawer();
+              } else {
+                openAuthDrawer();
+              }
+            }}
+            className="flex items-center gap-x-2 text-[10px] md:text-xs uppercase tracking-widest font-medium hover:opacity-50 transition-opacity duration-300"
+            style={{ color: textColor }}
+            aria-label={user ? "Ouvrir le profil" : "Se connecter"}
+          >
+            <User size={18} strokeWidth={1.5} style={{ stroke: textColor }} />
+          </button>
 
           {/* Panier */}
           <button
