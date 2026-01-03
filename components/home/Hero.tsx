@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -67,16 +66,17 @@ export default function Hero() {
       ref={sectionRef}
       className="relative h-[100dvh] w-full overflow-hidden"
     >
-      {/* Image de fond (dominante) */}
-      <div ref={imageRef} className="absolute inset-0 w-full h-full md:scale-110 ">
-        <Image
-          src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2908&auto=format&fit=crop"
-          alt="Parfum de niche - Essence mystérieuse"
-          fill
-          priority
-          className="object-cover object-center"
-          quality={90}
-        />
+      {/* Vidéo de fond (dominante) */}
+      <div ref={imageRef} className="absolute inset-0 w-full h-full md:scale-110">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover object-center"
+        >
+          <source src="/campaign-video.mp4" type="video/mp4" />
+        </video>
       </div>
 
       {/* Dégradé de lisibilité (bottom fade) */}
