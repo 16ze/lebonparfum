@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import gsap from "gsap";
+import { Minus, Plus, ShoppingBag, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { X, Plus, Minus, ShoppingBag } from "lucide-react";
-import gsap from "gsap";
-import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useRef } from "react";
 
 /**
  * CartDrawer - Volet latéral droit pour le panier (style carte flottante)
@@ -65,8 +65,8 @@ export default function CartDrawer() {
               visibility: "visible",
             },
             {
-              opacity: 0.8,
-              backdropFilter: "blur(250px)",
+              opacity: 0.8, // Gère l'opacité du backdrop
+              backdropFilter: "blur(250px)", // Gère le blur du backdrop
               duration: 0.5,
               ease: "power2.out",
             }

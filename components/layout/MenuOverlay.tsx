@@ -81,11 +81,11 @@ export default function MenuOverlay({
       gsap.fromTo(
         mobileContentRef.current,
         { opacity: 0, x: activeBrand ? 20 : -20 },
-        { 
-          opacity: 1, 
-          x: 0, 
-          duration: 0.4, 
-          ease: "power2.out" 
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.4,
+          ease: "power2.out",
         }
       );
     });
