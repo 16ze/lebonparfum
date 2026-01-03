@@ -19,7 +19,9 @@ interface Order {
     city: string;
     postal_code: string;
     country: string;
-  };
+    phone?: string;
+    email?: string;
+  } | null; // Peut être null pour les anciennes commandes
   created_at: string;
   profiles: {
     full_name: string;
@@ -158,20 +160,49 @@ export default function OrderDetailsModal({
             </h3>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-sm font-medium">
-              {order.shipping_address.first_name}{" "}
-              {order.shipping_address.last_name}
-            </p>
-            <p className="text-sm">{order.shipping_address.address}</p>
-            <p className="text-sm">
-              {order.shipping_address.postal_code}{" "}
-              {order.shipping_address.city}
-            </p>
-            <p className="text-sm uppercase tracking-wide">
-              {order.shipping_address.country}
-            </p>
-          </div>
+          {order.shipping_address ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {order.shipping_address.first_name}{" "}
+                {order.shipping_address.last_name}
+              </p>
+              <p className="text-sm">{order.shipping_address.address}</p>
+              <p className="text-sm">
+                {order.shipping_address.postal_code}{" "}
+                {order.shipping_address.city}
+              </p>
+              <p className="text-sm uppercase tracking-wide">
+                {order.shipping_address.country}
+              </p>
+              {order.shipping_address.phone && (
+                <p className="text-sm text-gray-600 mt-2">
+                  <span className="text-xs uppercase tracking-wider text-gray-400">
+                    Tél :
+                  </span>{" "}
+                  {order.shipping_address.phone}
+                </p>
+              )}
+              {order.shipping_address.email && (
+                <p className="text-sm text-gray-600">
+                  <span className="text-xs uppercase tracking-wider text-gray-400">
+                    Email :
+                  </span>{" "}
+                  {order.shipping_address.email}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-sm p-4">
+              <p className="text-xs text-amber-700 uppercase tracking-wider">
+                Aucune adresse de livraison
+              </p>
+              <p className="text-xs text-amber-600 mt-2">
+                Cette commande a été passée avant l'implémentation du système
+                d'adresses. Contactez le client via son email pour obtenir les
+                informations de livraison.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Bouton fermer */}
