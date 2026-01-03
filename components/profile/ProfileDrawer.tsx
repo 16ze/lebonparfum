@@ -89,7 +89,7 @@ export default function ProfileDrawer() {
     if (!drawerRef.current || !isProfileDrawerOpen) return;
 
     gsap.to(drawerRef.current, {
-      width: isProfileExpanded ? "99vw" : "480px",
+      width: isProfileExpanded ? "98vw" : "480px",
       duration: 0.4,
       ease: "power2.inOut",
     });
@@ -136,8 +136,7 @@ export default function ProfileDrawer() {
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="fixed top-4 right-4 bottom-4 bg-white rounded-3xl shadow-2xl z-[9999] flex flex-col overflow-hidden invisible"
-        style={{ width: "480px" }}
+        className="fixed top-4 right-4 bottom-4 w-[95vw] md:w-[480px] bg-white rounded-3xl shadow-2xl z-[9999] flex flex-col overflow-hidden invisible"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">

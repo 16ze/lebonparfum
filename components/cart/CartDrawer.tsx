@@ -164,17 +164,7 @@ export default function CartDrawer() {
       {/* Cart Drawer - Style carte flottante comme MenuOverlay */}
       <div
         ref={drawerRef}
-        className="fixed z-[60] bg-white shadow-2xl rounded-3xl right-4"
-        style={{
-          top: "90px",
-          bottom: "1rem",
-          width: "400px",
-          maxWidth: "calc(100vw - 2rem)",
-          visibility: "hidden",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="fixed top-4 right-4 bottom-4 w-[95vw] md:w-[400px] bg-white shadow-2xl rounded-3xl z-[60] overflow-hidden invisible flex flex-col"
       >
         {/* Header - fixe */}
         <div
