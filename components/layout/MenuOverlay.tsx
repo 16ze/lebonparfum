@@ -115,13 +115,6 @@ export default function MenuOverlay({
     return () => ctx.revert();
   }, [activeBrand, isMobile]);
 
-  // DEBUG: Log des données reçues
-  console.log("🔍 MenuOverlay - Props reçues:", {
-    collections,
-    productsCount: products.length,
-    products: products.map((p) => ({ id: p.id, name: p.name, count: p.products.length })),
-  });
-
   // Animation GSAP : Slide depuis la gauche
   useEffect(() => {
     if (!menuRef.current) return;
@@ -245,18 +238,6 @@ export default function MenuOverlay({
   const activeCollectionData = products.find(
     (p) => p.id === activeBrand || p.name === activeBrand
   );
-
-  // DEBUG: Log de la collection active
-  console.log("🔍 MenuOverlay - État actuel:", {
-    activeBrand,
-    activeCollectionData: activeCollectionData
-      ? {
-          id: activeCollectionData.id,
-          name: activeCollectionData.name,
-          productsCount: activeCollectionData.products.length,
-        }
-      : null,
-  });
 
   return (
     <>
