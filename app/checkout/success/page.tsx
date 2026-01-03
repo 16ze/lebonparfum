@@ -4,122 +4,173 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { CheckCircle, Package, Loader2 } from "lucide-react";
 
 /**
- * Page de confirmation de commande après paiement Stripe
+ * Page de Confirmation de Commande - Style Byredo
  *
- * Design Byredo :
- * - Minimaliste, centré
- * - Gros titre "MERCI"
- * - Message de confirmation épuré
- * - Bouton retour à l'accueil
+ * Affichée après un paiement réussi via Stripe
+ * URL: /checkout/success?payment_intent=pi_xxx
  *
  * Logique :
- * - Récupère le payment_intent depuis l'URL
- * - Appelle l'API confirm-order (qui lit les items depuis Stripe metadata)
- * - Vide le panier seulement après confirmation de l'API
+ * - Stripe redirige automatiquement vers cette page après paiement
+ * - Le webhook Stripe a déjà créé la commande et décrémenté le stock
+ * - On vide simplement le panier côté client
+ *
+ * Design :
+ * - Centré, minimaliste, élégant
+ * - Icône de succès
+ * - Message de remerciement
+ * - Numéro de commande (Payment Intent ID)
  */
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
-  const [isConfirming, setIsConfirming] = useState(true);
-  const [confirmationError, setConfirmationError] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cartCleared, setCartCleared] = useState(false);
 
-  /**
-   * Confirmer la commande et décrémenter le stock
-   * Les items sont lus depuis les metadata Stripe (source de vérité)
-   */
   useEffect(() => {
-    const confirmOrder = async () => {
-      // Récupérer le payment_intent depuis l'URL (Stripe l'ajoute automatiquement)
-      const paymentIntentId = searchParams.get("payment_intent");
+    const pi = searchParams.get("payment_intent");
 
-      if (!paymentIntentId) {
-        console.error("❌ payment_intent manquant dans l'URL");
-        setConfirmationError("Identifiant de paiement manquant");
-        setIsConfirming(false);
-        return;
-      }
+    if (!pi) {
+      // Si pas de payment_intent, quelque chose ne va pas
+      console.error("❌ payment_intent manquant dans l'URL");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        // Appeler l'API pour confirmer la commande et décrémenter le stock
-        // L'API lit les items depuis les metadata Stripe
-        const response = await fetch("/api/confirm-order", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            payment_intent_id: paymentIntentId,
-          }),
-        });
+    setPaymentIntentId(pi);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Erreur lors de la confirmation de commande");
-        }
+    // Vider le panier côté client UNIQUEMENT si ce n'est pas déjà fait
+    // (La commande a déjà été créée par le webhook Stripe)
+    if (!cartCleared) {
+      console.log("✅ Vidage du panier après paiement réussi");
+      clearCart();
+      setCartCleared(true);
+    }
 
-        const data = await response.json();
-        console.log("✅ Commande confirmée:", data);
+    setIsLoading(false);
+  }, [searchParams, clearCart, cartCleared]);
 
-        // **IMPORTANT : Ne vider le panier qu'après confirmation de l'API**
-        clearCart();
-      } catch (error) {
-        console.error("❌ Erreur lors de la confirmation de commande:", error);
-        setConfirmationError(
-          error instanceof Error
-            ? error.message
-            : "Une erreur est survenue lors de la confirmation de votre commande"
-        );
-        // On ne vide PAS le panier en cas d'erreur, pour permettre une réessai
-      } finally {
-        setIsConfirming(false);
-      }
-    };
+  // Affichage en cours de chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="text-center">
+          <Loader2 className="animate-spin mx-auto mb-4 text-black" size={40} strokeWidth={1.5} />
+          <p className="text-sm uppercase tracking-widest text-gray-500">
+            Chargement...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-    confirmOrder();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Si pas de payment_intent, afficher un message d'erreur
+  if (!paymentIntentId) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="text-center max-w-lg">
+          <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-widest mb-4">
+            Erreur
+          </h1>
+          <p className="text-sm text-gray-600 mb-8">
+            Impossible de confirmer votre commande. Veuillez contacter notre support.
+          </p>
+          <Link
+            href="/"
+            className="inline-block bg-black text-white px-8 py-4 text-xs uppercase tracking-widest font-bold hover:bg-gray-800 transition-colors"
+          >
+            Retour à l'accueil
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="text-center max-w-2xl">
-        {/* Titre principal : MERCI */}
-        <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-wider mb-6">
-          MERCI
+      <div className="max-w-lg w-full text-center">
+        {/* Icône de succès */}
+        <div className="mb-8 flex justify-center">
+          <div className="w-20 h-20 bg-black flex items-center justify-center">
+            <CheckCircle className="w-12 h-12 text-white" strokeWidth={1.5} />
+          </div>
+        </div>
+
+        {/* Titre */}
+        <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-widest mb-4">
+          Commande Confirmée
         </h1>
 
-        {/* Sous-titre */}
-        <h2 className="text-lg md:text-xl font-medium uppercase tracking-widest text-gray-600 mb-8">
-          Votre commande a été validée.
-        </h2>
+        {/* Message de remerciement */}
+        <p className="text-sm md:text-base text-gray-600 mb-8 leading-relaxed">
+          Merci pour votre achat. Votre commande a été enregistrée avec succès
+          et un email de confirmation vous a été envoyé.
+        </p>
 
-        {/* Message de confirmation ou d'erreur */}
-        {isConfirming ? (
-          <p className="text-sm text-gray-500 mb-12 max-w-md mx-auto">
-            Confirmation de votre commande en cours...
-          </p>
-        ) : confirmationError ? (
-          <div className="mb-12 max-w-md mx-auto">
-            <p className="text-sm text-red-600 mb-4">{confirmationError}</p>
-            <p className="text-xs text-gray-500">
-              Votre paiement a été validé, mais une erreur technique est survenue.
-              Notre équipe a été notifiée.
-            </p>
+        {/* Numéro de commande */}
+        <div className="border border-black/10 p-6 mb-8">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Package className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+            <span className="text-xs uppercase tracking-widest text-gray-400 font-medium">
+              Numéro de commande
+            </span>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 mb-12 max-w-md mx-auto">
-            Vous recevrez un email de confirmation sous peu.
+          <p className="text-sm font-mono text-black break-all">
+            {paymentIntentId}
           </p>
-        )}
+        </div>
 
-        {/* Bouton retour à l'accueil */}
-        <Link
-          href="/"
-          className="inline-block bg-black text-white px-12 py-4 text-xs uppercase tracking-widest font-bold hover:bg-gray-800 transition-colors"
-        >
-          Retourner à l'accueil
-        </Link>
+        {/* Informations de livraison */}
+        <div className="bg-gray-50 border border-black/5 p-6 mb-8">
+          <p className="text-xs uppercase tracking-widest text-gray-500 mb-3">
+            Prochaines étapes
+          </p>
+          <ul className="text-sm text-gray-600 space-y-2 text-left">
+            <li className="flex items-start gap-2">
+              <span className="text-black">•</span>
+              <span>Vous recevrez un email de confirmation sous quelques minutes</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-black">•</span>
+              <span>Votre commande sera expédiée sous 24-48h ouvrées</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-black">•</span>
+              <span>Un numéro de suivi vous sera communiqué par email</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Boutons d'action */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link
+            href="/"
+            className="flex-1 bg-black text-white px-6 py-4 text-xs uppercase tracking-widest font-bold hover:bg-gray-800 transition-colors text-center"
+          >
+            Retour à la boutique
+          </Link>
+
+          <Link
+            href="/account"
+            className="flex-1 border border-black/20 text-black px-6 py-4 text-xs uppercase tracking-widest font-medium hover:bg-black/5 transition-colors text-center"
+          >
+            Mon compte
+          </Link>
+        </div>
+
+        {/* Message de support */}
+        <p className="mt-8 text-xs text-gray-400 uppercase tracking-wider">
+          Besoin d'aide ?{" "}
+          <a
+            href="mailto:contact@lebonparfum.com"
+            className="text-black hover:underline"
+          >
+            Contactez-nous
+          </a>
+        </p>
       </div>
     </div>
   );

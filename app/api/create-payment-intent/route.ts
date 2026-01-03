@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         id: product.id,
         slug: product.slug,
         name: product.name,
-        price: Number(product.price), // Prix en euros depuis la DB
+        price: Number(product.price) / 100, // Prix en euros (converti depuis centimes en DB)
         quantity: item.quantity,
         imageUrl: product.image_url,
       });
@@ -159,6 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calcul du montant total des produits (en centimes)
+    // Les prix sont déjà en euros, on multiplie par 100 pour Stripe
     const subtotalCents = Math.round(
       verifiedItems.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100
     );
@@ -209,6 +210,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Erreur lors de la création du payment intent:", error);
 
+    // Log détaillé pour le debugging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     // Gestion des erreurs spécifiques
     if (error instanceof Error) {
       if (error.message.includes("Stock insuffisant")) {
@@ -230,6 +238,15 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Retourner le message d'erreur exact pour le debugging
+      return NextResponse.json<PaymentIntentError>(
+        {
+          error: "server_error",
+          message: `Erreur: ${error.message}`,
+        },
+        { status: 500 }
+      );
     }
 
     // Erreur générique

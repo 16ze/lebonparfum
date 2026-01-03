@@ -43,3 +43,23 @@ export interface PaymentIntentError {
   message: string;
 }
 
+/**
+ * Item de commande stocké dans la DB (order_items)
+ */
+export interface OrderItem {
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  quantity: number;
+  price_at_time: number; // Prix unitaire en centimes au moment de l'achat
+  image_url?: string | null;
+}
+
+/**
+ * Données extraites des metadata Stripe pour créer une commande
+ */
+export interface StripeMetadataCart {
+  id: string; // Product ID ou slug
+  qty: number;
+}
+
