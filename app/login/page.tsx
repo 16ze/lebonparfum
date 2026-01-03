@@ -103,6 +103,12 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("❌ Erreur inattendue:", err);
+      console.error("❌ Type d'erreur:", typeof err);
+      console.error("❌ Détails:", {
+        name: err instanceof Error ? err.name : 'unknown',
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'no stack',
+      });
       setError("Une erreur inattendue s'est produite");
       setIsLoading(false);
     }
