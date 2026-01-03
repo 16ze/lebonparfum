@@ -58,6 +58,8 @@ export default function MenuOverlay({
   const { isOpen, closeMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const collectionsViewRef = useRef<HTMLDivElement>(null);
+  const productsViewRef = useRef<HTMLDivElement>(null);
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -71,6 +73,47 @@ export default function MenuOverlay({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Animation de transition entre Collections et Produits (mobile uniquement)
+  useEffect(() => {
+    if (!isMobile || !collectionsViewRef.current || !productsViewRef.current) return;
+
+    const ctx = gsap.context(() => {
+      if (activeBrand) {
+        // Transition vers les produits : Slide left
+        gsap.fromTo(
+          collectionsViewRef.current,
+          { x: 0, opacity: 1 },
+          { x: "-30%", opacity: 0, duration: 0.3, ease: "power2.out" }
+        );
+        gsap.fromTo(
+          productsViewRef.current,
+          { x: "100%", opacity: 0, display: "flex" },
+          { x: 0, opacity: 1, duration: 0.4, ease: "power3.out", delay: 0.1 }
+        );
+      } else {
+        // Transition vers les collections : Slide right
+        gsap.to(productsViewRef.current, {
+          x: "100%",
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.in",
+          onComplete: () => {
+            if (productsViewRef.current) {
+              productsViewRef.current.style.display = "none";
+            }
+          },
+        });
+        gsap.fromTo(
+          collectionsViewRef.current,
+          { x: "-30%", opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.4, ease: "power3.out", delay: 0.1 }
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, [activeBrand, isMobile]);
 
   // DEBUG: Log des données reçues
   console.log("🔍 MenuOverlay - Props reçues:", {
@@ -275,14 +318,27 @@ export default function MenuOverlay({
             <div
               style={{
                 width: "100%",
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 minHeight: 0,
+                overflow: "hidden",
               }}
             >
-              {!activeBrand ? (
-                // Vue Marques
-                <>
+              {/* Vue Marques */}
+              <div
+                ref={collectionsViewRef}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  minHeight: 0,
+                }}
+              >
                   <div
                     className="px-6 py-6"
                     style={{
@@ -365,9 +421,22 @@ export default function MenuOverlay({
                     </Link>
                   </div>
                 </>
-              ) : (
-                // Vue Produits (après avoir cliqué sur une marque)
-                <>
+              </div>
+
+              {/* Vue Produits (après avoir cliqué sur une marque) */}
+              <div
+                ref={productsViewRef}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: "none",
+                  flexDirection: "column",
+                  minHeight: 0,
+                }}
+              >
                   <div
                     className="px-6 py-6"
                     style={{
@@ -407,7 +476,7 @@ export default function MenuOverlay({
                     )}
                   </div>
                 </>
-              )}
+              </div>
             </div>
           ) : (
             // MODE DESKTOP : Grille à 3 colonnes (existant)
