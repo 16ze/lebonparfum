@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { X, Maximize2, Minimize2, User, Package, Heart, LogOut } from "lucide-react";
-import gsap from "gsap";
-import { useAuth } from "@/context/AuthContext";
 import { logoutAction } from "@/app/login/actions";
+import { useAuth } from "@/context/AuthContext";
+import gsap from "gsap";
+import {
+  Heart,
+  LogOut,
+  Maximize2,
+  Minimize2,
+  Package,
+  User,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 /**
  * ProfileDrawer - Overlay de profil (style Byredo)
@@ -100,7 +108,7 @@ export default function ProfileDrawer() {
    */
   const handleNavigate = (view: "profile" | "orders" | "wishlist") => {
     setProfileView(view);
-    
+
     // Si en mode normal, ouvrir la page dans un nouvel onglet ou naviguer
     if (!isProfileExpanded) {
       const routes = {
@@ -178,7 +186,10 @@ export default function ProfileDrawer() {
                 onClick={() => handleNavigate("profile")}
                 className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
               >
-                <User className="w-5 h-5 text-black/60 group-hover:text-black transition-colors" strokeWidth={1.5} />
+                <User
+                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                  strokeWidth={1.5}
+                />
                 <span className="text-sm uppercase tracking-widest font-medium">
                   Mon Profil
                 </span>
@@ -188,7 +199,10 @@ export default function ProfileDrawer() {
                 onClick={() => handleNavigate("orders")}
                 className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
               >
-                <Package className="w-5 h-5 text-black/60 group-hover:text-black transition-colors" strokeWidth={1.5} />
+                <Package
+                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                  strokeWidth={1.5}
+                />
                 <span className="text-sm uppercase tracking-widest font-medium">
                   Mes Commandes
                 </span>
@@ -198,7 +212,10 @@ export default function ProfileDrawer() {
                 onClick={() => handleNavigate("wishlist")}
                 className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
               >
-                <Heart className="w-5 h-5 text-black/60 group-hover:text-black transition-colors" strokeWidth={1.5} />
+                <Heart
+                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                  strokeWidth={1.5}
+                />
                 <span className="text-sm uppercase tracking-widest font-medium">
                   Mes Favoris
                 </span>
@@ -211,7 +228,7 @@ export default function ProfileDrawer() {
             <div className="w-full h-full">
               <iframe
                 ref={contentRef}
-                src={`/account/${currentProfileView}`}
+                src={`/account/${currentProfileView}?embed=true`}
                 className="w-full h-full border-0"
                 title={`Account ${currentProfileView}`}
               />
@@ -237,4 +254,3 @@ export default function ProfileDrawer() {
     </>
   );
 }
-
