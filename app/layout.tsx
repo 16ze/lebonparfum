@@ -5,6 +5,7 @@ import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
 import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
 import { CartProvider } from "@/context/CartContext";
 import { MenuProvider } from "@/context/MenuContext";
+import { CheckoutProvider } from "@/context/CheckoutContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -30,16 +31,18 @@ export default function RootLayout({
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
         <CartProvider>
-          <MenuProvider>
-            <SmoothScroll>
-              <ConditionalLayout>
-                <MenuOverlayWrapper />
-                <SearchOverlayWrapper />
-                <CartDrawer />
-                {children}
-              </ConditionalLayout>
-            </SmoothScroll>
-          </MenuProvider>
+          <CheckoutProvider>
+            <MenuProvider>
+              <SmoothScroll>
+                <ConditionalLayout>
+                  <MenuOverlayWrapper />
+                  <SearchOverlayWrapper />
+                  <CartDrawer />
+                  {children}
+                </ConditionalLayout>
+              </SmoothScroll>
+            </MenuProvider>
+          </CheckoutProvider>
         </CartProvider>
       </body>
     </html>
