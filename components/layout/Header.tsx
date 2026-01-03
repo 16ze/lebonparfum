@@ -159,11 +159,14 @@ export default function Header() {
               elementsRef.current[0] = el;
             }}
             onClick={toggleMenu}
-            className="p-2 hover:opacity-50 transition-opacity duration-300"
+            className="flex items-center gap-x-2 p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
             aria-label="Ouvrir le menu"
           >
             <Menu size={20} strokeWidth={1.5} style={{ stroke: textColor }} />
+            <span className="hidden md:inline text-[10px] md:text-xs uppercase tracking-widest font-medium">
+              Menu
+            </span>
           </button>
 
           {/* Recherche */}
@@ -223,7 +226,7 @@ export default function Header() {
               elementsRef.current[4] = el;
             }}
             onClick={openCart}
-            className="relative p-2 hover:opacity-50 transition-opacity duration-300"
+            className="relative flex items-center gap-x-2 p-2 hover:opacity-50 transition-opacity duration-300"
             style={{ color: textColor }}
             aria-label={`Ouvrir le panier (${cartCount} article${cartCount > 1 ? "s" : ""})`}
           >
@@ -232,11 +235,16 @@ export default function Header() {
               strokeWidth={1.5}
               style={{ stroke: textColor }}
             />
+            {/* Badge uniquement sur mobile */}
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center md:hidden">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
+            {/* Texte uniquement sur desktop */}
+            <span className="hidden md:inline text-[10px] md:text-xs uppercase tracking-widest font-medium">
+              Panier {cartCount > 0 && `(${cartCount})`}
+            </span>
           </button>
         </div>
       </nav>
