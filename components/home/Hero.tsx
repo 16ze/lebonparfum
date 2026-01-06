@@ -58,27 +58,28 @@ export default function Hero() {
 
       // Animation Logo Volant "Gucci-style"
       if (floatingLogoRef.current && sectionRef.current) {
-        // Animation principale : montée et rétrécissement
+        // Animation principale : montée, rétrécissement et changement de couleur
         gsap.to(floatingLogoRef.current, {
-          y: -96, // Remonte de 120px à 24px (position header logo) = -96px
-          scale: 0.15, // Rétrécit pour atteindre la taille du logo header
+          scale: 0.25, // Rétrécit pour atteindre la taille du logo header
+          y: "-45vh", // Remonte vers le haut de l'écran pour atteindre la zone du header
+          color: "#000000", // Change de blanc à noir quand le header devient blanc
           ease: "none",
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top top",
-            end: "bottom top",
-            scrub: 1, // Scrub plus lent pour transition plus visible
+            end: "bottom 100px", // Arrête l'animation un peu avant que le header devienne complètement blanc
+            scrub: true, // Synchronisé avec le scroll
           },
         });
 
-        // Fade out progressif à la fin (commence quand le logo arrive près du header)
+        // Disparition finale : fade out quand le Hero sort de l'écran
         gsap.to(floatingLogoRef.current, {
-          autoAlpha: 0,
+          autoAlpha: 0, // Disparaît complètement (opacity + visibility)
           ease: "none",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "80% top", // Commence à 80% du scroll pour transition visible
-            end: "bottom top",
+            start: "bottom top", // Commence quand le bas du Hero touche le haut de l'écran
+            end: "bottom -100px", // Fini un peu après
             scrub: 0.5,
           },
         });
@@ -111,7 +112,7 @@ export default function Hero() {
       {/* Logo Volant (Animation Gucci-style) */}
       <h1
         ref={floatingLogoRef}
-        className="absolute top-[120px] left-1/2 -translate-x-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-4xl md:text-7xl z-40 pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-5xl md:text-8xl z-50 pointer-events-none"
       >
         LE BON PARFUM
       </h1>

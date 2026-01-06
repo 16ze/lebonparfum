@@ -36,12 +36,34 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(!isHome); // Sur les autres pages, on considère qu'on est "scrollé"
+  const [showLogo, setShowLogo] = useState(!isHome); // Logo header visible par défaut sauf sur Home
 
   // Gestion du scroll uniquement sur la page d'accueil
   useEffect(() => {
     if (!isHome) {
-      // Sur les autres pages, on force l'état "scrollé"
+      // Sur les autres pages, on force l'état "scrollé" et logo visible
       setIsScrolled(true);
+      setShowLogo(true);
+      return;
+    }
+
+    // Écouter le scroll pour afficher le logo header quand on est presque à la fin du Hero
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      // Afficher le logo quand on a scrollé presque toute la hauteur du Hero
+      setShowLogo(scrollY > windowHeight - 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Vérifier immédiatement
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
+
+  // Animations GSAP uniquement sur la page d'accueil
+  useEffect(() => {
+    if (!isHome) {
       return;
     }
 
@@ -98,22 +120,6 @@ export default function Header() {
           });
         },
       });
-
-      // 3. Animation Logo Header : apparaît progressivement quand le logo volant arrive
-      // Trigger sur le Hero (première section)
-      const heroSection = document.querySelector("section");
-      if (heroSection && elementsRef.current[2]) {
-        gsap.to(elementsRef.current[2], {
-          opacity: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: heroSection,
-            start: "80% top", // Commence à apparaître quand le logo volant arrive
-            end: "bottom top",
-            scrub: 0.5,
-          },
-        });
-      }
     }, headerRef);
 
     return () => ctx.revert();
@@ -208,10 +214,10 @@ export default function Header() {
         >
           <h1
             className={clsx(
-              "text-base md:text-lg font-bold uppercase tracking-widest",
+              "text-base md:text-lg font-bold uppercase tracking-widest transition-opacity duration-300",
               {
-                "opacity-0": isHome, // Caché sur Home par défaut (GSAP gère l'apparition)
-                "opacity-100": !isHome, // Visible sur autres pages
+                "opacity-0": isHome && !showLogo, // Caché sur Home jusqu'à la fin de l'animation
+                "opacity-100": !isHome || showLogo, // Visible sur autres pages ou après scroll
               }
             )}
             style={{ color: textColor }}
