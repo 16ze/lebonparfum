@@ -61,7 +61,7 @@ export default function Hero() {
         // Animation principale : montée, rétrécissement et changement de couleur
         gsap.to(floatingLogoRef.current, {
           scale: 0.25, // Rétrécit pour atteindre la taille du logo header
-          y: "-45vh", // Remonte vers le haut de l'écran pour atteindre la zone du header
+          y: -96, // Remonte de ~120px à ~24px (position header logo) = -96px
           color: "#000000", // Change de blanc à noir quand le header devient blanc
           ease: "none",
           scrollTrigger: {
@@ -112,7 +112,7 @@ export default function Hero() {
       {/* Logo Volant (Animation Gucci-style) */}
       <h1
         ref={floatingLogoRef}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-5xl md:text-8xl z-50 pointer-events-none"
+        className="absolute top-[100px] md:top-[120px] left-1/2 -translate-x-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-5xl md:text-8xl z-50 pointer-events-none"
       >
         LE BON PARFUM
       </h1>
