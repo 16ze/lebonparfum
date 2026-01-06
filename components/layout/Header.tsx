@@ -191,7 +191,13 @@ export default function Header() {
           }}
         >
           <h1
-            className="text-base md:text-lg font-bold uppercase tracking-widest"
+            className={clsx(
+              "text-base md:text-lg font-bold uppercase tracking-widest transition-opacity duration-300",
+              {
+                "opacity-0": isHome && !isScrolled, // Caché sur Home jusqu'au scroll
+                "opacity-100": !isHome || isScrolled, // Visible sur autres pages ou après scroll
+              }
+            )}
             style={{ color: textColor }}
           >
             LE BON PARFUM

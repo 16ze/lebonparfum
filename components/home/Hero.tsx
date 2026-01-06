@@ -20,6 +20,7 @@ export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const floatingLogoRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -55,6 +56,22 @@ export default function Hero() {
         });
       });
 
+      // Animation Logo Volant "Gucci-style"
+      if (floatingLogoRef.current && sectionRef.current) {
+        gsap.to(floatingLogoRef.current, {
+          scale: 0.2, // Rétrécit pour atteindre la taille du logo header
+          y: "-45vh", // Remonte vers le haut de l'écran
+          autoAlpha: 0, // Fade out à la fin pour laisser le header prendre le relais
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      }
+
       return () => mm.revert();
     }, sectionRef);
 
@@ -78,6 +95,14 @@ export default function Hero() {
           <source src="/campaign-video.mp4" type="video/mp4" />
         </video>
       </div>
+
+      {/* Logo Volant (Animation Gucci-style) */}
+      <h1
+        ref={floatingLogoRef}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-4xl md:text-7xl z-40 pointer-events-none"
+      >
+        LE BON PARFUM
+      </h1>
 
       {/* Dégradé de lisibilité (bottom fade) */}
       <div className="absolute bottom-0 w-full h-40 bg-gradient-to-t from-black/60 to-transparent z-0" />
