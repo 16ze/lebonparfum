@@ -98,6 +98,22 @@ export default function Header() {
           });
         },
       });
+
+      // 3. Animation Logo Header : apparaît progressivement quand le logo volant arrive
+      // Trigger sur le Hero (première section)
+      const heroSection = document.querySelector("section");
+      if (heroSection && elementsRef.current[2]) {
+        gsap.to(elementsRef.current[2], {
+          opacity: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroSection,
+            start: "80% top", // Commence à apparaître quand le logo volant arrive
+            end: "bottom top",
+            scrub: 0.5,
+          },
+        });
+      }
     }, headerRef);
 
     return () => ctx.revert();
@@ -192,10 +208,10 @@ export default function Header() {
         >
           <h1
             className={clsx(
-              "text-base md:text-lg font-bold uppercase tracking-widest transition-opacity duration-300",
+              "text-base md:text-lg font-bold uppercase tracking-widest",
               {
-                "opacity-0": isHome && !isScrolled, // Caché sur Home jusqu'au scroll
-                "opacity-100": !isHome || isScrolled, // Visible sur autres pages ou après scroll
+                "opacity-0": isHome, // Caché sur Home par défaut (GSAP gère l'apparition)
+                "opacity-100": !isHome, // Visible sur autres pages
               }
             )}
             style={{ color: textColor }}

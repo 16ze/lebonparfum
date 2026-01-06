@@ -58,16 +58,28 @@ export default function Hero() {
 
       // Animation Logo Volant "Gucci-style"
       if (floatingLogoRef.current && sectionRef.current) {
+        // Animation principale : montée et rétrécissement
         gsap.to(floatingLogoRef.current, {
-          scale: 0.2, // Rétrécit pour atteindre la taille du logo header
-          y: "-45vh", // Remonte vers le haut de l'écran
-          autoAlpha: 0, // Fade out à la fin pour laisser le header prendre le relais
+          y: -96, // Remonte de 120px à 24px (position header logo) = -96px
+          scale: 0.15, // Rétrécit pour atteindre la taille du logo header
           ease: "none",
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top top",
             end: "bottom top",
-            scrub: true,
+            scrub: 1, // Scrub plus lent pour transition plus visible
+          },
+        });
+
+        // Fade out progressif à la fin (commence quand le logo arrive près du header)
+        gsap.to(floatingLogoRef.current, {
+          autoAlpha: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "80% top", // Commence à 80% du scroll pour transition visible
+            end: "bottom top",
+            scrub: 0.5,
           },
         });
       }
@@ -99,7 +111,7 @@ export default function Hero() {
       {/* Logo Volant (Animation Gucci-style) */}
       <h1
         ref={floatingLogoRef}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-4xl md:text-7xl z-40 pointer-events-none"
+        className="absolute top-[120px] left-1/2 -translate-x-1/2 text-white font-bold uppercase tracking-widest text-center whitespace-nowrap text-4xl md:text-7xl z-40 pointer-events-none"
       >
         LE BON PARFUM
       </h1>
