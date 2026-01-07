@@ -25,7 +25,7 @@ export default async function AddressesPage() {
   }
 
   // Récupérer les adresses de l'utilisateur
-  const { data: addresses, error: addressesError } = await supabase
+  const { data: addressesRaw, error: addressesError } = await supabase
     .from("user_addresses")
     .select("*")
     .eq("user_id", user.id)
@@ -35,6 +35,12 @@ export default async function AddressesPage() {
   if (addressesError) {
     console.error("❌ Erreur récupération adresses:", addressesError.message);
   }
+
+  // Mapping: address_line1 (DB) -> address (code TypeScript)
+  const addresses = addressesRaw?.map((addr: any) => ({
+    ...addr,
+    address: addr.address_line1 || addr.address, // Support des deux formats pour compatibilité
+  })) || [];
 
   return (
     <div className="max-w-4xl">
