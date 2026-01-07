@@ -21,7 +21,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LE BON PARFUM - Parfums de Niche & Dupes de Luxe",
+  title: "THE PARFUMERIEE - Parfums de Niche & Dupes de Luxe",
   description: "Revendeur de parfums de niche et dupes de luxe",
 };
 

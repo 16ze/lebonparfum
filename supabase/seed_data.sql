@@ -1,5 +1,5 @@
 -- ============================================
--- Seed Data - Catalogue Le Bon Parfum
+-- Seed Data - Catalogue THE PARFUMERIEE
 -- ============================================
 -- Description: Injection du catalogue complet avec gestion du stock
 -- 

@@ -51,7 +51,7 @@ export default function AdminSidebar() {
       {/* Logo / Titre */}
       <div className="p-6 border-b border-white/10">
         <h1 className="text-xl uppercase tracking-widest font-bold">
-          Le Bon Parfum
+          THE PARFUMERIEE
         </h1>
         <p className="text-xs uppercase tracking-widest text-white/50 mt-1">
           Administration

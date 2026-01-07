@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
  * Header - Byredo-style immersive navigation
  *
  * Layout :
- * [ ☰ MENU ]     LE BON PARFUM     [ PANIER (0) 🛍️ ]
+ * [ ☰ MENU ]     THE PARFUMERIEE     [ PANIER (0) 🛍️ ]
  *
  * Logique conditionnelle :
  * - Page d'accueil (/) : Transparent au top → Blanc au scroll
@@ -218,14 +218,14 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Centre : Logo LE BON PARFUM */}
+        {/* Centre : Logo THE PARFUMERIEE */}
         <Link href="/">
           <h1
             ref={logoRef}
             className="text-base md:text-lg font-bold uppercase tracking-widest"
             style={{ color: isHome && !isScrolled ? "#FFFFFF" : textColor }}
           >
-            LE BON PARFUM
+            THE PARFUMERIEE
           </h1>
         </Link>
 

@@ -1,7 +1,7 @@
 -- ============================================
 -- Schéma SQL pour la table products
 -- ============================================
--- Description: Table pour stocker le catalogue de parfums Le Bon Parfum
+-- Description: Table pour stocker le catalogue de parfums THE PARFUMERIEE
 -- 
 -- Instructions:
 --   1. Ouvrez Supabase Dashboard > SQL Editor

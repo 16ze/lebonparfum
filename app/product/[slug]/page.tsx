@@ -78,17 +78,17 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Produit non trouvé | LE BON PARFUM",
+      title: "Produit non trouvé | THE PARFUMERIEE",
     };
   }
 
   return {
-    title: `${product.name} - ${product.collection} | LE BON PARFUM`,
+    title: `${product.name} - ${product.collection} | THE PARFUMERIEE`,
     description:
       product.description ||
       `Découvrez ${product.name} de la collection ${product.collection}. Parfum de niche de haute qualité.`,
     openGraph: {
-      title: `${product.name} | LE BON PARFUM`,
+      title: `${product.name} | THE PARFUMERIEE`,
       description:
         product.description ||
         `${product.name} - Collection ${product.collection}`,

@@ -148,7 +148,7 @@ export default function CheckoutPage() {
               href="/"
               className="inline-block text-base font-bold uppercase tracking-widest text-black hover:opacity-50 transition-opacity mb-6"
             >
-              LE BON PARFUM
+              THE PARFUMERIEE
             </Link>
 
             {/* Fil d'Ariane */}

@@ -191,7 +191,7 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
         <div className="max-w-6xl mx-auto px-6 md:px-12">
           {/* Logo centré */}
           <h1 className="text-3xl font-bold uppercase tracking-widest text-center mb-8">
-            LE BON PARFUM
+            THE PARFUMERIEE
           </h1>
 
           {/* Input de recherche style Louis Vuitton */}

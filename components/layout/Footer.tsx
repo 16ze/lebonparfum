@@ -8,7 +8,7 @@ import Link from "next/link";
  * - Typographie blanche minimaliste
  * - Newsletter simple en haut
  * - Grille de liens (Client, Légal, Social)
- * - Signature gigantesque "LE BON PARFUM" (text-[10vw])
+ * - Signature gigantesque "THE PARFUMERIEE" (text-[8vw])
  */
 
 export default function Footer() {
@@ -159,15 +159,15 @@ export default function Footer() {
         <div className="border-t border-gray-500/10 pt-8 md:pt-12">
           {/* Signature Gigantesque */}
           <div className="text-center mb-8">
-            <h2 className="text-[10vw] font-bold uppercase tracking-wider leading-none">
-              LE BON PARFUM
+            <h2 className="text-[8vw] font-bold uppercase tracking-wider leading-none">
+              THE PARFUMERIEE
             </h2>
           </div>
 
           {/* Copyright */}
           <div className="text-center">
             <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-              © 2026 LE BON PARFUM. Tous droits réservés.
+              © 2026 THE PARFUMERIEE. Tous droits réservés.
             </p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-# Configuration Supabase - Le Bon Parfum
+# Configuration Supabase - THE PARFUMERIEE
 
 ## 📋 Prérequis
 

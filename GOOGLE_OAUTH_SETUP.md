@@ -17,7 +17,7 @@ Ce guide explique comment configurer Google OAuth pour permettre aux utilisateur
 
 1. Aller sur [Google Cloud Console](https://console.cloud.google.com/)
 2. Créer un nouveau projet ou sélectionner un projet existant
-3. Nommer le projet (ex: "Le Bon Parfum")
+3. Nommer le projet (ex: "THE PARFUMERIEE")
 
 ### 1.2 Activer l'API Google+
 
@@ -31,14 +31,14 @@ Ce guide explique comment configurer Google OAuth pour permettre aux utilisateur
 2. Cliquer sur **Create Credentials** > **OAuth client ID**
 3. Si demandé, configurer l'écran de consentement OAuth :
    - **User Type** : External
-   - **App name** : Le Bon Parfum
+   - **App name** : THE PARFUMERIEE
    - **User support email** : Votre email
    - **Developer contact** : Votre email
    - **Scopes** : Laisser par défaut (email, profile, openid)
    - **Test users** : Ajouter votre email de test
 4. Retourner à **Credentials** > **Create Credentials** > **OAuth client ID**
 5. Sélectionner **Application type** : Web application
-6. **Name** : Le Bon Parfum - Supabase
+6. **Name** : THE PARFUMERIEE - Supabase
 7. **Authorized JavaScript origins** :
    ```
    https://ocaphdoqxusfqwrykydr.supabase.co
