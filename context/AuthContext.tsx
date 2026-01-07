@@ -61,12 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Si utilisateur connecté, récupérer le statut admin
         if (user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("is_admin")
             .eq("id", user.id)
             .single();
-          setIsAdmin(profile?.is_admin || false);
+          
+          if (profileError) {
+            console.error("❌ Erreur récupération profil pour isAdmin:", profileError);
+            setIsAdmin(false);
+          } else {
+            console.log("✅ Statut admin récupéré:", profile?.is_admin, "pour user:", user.email);
+            setIsAdmin(profile?.is_admin || false);
+          }
         } else {
           setIsAdmin(false);
         }
@@ -92,12 +99,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si utilisateur connecté, récupérer le statut admin
       if (currentUser) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("is_admin")
             .eq("id", currentUser.id)
             .single();
-          setIsAdmin(profile?.is_admin || false);
+          
+          if (profileError) {
+            console.error("❌ Erreur récupération profil pour isAdmin:", profileError);
+            setIsAdmin(false);
+          } else {
+            console.log("✅ Statut admin mis à jour:", profile?.is_admin, "pour user:", currentUser.email);
+            setIsAdmin(profile?.is_admin || false);
+          }
         } catch (error) {
           console.error("❌ Erreur récupération profil:", error);
           setIsAdmin(false);
@@ -134,12 +148,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Récupérer le statut admin
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("is_admin")
           .eq("id", user.id)
           .single();
-        setIsAdmin(profile?.is_admin || false);
+        
+        if (profileError) {
+          console.error("❌ Erreur récupération profil dans refreshUser:", profileError);
+          setIsAdmin(false);
+        } else {
+          console.log("✅ Statut admin rafraîchi:", profile?.is_admin);
+          setIsAdmin(profile?.is_admin || false);
+        }
       } else {
         setIsAdmin(false);
       }
