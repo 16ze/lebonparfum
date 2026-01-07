@@ -126,6 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (_event === "SIGNED_IN") {
         setIsAuthDrawerOpen(false);
       }
+
+      // Si l'utilisateur se déconnecte, fermer le ProfileDrawer
+      if (_event === "SIGNED_OUT") {
+        console.log("🔒 Utilisateur déconnecté - Fermeture ProfileDrawer");
+        setIsProfileDrawerOpen(false);
+        setIsProfileExpanded(false);
+        setIsAdmin(false);
+      }
     });
 
     // Cleanup : se désabonner lors du démontage

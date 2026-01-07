@@ -130,7 +130,11 @@ export default function ProfileDrawer() {
    */
   const handleLogout = async () => {
     try {
+      console.log("🔓 Tentative de déconnexion...");
       closeProfileDrawer();
+      
+      // Attendre un peu que le drawer se ferme
+      await new Promise((resolve) => setTimeout(resolve, 100));
       
       // Déconnexion avec le client Supabase côté client
       const supabase = createClient();
@@ -138,17 +142,19 @@ export default function ProfileDrawer() {
 
       if (error) {
         console.error("❌ Erreur lors de la déconnexion:", error.message);
-        alert("Erreur lors de la déconnexion. Veuillez réessayer.");
+        alert(`Erreur lors de la déconnexion: ${error.message}`);
         return;
       }
 
-      console.log("✅ Déconnexion réussie");
+      console.log("✅ Déconnexion réussie - Redirection vers la home...");
       
       // Forcer un rechargement complet de la page pour réinitialiser tous les états
-      window.location.href = "/";
+      // Utiliser window.location.replace pour éviter le retour en arrière
+      window.location.replace("/");
     } catch (error) {
       console.error("❌ Erreur inattendue lors de la déconnexion:", error);
-      alert("Erreur inattendue lors de la déconnexion. Veuillez réessayer.");
+      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+      alert(`Erreur inattendue lors de la déconnexion: ${errorMessage}`);
     }
   };
 
