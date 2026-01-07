@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 /**
  * AuthContext - Gestion de l'authentification côté client
@@ -92,7 +92,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("🔐 État d'authentification changé:", _event);
+      console.log("🔐 État d'authentification changé:", _event, "session:", session ? "présente" : "null");
+      
+      // Si déconnexion, nettoyer immédiatement l'état
+      if (_event === "SIGNED_OUT") {
+        console.log("🔒 Utilisateur déconnecté - Nettoyage immédiat de l'état");
+        setUser(null);
+        setIsAdmin(false);
+        setIsProfileDrawerOpen(false);
+        setIsProfileExpanded(false);
+        setIsLoading(false);
+        return; // Sortir immédiatement pour éviter le reste du traitement
+      }
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
@@ -125,14 +137,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si l'utilisateur se connecte, fermer l'AuthDrawer
       if (_event === "SIGNED_IN") {
         setIsAuthDrawerOpen(false);
-      }
-
-      // Si l'utilisateur se déconnecte, fermer le ProfileDrawer
-      if (_event === "SIGNED_OUT") {
-        console.log("🔒 Utilisateur déconnecté - Fermeture ProfileDrawer");
-        setIsProfileDrawerOpen(false);
-        setIsProfileExpanded(false);
-        setIsAdmin(false);
       }
     });
 

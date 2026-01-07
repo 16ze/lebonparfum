@@ -131,10 +131,9 @@ export default function ProfileDrawer() {
   const handleLogout = async () => {
     try {
       console.log("🔓 Tentative de déconnexion...");
-      closeProfileDrawer();
       
-      // Attendre un peu que le drawer se ferme
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Fermer le drawer immédiatement pour un feedback visuel
+      closeProfileDrawer();
       
       // Déconnexion avec le client Supabase côté client
       const supabase = createClient();
@@ -147,6 +146,9 @@ export default function ProfileDrawer() {
       }
 
       console.log("✅ Déconnexion réussie - Redirection vers la home...");
+      
+      // Attendre un peu pour laisser le temps à onAuthStateChange de se déclencher
+      await new Promise((resolve) => setTimeout(resolve, 200));
       
       // Forcer un rechargement complet de la page pour réinitialiser tous les états
       // Utiliser window.location.replace pour éviter le retour en arrière
@@ -189,7 +191,16 @@ export default function ProfileDrawer() {
     }
   };
 
-  if (!isProfileDrawerOpen || !user) return null;
+  // Ne pas afficher si le drawer est fermé OU si l'utilisateur n'est pas connecté
+  // (Si l'utilisateur se déconnecte, le drawer doit se fermer automatiquement)
+  if (!isProfileDrawerOpen) return null;
+  
+  // Si l'utilisateur se déconnecte pendant que le drawer est ouvert, le fermer
+  if (!user) {
+    console.log("⚠️ ProfileDrawer ouvert mais user est null - Fermeture automatique");
+    closeProfileDrawer();
+    return null;
+  }
 
   return (
     <>
