@@ -15,10 +15,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
  * - Rafraîchissement automatique de la session
  */
 
-type ProfileView = "profile" | "orders" | "wishlist";
+type ProfileView = "profile" | "orders" | "wishlist" | "dashboard" | "products" | "settings";
 
 interface AuthContextType {
   user: User | null;
+  isAdmin: boolean;
   isLoading: boolean;
   isAuthDrawerOpen: boolean;
   openAuthDrawer: () => void;
@@ -37,6 +38,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
@@ -49,16 +51,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
-    // Récupération initiale de l'utilisateur
+    // Récupération initiale de l'utilisateur et statut admin
     const getUser = async () => {
       try {
         const {
           data: { user },
         } = await supabase.auth.getUser();
         setUser(user);
+
+        // Si utilisateur connecté, récupérer le statut admin
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", user.id)
+            .single();
+          setIsAdmin(profile?.is_admin || false);
+        } else {
+          setIsAdmin(false);
+        }
       } catch (error) {
         console.error("❌ Erreur lors de la récupération de l'utilisateur:", error);
         setUser(null);
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }
@@ -69,9 +84,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Écouter les changements d'authentification (login, logout, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("🔐 État d'authentification changé:", _event);
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      // Si utilisateur connecté, récupérer le statut admin
+      if (currentUser) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", currentUser.id)
+            .single();
+          setIsAdmin(profile?.is_admin || false);
+        } catch (error) {
+          console.error("❌ Erreur récupération profil:", error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+
       setIsLoading(false);
 
       // Si l'utilisateur se connecte, fermer l'AuthDrawer
@@ -87,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * Rafraîchir manuellement l'utilisateur
+   * Rafraîchir manuellement l'utilisateur et statut admin
    * Utile après un login/signup pour mettre à jour l'état immédiatement
    */
   const refreshUser = async () => {
@@ -97,6 +131,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+
+      // Récupérer le statut admin
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
+      } else {
+        setIsAdmin(false);
+      }
     } catch (error) {
       console.error("❌ Erreur lors du rafraîchissement de l'utilisateur:", error);
     }
@@ -158,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        isAdmin,
         isLoading,
         isAuthDrawerOpen,
         openAuthDrawer,

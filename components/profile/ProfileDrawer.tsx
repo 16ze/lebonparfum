@@ -5,10 +5,13 @@ import { createClient } from "@/utils/supabase/client";
 import gsap from "gsap";
 import {
   Heart,
+  LayoutDashboard,
   LogOut,
   Maximize2,
   Minimize2,
   Package,
+  Settings,
+  ShoppingBag,
   User,
   X,
 } from "lucide-react";
@@ -28,6 +31,7 @@ import { useEffect, useRef } from "react";
 export default function ProfileDrawer() {
   const {
     user,
+    isAdmin,
     isProfileDrawerOpen,
     isProfileExpanded,
     currentProfileView,
@@ -138,18 +142,31 @@ export default function ProfileDrawer() {
   /**
    * Navigation vers une vue
    */
-  const handleNavigate = (view: "profile" | "orders" | "wishlist") => {
+  const handleNavigate = (view: "profile" | "orders" | "wishlist" | "dashboard" | "products" | "settings") => {
     setProfileView(view);
 
-    // Si en mode normal, ouvrir la page dans un nouvel onglet ou naviguer
+    // Si en mode normal, naviguer vers la page
     if (!isProfileExpanded) {
-      const routes = {
+      const clientRoutes = {
         profile: "/account/profile",
         orders: "/account/orders",
         wishlist: "/account/wishlist",
       };
-      router.push(routes[view]);
-      closeProfileDrawer();
+
+      const adminRoutes = {
+        dashboard: "/admin/dashboard",
+        products: "/admin/products",
+        orders: "/admin/orders",
+        settings: "/admin/settings",
+      };
+
+      const routes = isAdmin ? adminRoutes : clientRoutes;
+      const route = routes[view as keyof typeof routes];
+
+      if (route) {
+        router.push(route);
+        closeProfileDrawer();
+      }
     }
   };
 
@@ -213,44 +230,104 @@ export default function ProfileDrawer() {
               </div>
 
               {/* Menu de navigation */}
-              <button
-                onClick={() => handleNavigate("profile")}
-                className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
-              >
-                <User
-                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
-                  strokeWidth={1.5}
-                />
-                <span className="text-sm uppercase tracking-widest font-medium">
-                  Mon Profil
-                </span>
-              </button>
+              {isAdmin ? (
+                // Menu Admin
+                <>
+                  <button
+                    onClick={() => handleNavigate("dashboard")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <LayoutDashboard
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Dashboard
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => handleNavigate("orders")}
-                className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
-              >
-                <Package
-                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
-                  strokeWidth={1.5}
-                />
-                <span className="text-sm uppercase tracking-widest font-medium">
-                  Mes Commandes
-                </span>
-              </button>
+                  <button
+                    onClick={() => handleNavigate("products")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <Package
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Produits
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => handleNavigate("wishlist")}
-                className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
-              >
-                <Heart
-                  className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
-                  strokeWidth={1.5}
-                />
-                <span className="text-sm uppercase tracking-widest font-medium">
-                  Mes Favoris
-                </span>
-              </button>
+                  <button
+                    onClick={() => handleNavigate("orders")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <ShoppingBag
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Commandes
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigate("settings")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <Settings
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Paramètres
+                    </span>
+                  </button>
+                </>
+              ) : (
+                // Menu Client
+                <>
+                  <button
+                    onClick={() => handleNavigate("profile")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <User
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Mon Profil
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigate("orders")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <Package
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Mes Commandes
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigate("wishlist")}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-black/5 transition-colors rounded-sm text-left group"
+                  >
+                    <Heart
+                      className="w-5 h-5 text-black/60 group-hover:text-black transition-colors"
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-sm uppercase tracking-widest font-medium">
+                      Mes Favoris
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -259,9 +336,13 @@ export default function ProfileDrawer() {
             <div className="w-full h-full">
               <iframe
                 ref={contentRef}
-                src={`/account/${currentProfileView}?embed=true`}
+                src={
+                  isAdmin
+                    ? `/admin/${currentProfileView === "profile" ? "dashboard" : currentProfileView}?embed=true`
+                    : `/account/${currentProfileView}?embed=true`
+                }
                 className="w-full h-full border-0"
-                title={`Account ${currentProfileView}`}
+                title={`${isAdmin ? "Admin" : "Account"} ${currentProfileView}`}
               />
             </div>
           )}
