@@ -199,15 +199,16 @@ export async function createAddressAction(data: {
     }
 
     // Créer l'adresse
-    // CRITIQUE : S'assurer que user_id est bien défini et que country a une valeur par défaut
+    // CRITIQUE : Mapping exact des champs code -> base de données
+    // La table utilise 'address_line1' (pas 'address') selon la structure réelle
     const addressPayload = {
       user_id: user.id,
       label: data.label,
       first_name: data.first_name,
       last_name: data.last_name,
-      address: data.address,
+      address_line1: data.address, // Mapping: address (code) -> address_line1 (DB)
       city: data.city,
-      postal_code: data.postal_code,
+      postal_code: data.postal_code, // Déjà correct
       country: data.country || "France", // Valeur par défaut si manquante
       is_default: data.is_default,
       ...(data.address_complement && { address_complement: data.address_complement }),
@@ -281,9 +282,24 @@ export async function updateAddressAction(
     }
 
     // Mettre à jour l'adresse
+    // CRITIQUE : Mapping exact des champs code -> base de données
+    // La table utilise 'address_line1' (pas 'address')
+    const updatePayload: Record<string, any> = {};
+    
+    if (data.label !== undefined) updatePayload.label = data.label;
+    if (data.first_name !== undefined) updatePayload.first_name = data.first_name;
+    if (data.last_name !== undefined) updatePayload.last_name = data.last_name;
+    if (data.address !== undefined) updatePayload.address_line1 = data.address; // Mapping: address -> address_line1
+    if (data.address_complement !== undefined) updatePayload.address_complement = data.address_complement;
+    if (data.city !== undefined) updatePayload.city = data.city;
+    if (data.postal_code !== undefined) updatePayload.postal_code = data.postal_code;
+    if (data.country !== undefined) updatePayload.country = data.country;
+    if (data.phone !== undefined) updatePayload.phone = data.phone;
+    if (data.is_default !== undefined) updatePayload.is_default = data.is_default;
+
     const { error: updateError } = await supabase
       .from("user_addresses")
-      .update(data)
+      .update(updatePayload)
       .eq("id", addressId)
       .eq("user_id", user.id);
 
