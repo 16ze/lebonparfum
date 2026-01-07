@@ -158,9 +158,9 @@ export default function ProductModal({
     >
       <form onSubmit={handleSubmit} className="h-full flex flex-col">
         {/* Layout Grid : 3 colonnes - Image | Infos de base | Description + Prix/Stock */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 flex-1 overflow-y-auto">
           {/* Colonne 1 : Image */}
-          <div className="border-r border-black/10 p-8 flex flex-col">
+          <div className="border-b lg:border-b-0 lg:border-r border-black/10 p-4 md:p-6 lg:p-8 flex flex-col">
             <label className="block text-xs uppercase tracking-widest text-gray-500 mb-4">
               Image du produit
             </label>
@@ -174,9 +174,9 @@ export default function ProductModal({
           </div>
 
           {/* Colonne 2 : Nom, Slug, Marque */}
-          <div className="border-r border-black/10 flex flex-col">
+          <div className="border-b lg:border-b-0 lg:border-r border-black/10 flex flex-col">
             {/* Section Nom */}
-            <div className="border-b border-black/10 px-6 py-6">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="name" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Nom du produit *
               </label>
@@ -194,7 +194,7 @@ export default function ProductModal({
             </div>
 
             {/* Section Slug */}
-            <div className="border-b border-black/10 px-6 py-6">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="slug" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Slug (URL) *
               </label>
@@ -215,7 +215,7 @@ export default function ProductModal({
             </div>
 
             {/* Section Marque */}
-            <div className="px-6 py-6 flex-1">
+            <div className="px-4 md:px-6 py-4 md:py-6 flex-1">
               <label htmlFor="brand" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Marque *
               </label>
@@ -236,7 +236,7 @@ export default function ProductModal({
           {/* Colonne 3 : Description, Prix, Stock */}
           <div className="flex flex-col">
             {/* Section Description */}
-            <div className="border-b border-black/10 px-6 py-6 flex-1">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6 flex-1">
               <label htmlFor="description" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Description
               </label>
@@ -247,13 +247,13 @@ export default function ProductModal({
                 onChange={handleChange}
                 disabled={isLoading}
                 rows={6}
-                className="w-full border border-black/20 p-3 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50 resize-none h-full"
+                className="w-full border border-black/20 p-3 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50 resize-none min-h-[120px] lg:h-full"
                 placeholder="Description du produit..."
               />
             </div>
 
             {/* Section Prix */}
-            <div className="border-b border-black/10 px-6 py-6">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="price" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Prix (€) *
               </label>
@@ -273,7 +273,7 @@ export default function ProductModal({
             </div>
 
             {/* Section Stock */}
-            <div className="px-6 py-6">
+            <div className="px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="stock" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Stock *
               </label>
@@ -294,20 +294,20 @@ export default function ProductModal({
         </div>
 
         {/* Message d'erreur + Boutons - Barre fixe en bas */}
-        <div className="border-t border-black/10 bg-white">
+        <div className="border-t border-black/10 bg-white flex-shrink-0">
           {error && (
-            <div className="px-8 py-4 bg-red-50 border-b border-red-200">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="px-4 md:px-8 py-3 md:py-4 bg-red-50 border-b border-red-200">
+              <p className="text-xs md:text-sm text-red-600">{error}</p>
             </div>
           )}
 
-          <div className="px-8 py-6">
-            <div className="flex items-center gap-4 max-w-md ml-auto">
+          <div className="px-4 md:px-8 py-4 md:py-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-md sm:ml-auto">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-6 py-3 border border-black/20 uppercase tracking-wider text-sm hover:bg-black/5 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 md:px-6 py-2.5 md:py-3 border border-black/20 uppercase tracking-wider text-xs md:text-sm hover:bg-black/5 transition-colors disabled:opacity-50"
               >
                 Annuler
               </button>
@@ -315,7 +315,7 @@ export default function ProductModal({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-black text-white px-6 py-3 uppercase tracking-wider text-sm hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 bg-black text-white px-4 md:px-6 py-2.5 md:py-3 uppercase tracking-wider text-xs md:text-sm hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isLoading ? "Enregistrement..." : isEditMode ? "Enregistrer" : "Créer"}
