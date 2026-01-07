@@ -54,13 +54,30 @@ export default function Header() {
         return;
       }
 
+      // Utiliser matchMedia pour des valeurs responsives
+      const mm = gsap.matchMedia();
+
       // Configuration initiale du logo sur Home (géant, descendu, blanc)
+      // Valeurs différentes selon la taille d'écran
       if (logoRef.current) {
-        gsap.set(logoRef.current, {
-          y: 120, // Descendu dans le Hero
-          scale: 3, // Agrandi
-          transformOrigin: "center top", // Origine de transformation
-          color: "#FFFFFF", // Blanc
+        // Mobile : valeurs réduites
+        mm.add("(max-width: 767px)", () => {
+          gsap.set(logoRef.current, {
+            y: 60, // Moins de descente sur mobile (60px au lieu de 120px)
+            scale: 2, // Scale réduit sur mobile (2x au lieu de 3x)
+            transformOrigin: "center top",
+            color: "#FFFFFF",
+          });
+        });
+
+        // Desktop : valeurs complètes
+        mm.add("(min-width: 768px)", () => {
+          gsap.set(logoRef.current, {
+            y: 120, // Descente complète sur desktop
+            scale: 3, // Agrandissement complet
+            transformOrigin: "center top",
+            color: "#FFFFFF",
+          });
         });
       }
 
@@ -103,21 +120,42 @@ export default function Header() {
         },
       });
 
-      // 3. Animation Logo : remonte, rétrécit et change de couleur
+      // 3. Animation Logo : remonte, rétrécit et change de couleur (responsive)
       if (logoRef.current) {
-        gsap.to(logoRef.current, {
-          y: 0, // Remonte à sa position normale
-          scale: 1, // Rétrécit à sa taille normale
-          color: "#000000", // Change de blanc à noir
-          ease: "none",
-          scrollTrigger: {
-            trigger: document.body,
-            start: "top top",
-            end: "150px top", // Animation rapide dès le début du scroll
-            scrub: true,
-          },
+        // Mobile : animation plus courte
+        mm.add("(max-width: 767px)", () => {
+          gsap.to(logoRef.current, {
+            y: 0,
+            scale: 1,
+            color: "#000000",
+            ease: "none",
+            scrollTrigger: {
+              trigger: document.body,
+              start: "top top",
+              end: "80px top", // Animation plus courte sur mobile (80px au lieu de 150px)
+              scrub: true,
+            },
+          });
+        });
+
+        // Desktop : animation complète
+        mm.add("(min-width: 768px)", () => {
+          gsap.to(logoRef.current, {
+            y: 0,
+            scale: 1,
+            color: "#000000",
+            ease: "none",
+            scrollTrigger: {
+              trigger: document.body,
+              start: "top top",
+              end: "150px top", // Animation complète sur desktop
+              scrub: true,
+            },
+          });
         });
       }
+
+      return () => mm.revert();
     }, headerRef);
 
     return () => ctx.revert();
