@@ -47,17 +47,21 @@ export default function ProfileDrawer() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLIFrameElement>(null);
 
-  // Debug : Vérifier le statut admin quand le drawer s'ouvre
+  // CRITIQUE : Rafraîchir le statut admin à chaque ouverture du drawer
+  // Pour s'assurer que le menu affiche correctement les options admin/client
   useEffect(() => {
     if (isProfileDrawerOpen && user) {
-      console.log("🔍 ProfileDrawer ouvert - isAdmin:", isAdmin, "user:", user.email);
-      // Rafraîchir le statut admin si nécessaire
-      if (!isAdmin) {
-        console.log("⚠️ isAdmin est false, rafraîchissement...");
-        refreshUser();
-      }
+      console.log("🔍 ProfileDrawer ouvert - Rafraîchissement du statut admin...");
+      console.log("🔍 État actuel - isAdmin:", isAdmin, "user:", user.email);
+      
+      // FORCER le rafraîchissement à chaque ouverture pour garantir la cohérence
+      refreshUser().then(() => {
+        console.log("✅ Rafraîchissement terminé");
+      }).catch((error) => {
+        console.error("❌ Erreur lors du rafraîchissement:", error);
+      });
     }
-  }, [isProfileDrawerOpen, user, isAdmin, refreshUser]);
+  }, [isProfileDrawerOpen, user?.id]); // Dépendre de user?.id pour éviter les appels inutiles
 
   /**
    * Animation GSAP : Slide-in depuis la droite

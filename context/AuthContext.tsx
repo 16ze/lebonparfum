@@ -149,17 +149,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Rafraîchir manuellement l'utilisateur et statut admin
    * Utile après un login/signup pour mettre à jour l'état immédiatement
+   * CRITIQUE : Cette fonction doit TOUJOURS récupérer le statut admin depuis la DB
    */
   const refreshUser = async () => {
     const supabase = createClient();
     try {
+      console.log("🔄 refreshUser() appelé - Récupération user et statut admin...");
+      
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error("❌ Erreur auth.getUser dans refreshUser:", authError);
+        setUser(null);
+        setIsAdmin(false);
+        return;
+      }
+
       setUser(user);
 
-      // Récupérer le statut admin
+      // Récupérer le statut admin DEPUIS LA BASE DE DONNÉES à chaque fois
       if (user) {
+        console.log("🔍 Récupération profil pour user:", user.id);
+        
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -168,16 +182,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (profileError) {
           console.error("❌ Erreur récupération profil dans refreshUser:", profileError);
+          console.error("❌ Détails erreur:", {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+          });
           setIsAdmin(false);
         } else {
-          console.log("✅ Statut admin rafraîchi:", profile?.is_admin);
-          setIsAdmin(profile?.is_admin || false);
+          const adminStatus = profile?.is_admin === true;
+          console.log("✅ Statut admin rafraîchi depuis DB:", adminStatus, "pour user:", user.email);
+          setIsAdmin(adminStatus);
         }
       } else {
+        console.log("⚠️ Aucun user connecté - isAdmin = false");
         setIsAdmin(false);
       }
     } catch (error) {
-      console.error("❌ Erreur lors du rafraîchissement de l'utilisateur:", error);
+      console.error("❌ Erreur inattendue lors du rafraîchissement de l'utilisateur:", error);
+      setIsAdmin(false);
     }
   };
 
