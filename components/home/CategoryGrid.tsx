@@ -14,31 +14,31 @@ import type { Category } from "@/types/category";
  * - md:gap-6 (uniforme sur desktop)
  */
 export default function CategoryGrid() {
-  // Mock Data - 4 Catégories principales
+  // Collections phares - 4 marques réelles
   const categories: Category[] = [
     {
       id: "1",
-      name: "Parfums",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2000&auto=format&fit=crop",
-      link: "/collections/parfums",
+      name: "CASABLANCA",
+      image: "https://placehold.co/600x800/F5F5F5/000000?text=CASABLANCA",
+      link: "/collections/casablanca",
     },
     {
       id: "2",
-      name: "Soins Corps",
-      image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=2000&auto=format&fit=crop",
-      link: "/collections/soins-corps",
+      name: "CP KING ÉDITION",
+      image: "https://placehold.co/600x800/F5F5F5/000000?text=CP+KING+%C3%89DITION",
+      link: "/collections/cp-king",
     },
     {
       id: "3",
-      name: "Maison",
-      image: "https://images.unsplash.com/photo-1602874801006-94c0a7c13b6f?q=80&w=2000&auto=format&fit=crop",
-      link: "/collections/maison",
+      name: "CP PARIS",
+      image: "https://placehold.co/600x800/F5F5F5/000000?text=CP+PARIS",
+      link: "/collections/cp-paris",
     },
     {
       id: "4",
-      name: "Accessoires",
-      image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=2000&auto=format&fit=crop",
-      link: "/collections/accessoires",
+      name: "NOTE 33",
+      image: "https://placehold.co/600x800/F5F5F5/000000?text=NOTE+33",
+      link: "/collections/note-33",
     },
   ];
 
