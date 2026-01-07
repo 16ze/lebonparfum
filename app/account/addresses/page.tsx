@@ -36,11 +36,28 @@ export default async function AddressesPage() {
     console.error("❌ Erreur récupération adresses:", addressesError.message);
   }
 
-  // Mapping: address_line1 (DB) -> address (code TypeScript)
-  const addresses = addressesRaw?.map((addr: any) => ({
-    ...addr,
-    address: addr.address_line1 || addr.address, // Support des deux formats pour compatibilité
-  })) || [];
+  // Mapping: DB -> code TypeScript
+  // - address_line1 -> address
+  // - name -> first_name + last_name (séparation du nom complet)
+  const addresses = addressesRaw?.map((addr: any) => {
+    // Séparer name en first_name et last_name
+    let first_name = "";
+    let last_name = "";
+    if (addr.name) {
+      const nameParts = addr.name.trim().split(/\s+/);
+      if (nameParts.length > 0) {
+        first_name = nameParts[0];
+        last_name = nameParts.slice(1).join(" ") || "";
+      }
+    }
+    
+    return {
+      ...addr,
+      address: addr.address_line1 || addr.address, // Support des deux formats pour compatibilité
+      first_name: addr.first_name || first_name, // Priorité à first_name si existe, sinon extrait de name
+      last_name: addr.last_name || last_name, // Priorité à last_name si existe, sinon extrait de name
+    };
+  }) || [];
 
   return (
     <div className="max-w-4xl">

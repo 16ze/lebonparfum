@@ -200,12 +200,11 @@ export async function createAddressAction(data: {
 
     // Créer l'adresse
     // CRITIQUE : Mapping exact des champs code -> base de données
-    // La table utilise 'address_line1' (pas 'address') selon la structure réelle
+    // La table utilise 'name' (nom complet) et 'address_line1' (pas 'address')
     const addressPayload = {
       user_id: user.id,
       label: data.label,
-      first_name: data.first_name,
-      last_name: data.last_name,
+      name: `${data.first_name} ${data.last_name}`.trim(), // Fusion: first_name + last_name -> name
       address_line1: data.address, // Mapping: address (code) -> address_line1 (DB)
       city: data.city,
       postal_code: data.postal_code, // Déjà correct
@@ -283,12 +282,23 @@ export async function updateAddressAction(
 
     // Mettre à jour l'adresse
     // CRITIQUE : Mapping exact des champs code -> base de données
-    // La table utilise 'address_line1' (pas 'address')
+    // La table utilise 'name' (nom complet) et 'address_line1' (pas 'address')
     const updatePayload: Record<string, any> = {};
     
     if (data.label !== undefined) updatePayload.label = data.label;
-    if (data.first_name !== undefined) updatePayload.first_name = data.first_name;
-    if (data.last_name !== undefined) updatePayload.last_name = data.last_name;
+    // Fusion first_name + last_name en name si au moins un est défini
+    if (data.first_name !== undefined || data.last_name !== undefined) {
+      // Si on a les deux, on les fusionne
+      if (data.first_name !== undefined && data.last_name !== undefined) {
+        updatePayload.name = `${data.first_name} ${data.last_name}`.trim();
+      } else if (data.first_name !== undefined) {
+        // Si on a seulement first_name, on le met tel quel (ou on pourrait garder l'ancien last_name)
+        updatePayload.name = data.first_name;
+      } else if (data.last_name !== undefined) {
+        // Si on a seulement last_name
+        updatePayload.name = data.last_name;
+      }
+    }
     if (data.address !== undefined) updatePayload.address_line1 = data.address; // Mapping: address -> address_line1
     if (data.address_complement !== undefined) updatePayload.address_complement = data.address_complement;
     if (data.city !== undefined) updatePayload.city = data.city;
