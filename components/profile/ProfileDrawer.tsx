@@ -163,17 +163,17 @@ export default function ProfileDrawer() {
 
       console.log("✅ Déconnexion réussie côté Supabase - Attente onAuthStateChange...");
       
-      // Attendre un peu pour laisser le temps à onAuthStateChange de se déclencher et nettoyer l'état
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Attendre la fermeture du ProfileDrawer (animation GSAP ~400ms)
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      
+      // Attendre que onAuthStateChange nettoie l'état
+      await new Promise((resolve) => setTimeout(resolve, 200));
       
       console.log("🔓 Déconnexion complète - Ouverture du formulaire de connexion...");
       
       // Ouvrir automatiquement l'AuthDrawer pour permettre une nouvelle connexion
+      // L'AuthDrawer s'affichera à la place du ProfileDrawer
       openAuthDrawer();
-      
-      // Ne pas rediriger immédiatement, laisser l'utilisateur voir l'AuthDrawer
-      // Si on veut forcer une redirection vers la home, décommenter la ligne suivante :
-      // window.location.href = "/";
     } catch (error) {
       console.error("❌ Erreur inattendue lors de la déconnexion:", error);
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
