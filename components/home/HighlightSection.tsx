@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,14 +11,11 @@ import Link from "next/link";
  * - Image de fond statique
  * - Layout magazine : Titre haut + CTA bas
  * - Overlay sombre pour contraste
+ * - Pas d'animation rideau
  */
 export default function HighlightSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-
   return (
     <section
-      ref={sectionRef}
       className="relative h-[100dvh] w-full overflow-hidden"
     >
       {/* Image de fond */}
