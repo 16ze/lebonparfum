@@ -1,12 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 /**
  * HighlightSection - Campagne publicitaire Full Screen
@@ -19,36 +15,15 @@ gsap.registerPlugin(ScrollTrigger);
  */
 export default function HighlightSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const imageWrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Parallaxe : Image remonte pendant le scroll
-      gsap.to(imageWrapperRef.current, {
-        y: "-20%",
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
 
   return (
     <section
       ref={sectionRef}
       className="relative h-[100dvh] w-full overflow-hidden"
     >
-      {/* Image de fond avec parallaxe (wrapper 125% height) */}
-      <div
-        ref={imageWrapperRef}
-        className="absolute inset-0 w-full h-[125%] -top-[10%]"
-      >
+      {/* Image de fond */}
+      <div className="absolute inset-0 w-full h-full">
         <Image
           src="https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&w=2000&auto=format&fit=crop"
           alt="Parfum d'exception - Campagne artistique"

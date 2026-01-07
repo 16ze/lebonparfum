@@ -1,18 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Import Swiper styles
 import "swiper/css";
-
-gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Showcase - Section synchronisée style Dior
@@ -71,26 +67,8 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
 
 export default function Showcase() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const lifestyleImgRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  // GSAP Parallaxe sur l'image lifestyle (scroll page)
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.to(lifestyleImgRef.current, {
-        yPercent: 20, // Image descend pendant le scroll
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
 
   // Safety check: Garantir un activeItem valide même si Swiper.realIndex est undefined
   const activeItem = SHOWCASE_ITEMS[activeIndex] || SHOWCASE_ITEMS[0];
@@ -109,11 +87,7 @@ export default function Showcase() {
       <div className="hidden lg:grid lg:grid-cols-12 h-full max-w-[1800px] mx-auto">
         {/* COL 1 : Image Lifestyle (Gauche - 5 cols) */}
         <div className="col-span-5 relative h-full w-full overflow-hidden bg-gray-100">
-          {/* Wrapper parallaxe 120% */}
-          <div
-            ref={lifestyleImgRef}
-            className="absolute inset-0 w-full h-[120%] -top-[10%]"
-          >
+          <div className="absolute inset-0 w-full h-full">
             <Image
               src={activeItem.lifestyleImg}
               alt={activeItem.title}
