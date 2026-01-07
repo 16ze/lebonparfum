@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
+import clsx from "clsx";
 import gsap from "gsap";
 import {
   Heart,
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import clsx from "clsx";
 
 /**
  * ProfileDrawer - Overlay de profil (style Byredo)
@@ -135,16 +135,24 @@ export default function ProfileDrawer() {
   /**
    * Déconnexion
    */
-  const handleLogout = async () => {
+  const handleLogout = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     try {
-      console.log("🔓 Tentative de déconnexion...");
+      console.log("🔓 Tentative de déconnexion depuis ProfileDrawer...");
+      console.log("🔍 État actuel - user:", user?.email, "isOpen:", isProfileDrawerOpen);
       
       // Fermer le drawer immédiatement pour un feedback visuel
       closeProfileDrawer();
       
       // Déconnexion avec le client Supabase côté client
       const supabase = createClient();
-      const { error } = await supabase.auth.signOut();
+      console.log("🔍 Création client Supabase...");
+      
+      const { error, data } = await supabase.auth.signOut();
+      
+      console.log("🔍 Résultat signOut - error:", error, "data:", data);
 
       if (error) {
         console.error("❌ Erreur lors de la déconnexion:", error.message);
@@ -152,17 +160,20 @@ export default function ProfileDrawer() {
         return;
       }
 
-      console.log("✅ Déconnexion réussie - Redirection vers la home...");
+      console.log("✅ Déconnexion réussie côté Supabase - Attente onAuthStateChange...");
       
-      // Attendre un peu pour laisser le temps à onAuthStateChange de se déclencher
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Attendre un peu plus pour laisser le temps à onAuthStateChange de se déclencher
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      console.log("🔄 Redirection vers la home...");
       
       // Forcer un rechargement complet de la page pour réinitialiser tous les états
       // Utiliser window.location.replace pour éviter le retour en arrière
-      window.location.replace("/");
+      window.location.href = "/";
     } catch (error) {
       console.error("❌ Erreur inattendue lors de la déconnexion:", error);
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+      console.error("❌ Stack trace:", error instanceof Error ? error.stack : "Pas de stack");
       alert(`Erreur inattendue lors de la déconnexion: ${errorMessage}`);
     }
   };
@@ -400,7 +411,11 @@ export default function ProfileDrawer() {
         {!isProfileExpanded && (
           <div className="p-6 border-t border-gray-100">
             <button
-              onClick={handleLogout}
+              type="button"
+              onClick={(e) => {
+                console.log("🖱️ Bouton déconnexion cliqué");
+                handleLogout(e);
+              }}
               className="w-full flex items-center justify-center gap-3 py-3 border border-red-200 text-red-600 hover:bg-red-50 transition-colors rounded-sm group"
             >
               <LogOut className="w-4 h-4" strokeWidth={1.5} />
