@@ -20,7 +20,7 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isProfileDrawerOpen } = useAuth();
+  const { isProfileDrawerOpen, isProfileExpanded } = useAuth();
   const isEmbedMode = searchParams.get("embed") === "true";
   
   // Routes où on ne veut pas afficher Header et Footer
@@ -28,7 +28,7 @@ export default function ConditionalLayout({
   const shouldHideLayout = 
     hiddenRoutes.some((route) => pathname.startsWith(route)) || 
     isEmbedMode || // Masquer si mode embed
-    isProfileDrawerOpen; // Masquer si ProfileDrawer est ouvert
+    (isProfileDrawerOpen && isProfileExpanded); // Masquer si ProfileDrawer est ouvert ET expanded
 
   if (shouldHideLayout) {
     // Sur checkout, mode embed ou ProfileDrawer ouvert, on affiche juste les enfants (pas de Header/Footer)
