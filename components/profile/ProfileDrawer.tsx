@@ -1,7 +1,7 @@
 "use client";
 
-import { logoutAction } from "@/app/login/actions";
 import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/utils/supabase/client";
 import gsap from "gsap";
 import {
   Heart,
@@ -112,8 +112,27 @@ export default function ProfileDrawer() {
    * Déconnexion
    */
   const handleLogout = async () => {
-    closeProfileDrawer();
-    await logoutAction();
+    try {
+      closeProfileDrawer();
+      
+      // Déconnexion avec le client Supabase côté client
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("❌ Erreur lors de la déconnexion:", error.message);
+        alert("Erreur lors de la déconnexion. Veuillez réessayer.");
+        return;
+      }
+
+      console.log("✅ Déconnexion réussie");
+      
+      // Forcer un rechargement complet de la page pour réinitialiser tous les états
+      window.location.href = "/";
+    } catch (error) {
+      console.error("❌ Erreur inattendue lors de la déconnexion:", error);
+      alert("Erreur inattendue lors de la déconnexion. Veuillez réessayer.");
+    }
   };
 
   /**
