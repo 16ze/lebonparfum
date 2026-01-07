@@ -20,18 +20,24 @@ export default function AdminHeader() {
   return (
     <div className="border-b border-black/10 bg-white">
       <div className="px-4 md:px-8 py-4 md:py-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-          <div>
+        <div className="flex flex-row items-center justify-end md:justify-between gap-3 md:gap-0">
+          <div className="hidden md:block">
             <h2 className="text-xs uppercase tracking-widest text-gray-400">
               Espace Administration
             </h2>
           </div>
-          <Link
-            href="/"
-            className="text-xs uppercase tracking-widest font-medium text-black hover:opacity-50 transition-opacity duration-300 underline underline-offset-4"
-          >
-            Retour à la boutique
-          </Link>
+          <div className="flex flex-row items-center gap-3 md:gap-0">
+            {/* Sur mobile : Afficher "Espace Administration" avant le bouton */}
+            <h2 className="text-xs uppercase tracking-widest text-gray-400 md:hidden">
+              Espace Administration
+            </h2>
+            <Link
+              href="/"
+              className="text-xs uppercase tracking-widest font-medium text-black hover:opacity-50 transition-opacity duration-300 underline underline-offset-4 whitespace-nowrap"
+            >
+              Retour à la boutique
+            </Link>
+          </div>
         </div>
       </div>
     </div>
