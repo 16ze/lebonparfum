@@ -40,6 +40,7 @@ export default function ProfileDrawer() {
     toggleExpand,
     setProfileView,
     refreshUser,
+    openAuthDrawer,
   } = useAuth();
   const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -162,14 +163,17 @@ export default function ProfileDrawer() {
 
       console.log("✅ Déconnexion réussie côté Supabase - Attente onAuthStateChange...");
       
-      // Attendre un peu plus pour laisser le temps à onAuthStateChange de se déclencher
+      // Attendre un peu pour laisser le temps à onAuthStateChange de se déclencher et nettoyer l'état
       await new Promise((resolve) => setTimeout(resolve, 300));
       
-      console.log("🔄 Redirection vers la home...");
+      console.log("🔓 Déconnexion complète - Ouverture du formulaire de connexion...");
       
-      // Forcer un rechargement complet de la page pour réinitialiser tous les états
-      // Utiliser window.location.replace pour éviter le retour en arrière
-      window.location.href = "/";
+      // Ouvrir automatiquement l'AuthDrawer pour permettre une nouvelle connexion
+      openAuthDrawer();
+      
+      // Ne pas rediriger immédiatement, laisser l'utilisateur voir l'AuthDrawer
+      // Si on veut forcer une redirection vers la home, décommenter la ligne suivante :
+      // window.location.href = "/";
     } catch (error) {
       console.error("❌ Erreur inattendue lors de la déconnexion:", error);
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
