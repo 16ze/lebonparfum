@@ -14,8 +14,8 @@ import "swiper/css";
  * Showcase - Section synchronisée style Dior
  *
  * Architecture :
- * - Gauche (5 cols) : Image lifestyle (parallaxe + fade)
- * - Centre (3 cols) : Titre + Description (glissement)
+ * - Gauche (5 cols) : Image lifestyle
+ * - Centre (3 cols) : Titre + Description
  * - Droite (4 cols) : Carrousel produit (Swiper horizontal)
  *
  * Interaction :

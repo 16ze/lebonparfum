@@ -9,7 +9,7 @@ import Link from "next/link";
  *
  * Design :
  * - Plein écran (100dvh - mobile safe)
- * - Image de fond avec parallaxe (y: 0% → -20%)
+ * - Image de fond statique
  * - Layout magazine : Titre haut + CTA bas
  * - Overlay sombre pour contraste
  */
