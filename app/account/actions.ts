@@ -199,16 +199,37 @@ export async function createAddressAction(data: {
     }
 
     // Créer l'adresse
+    // CRITIQUE : S'assurer que user_id est bien défini et que country a une valeur par défaut
+    const addressPayload = {
+      user_id: user.id,
+      label: data.label,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      address: data.address,
+      city: data.city,
+      postal_code: data.postal_code,
+      country: data.country || "France", // Valeur par défaut si manquante
+      is_default: data.is_default,
+      ...(data.address_complement && { address_complement: data.address_complement }),
+      ...(data.phone && { phone: data.phone }),
+    };
+
     const { error: insertError } = await supabase
       .from("user_addresses")
-      .insert({
-        user_id: user.id,
-        ...data,
-      });
+      .insert(addressPayload);
 
     if (insertError) {
-      console.error("❌ Erreur create address:", insertError.message);
-      return { success: false, error: "Erreur lors de la création de l'adresse" };
+      console.error("❌ Erreur create address:", insertError);
+      console.error("❌ Détails:", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+      });
+      return { 
+        success: false, 
+        error: `Erreur lors de la création de l'adresse: ${insertError.message}` 
+      };
     }
 
     revalidatePath("/account/addresses");
