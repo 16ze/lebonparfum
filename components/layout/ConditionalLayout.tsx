@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -10,6 +11,7 @@ import Footer from "./Footer";
  * Routes sans Header/Footer :
  * - /checkout (page de paiement distraction-free)
  * - Toute page avec ?embed=true (iframe mode)
+ * - ProfileDrawer ouvert (pour une expérience immersive)
  */
 export default function ConditionalLayout({
   children,
@@ -18,16 +20,18 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { isProfileDrawerOpen } = useAuth();
   const isEmbedMode = searchParams.get("embed") === "true";
   
   // Routes où on ne veut pas afficher Header et Footer
   const hiddenRoutes = ["/checkout"];
-  const shouldHideLayout = hiddenRoutes.some((route) =>
-    pathname.startsWith(route)
-  ) || isEmbedMode; // Masquer aussi si mode embed
+  const shouldHideLayout = 
+    hiddenRoutes.some((route) => pathname.startsWith(route)) || 
+    isEmbedMode || // Masquer si mode embed
+    isProfileDrawerOpen; // Masquer si ProfileDrawer est ouvert
 
   if (shouldHideLayout) {
-    // Sur checkout ou mode embed, on affiche juste les enfants (pas de Header/Footer)
+    // Sur checkout, mode embed ou ProfileDrawer ouvert, on affiche juste les enfants (pas de Header/Footer)
     return <>{children}</>;
   }
 
