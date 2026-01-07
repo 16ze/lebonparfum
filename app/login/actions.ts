@@ -204,9 +204,10 @@ export async function loginWithGoogleAction() {
   try {
     const supabase = await createClient();
 
-    // Récupérer l'URL de callback (origin + /auth/callback)
+    // Récupérer l'URL de callback (origin + /auth/callback?next=/)
+    // On redirige vers la home page après connexion Google
     const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const redirectTo = `${origin}/auth/callback`;
+    const redirectTo = `${origin}/auth/callback?next=/`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

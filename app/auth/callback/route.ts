@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -17,8 +17,8 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
-  // Par défaut, on redirige vers /account si pas de paramètre "next"
-  const next = searchParams.get("next") ?? "/account";
+  // Par défaut, on redirige vers la home page si pas de paramètre "next"
+  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const cookieStore = await cookies();
@@ -53,20 +53,36 @@ export async function GET(request: Request) {
     );
 
     // C'EST ICI QUE LA MAGIE OPÈRE : Echange du code contre la session
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      console.log("✅ [CALLBACK] Session créée avec succès !");
+      console.log("👤 [CALLBACK] User:", data?.user?.email || "non disponible");
+      console.log("🔐 [CALLBACK] Session ID:", data?.session?.access_token ? "présent" : "absent");
+
       // Si ça marche, on redirige vers le site connecté
       const forwardedHost = request.headers.get("x-forwarded-host"); // Pour Vercel
       const isLocal = origin.includes("localhost");
 
+      let redirectUrl: string;
       if (isLocal) {
-        return NextResponse.redirect(`${origin}${next}`);
+        redirectUrl = `${origin}${next}`;
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+        redirectUrl = `https://${forwardedHost}${next}`;
       } else {
-        return NextResponse.redirect(`${origin}${next}`);
+        redirectUrl = `${origin}${next}`;
       }
+
+      console.log("➡️ [CALLBACK] Redirection vers:", redirectUrl);
+      
+      // CRITIQUE : S'assurer que les cookies sont bien définis dans la réponse
+      const response = NextResponse.redirect(redirectUrl);
+      
+      // Les cookies sont déjà définis via setAll, mais on peut forcer leur envoi
+      // en définissant explicitement les en-têtes Set-Cookie si nécessaire
+      return response;
+    } else {
+      console.error("❌ [CALLBACK] Erreur échange code:", error.message);
     }
   }
 
