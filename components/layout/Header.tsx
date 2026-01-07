@@ -64,22 +64,7 @@ export default function Header() {
         });
       }
 
-      // 1. Animation Hide/Show basée sur la direction du scroll (Home uniquement)
-      ScrollTrigger.create({
-        start: "top top",
-        end: "max",
-        onUpdate: (self) => {
-          const direction = self.direction; // 1 = down, -1 = up
-
-          gsap.to(headerRef.current, {
-            yPercent: direction === 1 ? -100 : 0,
-            duration: 0.5,
-            ease: "power3.out",
-          });
-        },
-      });
-
-      // 2. Animation Transparent → White basée sur la position du scroll
+      // 1. Animation Transparent → White basée sur la position du scroll
       ScrollTrigger.create({
         start: "top top",
         end: "50px top", // Réduit à 50px pour un changement plus rapide
