@@ -30,44 +30,40 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
+  const logoRef = useRef<HTMLHeadingElement>(null);
   const { toggleMenu, isOpen, openSearch } = useMenu();
   const { cartCount, openCart } = useCart();
   const { user, openProfileDrawer, openAuthDrawer } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(!isHome); // Sur les autres pages, on considère qu'on est "scrollé"
-  const [showLogo, setShowLogo] = useState(!isHome); // Logo header visible par défaut sauf sur Home
-
-  // Gestion du scroll uniquement sur la page d'accueil
-  useEffect(() => {
-    if (!isHome) {
-      // Sur les autres pages, on force l'état "scrollé" et logo visible
-      setIsScrolled(true);
-      setShowLogo(true);
-      return;
-    }
-
-    // Écouter le scroll pour afficher le logo header quand on est presque à la fin du Hero
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
-      // Afficher le logo quand on a scrollé presque toute la hauteur du Hero
-      setShowLogo(scrollY > windowHeight - 100);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Vérifier immédiatement
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHome]);
 
   // Animations GSAP uniquement sur la page d'accueil
   useEffect(() => {
-    if (!isHome) {
-      return;
-    }
-
     const ctx = gsap.context(() => {
+      if (!isHome) {
+        // Sur les autres pages : s'assurer que le logo est normal
+        if (logoRef.current) {
+          gsap.set(logoRef.current, {
+            y: 0,
+            scale: 1,
+            color: "#000000",
+            clearProps: "transform,color",
+          });
+        }
+        return;
+      }
+
+      // Configuration initiale du logo sur Home (géant, descendu, blanc)
+      if (logoRef.current) {
+        gsap.set(logoRef.current, {
+          y: 120, // Descendu dans le Hero
+          scale: 3, // Agrandi
+          transformOrigin: "center top", // Origine de transformation
+          color: "#FFFFFF", // Blanc
+        });
+      }
+
       // 1. Animation Hide/Show basée sur la direction du scroll (Home uniquement)
       ScrollTrigger.create({
         start: "top top",
@@ -102,7 +98,8 @@ export default function Header() {
 
           // Texte & Icons : blanc → noir
           elementsRef.current.forEach((el) => {
-            if (el) {
+            if (el && el !== logoRef.current) {
+              // Ne pas animer le logo ici (géré séparément)
               gsap.to(el, {
                 color: progress > 0.5 ? "#000000" : "#FFFFFF",
                 duration: 0.3,
@@ -120,6 +117,22 @@ export default function Header() {
           });
         },
       });
+
+      // 3. Animation Logo : remonte, rétrécit et change de couleur
+      if (logoRef.current) {
+        gsap.to(logoRef.current, {
+          y: 0, // Remonte à sa position normale
+          scale: 1, // Rétrécit à sa taille normale
+          color: "#000000", // Change de blanc à noir
+          ease: "none",
+          scrollTrigger: {
+            trigger: document.body,
+            start: "top top",
+            end: "150px top", // Animation rapide dès le début du scroll
+            scrub: true,
+          },
+        });
+      }
     }, headerRef);
 
     return () => ctx.revert();
@@ -206,21 +219,11 @@ export default function Header() {
         </div>
 
         {/* Centre : Logo LE BON PARFUM */}
-        <Link
-          href="/"
-          ref={(el) => {
-            elementsRef.current[2] = el;
-          }}
-        >
+        <Link href="/">
           <h1
-            className={clsx(
-              "text-base md:text-lg font-bold uppercase tracking-widest transition-opacity duration-300",
-              {
-                "opacity-0": isHome && !showLogo, // Caché sur Home jusqu'à la fin de l'animation
-                "opacity-100": !isHome || showLogo, // Visible sur autres pages ou après scroll
-              }
-            )}
-            style={{ color: textColor }}
+            ref={logoRef}
+            className="text-base md:text-lg font-bold uppercase tracking-widest"
+            style={{ color: isHome && !isScrolled ? "#FFFFFF" : textColor }}
           >
             LE BON PARFUM
           </h1>
