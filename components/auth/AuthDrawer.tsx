@@ -72,15 +72,22 @@ export default function AuthDrawer() {
   }, [isAuthDrawerOpen]);
 
   /**
-   * Réinitialiser le formulaire lors de la fermeture
+   * Réinitialiser le formulaire lors de la fermeture ou de l'ouverture
+   * CRITIQUE : Réinitialiser isLoading pour éviter que le bouton reste en chargement
    */
   useEffect(() => {
     if (!isAuthDrawerOpen) {
+      // Réinitialiser quand le drawer se ferme
       setEmail("");
       setPassword("");
       setFullName("");
       setError(null);
       setIsSignup(false);
+      setIsLoading(false); // CRITIQUE : Réinitialiser l'état de chargement
+    } else {
+      // Réinitialiser aussi quand le drawer s'ouvre (au cas où)
+      setIsLoading(false);
+      setError(null);
     }
   }, [isAuthDrawerOpen]);
 
@@ -112,10 +119,12 @@ export default function AuthDrawer() {
         const loginResult = await loginAction(email, password);
         if (loginResult.success) {
           await refreshUser();
+          setIsLoading(false); // CRITIQUE : Réinitialiser avant de fermer
           closeAuthDrawer();
         } else {
           setError("Compte créé. Connectez-vous maintenant.");
           setIsSignup(false);
+          setIsLoading(false); // Réinitialiser même en cas d'échec
         }
       } else {
         // Connexion
@@ -127,6 +136,7 @@ export default function AuthDrawer() {
         }
 
         await refreshUser();
+        setIsLoading(false); // CRITIQUE : Réinitialiser avant de fermer
         closeAuthDrawer();
       }
     } catch (err) {
