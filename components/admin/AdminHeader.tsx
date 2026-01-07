@@ -19,8 +19,8 @@ export default function AdminHeader() {
 
   return (
     <div className="border-b border-black/10 bg-white">
-      <div className="px-8 py-6">
-        <div className="flex items-center justify-between">
+      <div className="px-4 md:px-8 py-4 md:py-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
           <div>
             <h2 className="text-xs uppercase tracking-widest text-gray-400">
               Espace Administration

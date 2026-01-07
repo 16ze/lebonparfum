@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import clsx from "clsx";
 
 /**
  * ProfileDrawer - Overlay de profil (style Byredo)
@@ -109,10 +110,16 @@ export default function ProfileDrawer() {
       if (!drawerRef.current) return;
       const isMobile = window.innerWidth < 768;
       const normalWidth = isMobile ? "95vw" : "480px";
-      const expandedWidth = "98vw";
+      // Sur mobile, en mode expanded, on prend toute la largeur sauf un petit padding
+      const expandedWidth = isMobile ? "100vw" : "98vw";
 
       gsap.to(drawerRef.current, {
         width: isProfileExpanded ? expandedWidth : normalWidth,
+        // Sur mobile expanded, retirer les marges
+        top: isProfileExpanded && isMobile ? 0 : undefined,
+        right: isProfileExpanded && isMobile ? 0 : undefined,
+        bottom: isProfileExpanded && isMobile ? 0 : undefined,
+        borderRadius: isProfileExpanded && isMobile ? 0 : undefined,
         duration: 0.4,
         ease: "power2.inOut",
       });
@@ -215,7 +222,13 @@ export default function ProfileDrawer() {
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="fixed top-4 right-4 bottom-4 w-[95vw] md:w-[480px] bg-white rounded-3xl shadow-2xl z-[9999] flex flex-col overflow-hidden invisible"
+        className={clsx(
+          "fixed bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden invisible",
+          // Mode normal
+          !isProfileExpanded && "top-4 right-4 bottom-4 w-[95vw] md:w-[480px] rounded-3xl",
+          // Mode expanded sur mobile : plein écran
+          isProfileExpanded && "top-0 right-0 bottom-0 left-0 w-full h-full rounded-none md:top-4 md:right-4 md:bottom-4 md:left-auto md:w-[98vw] md:rounded-3xl"
+        )}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -373,6 +386,11 @@ export default function ProfileDrawer() {
                 }
                 className="w-full h-full border-0"
                 title={`${isAdmin ? "Admin" : "Account"} ${currentProfileView}`}
+                style={{
+                  // Forcer le zoom sur mobile pour éviter le problème de viewport
+                  transform: typeof window !== "undefined" && window.innerWidth < 768 ? "scale(1)" : "scale(1)",
+                  transformOrigin: "top left",
+                }}
               />
             </div>
           )}

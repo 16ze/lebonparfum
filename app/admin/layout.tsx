@@ -23,16 +23,16 @@ export default async function AdminLayout({
   return (
     <AuthGuard requireAdmin={true}>
       <div className="flex min-h-screen bg-white">
-        {/* Sidebar (fixe, 256px) */}
+        {/* Sidebar (drawer sur mobile, fixe sur desktop) */}
         <AdminSidebar />
 
-        {/* Zone de contenu (décalée de 256px pour la sidebar) */}
-        <main className="flex-1 ml-64">
+        {/* Zone de contenu (responsive) */}
+        <main className="flex-1 md:ml-64 w-full">
           {/* Header secondaire (masqué si embed=true) */}
           <AdminHeader />
 
-          {/* Contenu de la page */}
-          <div className="p-8">{children}</div>
+          {/* Contenu de la page (padding responsive) */}
+          <div className="p-4 md:p-8">{children}</div>
         </main>
       </div>
     </AuthGuard>
