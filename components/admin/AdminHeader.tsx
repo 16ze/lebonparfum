@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 /**
  * AdminHeader - Header interne du layout admin
@@ -25,6 +26,12 @@ export default function AdminHeader() {
               Espace Administration
             </h2>
           </div>
+          <Link
+            href="/"
+            className="text-xs uppercase tracking-widest font-medium text-black hover:opacity-50 transition-opacity duration-300 underline underline-offset-4"
+          >
+            Retour à la boutique
+          </Link>
         </div>
       </div>
     </div>
