@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Route de callback OAuth (Google, etc.)
@@ -20,6 +20,10 @@ export async function GET(request: NextRequest) {
   
   // Si un paramètre "next" est fourni, on l'utilise, sinon /account par défaut
   const next = searchParams.get("next") ?? "/account";
+  
+  // Récupérer le host forwarded pour Vercel/production (utilisé dans tout le scope)
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isLocal = origin.includes("localhost");
 
   if (code) {
     const supabase = await createClient();
@@ -28,10 +32,6 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Récupérer le host forwarded pour Vercel/production
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocal = origin.includes("localhost");
-
       // Construction de l'URL de redirection
       let redirectUrl: string;
       
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Si erreur ou pas de code, retour vers la page d'erreur
-  const errorUrl = origin.includes("localhost")
+  const errorUrl = isLocal
     ? `${origin}/auth/auth-code-error`
     : forwardedHost
     ? `https://${forwardedHost}/auth/auth-code-error`
