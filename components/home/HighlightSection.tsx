@@ -16,7 +16,7 @@ import Link from "next/link";
 export default function HighlightSection() {
   return (
     <section
-      className="relative h-[100dvh] w-full overflow-hidden"
+      className="relative z-20 h-[100dvh] w-full overflow-hidden bg-white"
     >
       {/* Image de fond */}
       <div className="absolute inset-0 w-full h-full">
