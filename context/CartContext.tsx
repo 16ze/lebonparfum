@@ -62,14 +62,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   /**
    * Sauvegarder le panier dans localStorage à chaque changement
-   * ⚠️ SAUF si le panier est vide (clearCart() a déjà supprimé le localStorage)
+   * ⚠️ Si le panier est vide, supprimer explicitement le localStorage
    */
   useEffect(() => {
     if (isMounted) {
       try {
-        // Si le panier est vide, ne rien faire (clearCart() a déjà supprimé le localStorage)
         if (cartItems.length === 0) {
-          console.log("🔇 Panier vide - Pas de sauvegarde dans localStorage");
+          // Supprimer le localStorage quand le panier est vide
+          localStorage.removeItem("lebonparfum-cart");
+          console.log("🔇 Panier vide - localStorage supprimé");
           return;
         }
         localStorage.setItem("lebonparfum-cart", JSON.stringify(cartItems));
