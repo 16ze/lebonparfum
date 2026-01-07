@@ -24,7 +24,7 @@ export default function ConditionalLayout({
   const isEmbedMode = searchParams.get("embed") === "true";
   
   // Routes où on ne veut pas afficher Header et Footer
-  const hiddenRoutes = ["/checkout"];
+  const hiddenRoutes = ["/checkout", "/admin"];
   const shouldHideLayout = 
     hiddenRoutes.some((route) => pathname.startsWith(route)) || 
     isEmbedMode || // Masquer si mode embed

@@ -1,5 +1,6 @@
 import AuthGuard from "@/components/auth/AuthGuard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminHeader from "@/components/admin/AdminHeader";
 
 /**
  * Layout Admin - Wrapper pour toutes les pages admin
@@ -12,6 +13,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
  * Design Byredo :
  * - Sidebar noire
  * - Contenu sur fond blanc
+ * - Header interne masqué si ?embed=true (pour ProfileDrawer)
  */
 export default async function AdminLayout({
   children,
@@ -26,18 +28,8 @@ export default async function AdminLayout({
 
         {/* Zone de contenu (décalée de 256px pour la sidebar) */}
         <main className="flex-1 ml-64">
-          {/* Header secondaire (optionnel) */}
-          <div className="border-b border-black/10 bg-white">
-            <div className="px-8 py-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xs uppercase tracking-widest text-gray-400">
-                    Espace Administration
-                  </h2>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Header secondaire (masqué si embed=true) */}
+          <AdminHeader />
 
           {/* Contenu de la page */}
           <div className="p-8">{children}</div>
