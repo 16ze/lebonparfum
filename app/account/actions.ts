@@ -309,28 +309,44 @@ export async function updateAddressAction(
       if (data.first_name !== undefined && data.last_name !== undefined) {
         updatePayload.name = `${data.first_name} ${data.last_name}`.trim();
       } else if (data.first_name !== undefined) {
-        updatePayload.name = data.first_name;
+        updatePayload.name = data.first_name.trim();
       } else if (data.last_name !== undefined) {
-        updatePayload.name = data.last_name;
+        updatePayload.name = data.last_name.trim();
       }
     }
-    if (data.address !== undefined) updatePayload.address_line1 = data.address; // Mapping: address -> address_line1
-    if (data.address_complement !== undefined) updatePayload.address_line2 = data.address_complement || null; // Mapping: address_complement -> address_line2
+    if (data.address !== undefined) updatePayload.address_line1 = data.address; // Mapping: address (code) -> address_line1 (DB)
+    if (data.address_complement !== undefined) updatePayload.address_line2 = data.address_complement || null; // Mapping: address_complement (code) -> address_line2 (DB)
     if (data.city !== undefined) updatePayload.city = data.city;
     if (data.postal_code !== undefined) updatePayload.postal_code = data.postal_code;
     if (data.country !== undefined) updatePayload.country = data.country;
     if (data.is_default !== undefined) updatePayload.is_default = data.is_default;
-    // NOTE : On n'inclut PAS 'label', 'phone', 'first_name', 'last_name' ou tout autre champ hors schéma
+    // NOTE : On n'inclut PAS 'label', 'phone', 'first_name', 'last_name', 'address', 'address_complement' ou tout autre champ hors schéma
+
+    // Vérifier que le payload n'est pas vide
+    if (Object.keys(updatePayload).length === 0) {
+      console.warn("⚠️ Aucun champ à mettre à jour pour l'adresse", addressId);
+      return { success: true, error: null }; // Rien à mettre à jour, considéré comme succès
+    }
 
     const { error: updateError } = await supabase
       .from("user_addresses")
       .update(updatePayload)
       .eq("id", addressId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id); // SÉCURITÉ : On vérifie que c'est bien l'adresse de l'utilisateur
 
     if (updateError) {
-      console.error("❌ Erreur update address:", updateError.message);
-      return { success: false, error: "Erreur lors de la mise à jour" };
+      console.error("❌ Erreur update address:", updateError);
+      console.error("❌ Détails erreur:", {
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        code: updateError.code,
+      });
+      console.error("❌ Payload envoyé:", updatePayload);
+      return { 
+        success: false, 
+        error: `Erreur lors de la mise à jour: ${updateError.message}` 
+      };
     }
 
     revalidatePath("/account/addresses");
