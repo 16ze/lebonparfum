@@ -92,29 +92,42 @@ export default function PaymentForm() {
 
       console.log("✅ PaymentElement trouvé, confirmation du paiement...");
       
+      const confirmParams = {
+        // Redirection après paiement réussi
+        return_url: `${window.location.origin}/checkout/success`,
+        // Envoyer l'adresse de livraison dans les metadata
+        shipping: {
+          name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+          address: {
+            line1: shippingAddress.address,
+            city: shippingAddress.city,
+            postal_code: shippingAddress.postalCode,
+            country: shippingAddress.country === "France" ? "FR" : "FR",
+          },
+          phone: shippingAddress.phone || undefined,
+        },
+        receipt_email: shippingAddress.email,
+      };
+
+      console.log("📋 Paramètres de confirmation:", {
+        return_url: confirmParams.return_url,
+        has_shipping: !!confirmParams.shipping,
+      });
+      
+      console.log("⏳ Appel stripe.confirmPayment en cours...");
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        confirmParams: {
-          // Redirection après paiement réussi
-          return_url: `${window.location.origin}/checkout/success`,
-          // Envoyer l'adresse de livraison dans les metadata
-          // Note: Les metadata Stripe sont stockées au niveau du PaymentIntent
-          // et seront récupérées par le webhook
-          shipping: {
-            name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
-            address: {
-              line1: shippingAddress.address,
-              city: shippingAddress.city,
-              postal_code: shippingAddress.postalCode,
-              country: shippingAddress.country === "France" ? "FR" : "FR", // Code ISO pays
-            },
-            phone: shippingAddress.phone || undefined,
-          },
-          // Ajouter l'email dans receipt_email pour envoyer le reçu Stripe
-          receipt_email: shippingAddress.email,
-        },
-        // IMPORTANT : Ne pas rediriger automatiquement pour voir les erreurs
+        confirmParams,
+        // IMPORTANT : Ne rediriger que si action requise (ex: 3D Secure)
         redirect: "if_required",
+      });
+
+      console.log("📥 Réponse stripe.confirmPayment reçue:", {
+        hasError: !!error,
+        errorType: error?.type,
+        errorMessage: error?.message,
+        paymentIntentId: paymentIntent?.id,
+        paymentIntentStatus: paymentIntent?.status,
       });
 
       // Si erreur, l'afficher
