@@ -37,8 +37,8 @@ export default async function AddressesPage() {
   }
 
   // Mapping: DB -> code TypeScript
-  // - address_line1 -> address
-  // - name -> first_name + last_name (séparation du nom complet)
+  // Structure DB réelle : id, user_id, name, address_line1, address_line2, city, postal_code, country, is_default
+  // Structure code : id, user_id, label, first_name, last_name, address, address_complement, city, postal_code, country, phone, is_default
   const addresses = addressesRaw?.map((addr: any) => {
     // Séparer name en first_name et last_name
     let first_name = "";
@@ -53,9 +53,12 @@ export default async function AddressesPage() {
     
     return {
       ...addr,
-      address: addr.address_line1 || addr.address, // Support des deux formats pour compatibilité
-      first_name: addr.first_name || first_name, // Priorité à first_name si existe, sinon extrait de name
-      last_name: addr.last_name || last_name, // Priorité à last_name si existe, sinon extrait de name
+      label: addr.label || "", // Pas dans la DB, valeur par défaut
+      address: addr.address_line1 || addr.address, // Mapping: address_line1 -> address
+      address_complement: addr.address_line2 || addr.address_complement || null, // Mapping: address_line2 -> address_complement
+      first_name: first_name, // Extrait de name
+      last_name: last_name, // Extrait de name
+      phone: addr.phone || null, // Pas dans la DB, valeur par défaut
     };
   }) || [];
 

@@ -199,19 +199,28 @@ export async function createAddressAction(data: {
     }
 
     // Créer l'adresse
-    // CRITIQUE : Mapping exact des champs code -> base de données
-    // La table utilise 'name' (nom complet) et 'address_line1' (pas 'address')
-    const addressPayload = {
+    // CRITIQUE : Construction stricte selon le schéma DB réel
+    // La table contient UNIQUEMENT : id, user_id, name, address_line1, address_line2, city, postal_code, country, is_default
+    // On ne doit PAS envoyer : label, first_name, last_name, phone, address_complement, etc.
+    const addressPayload: {
+      user_id: string;
+      name: string;
+      address_line1: string;
+      address_line2: string | null;
+      city: string;
+      postal_code: string;
+      country: string;
+      is_default: boolean;
+    } = {
       user_id: user.id,
-      label: data.label,
       name: `${data.first_name} ${data.last_name}`.trim(), // Fusion: first_name + last_name -> name
       address_line1: data.address, // Mapping: address (code) -> address_line1 (DB)
+      address_line2: data.address_complement || null, // Mapping: address_complement -> address_line2
       city: data.city,
-      postal_code: data.postal_code, // Déjà correct
+      postal_code: data.postal_code,
       country: data.country || "France", // Valeur par défaut si manquante
       is_default: data.is_default,
-      ...(data.address_complement && { address_complement: data.address_complement }),
-      ...(data.phone && { phone: data.phone }),
+      // NOTE : On n'inclut PAS 'label', 'phone', 'first_name', 'last_name' ou tout autre champ hors schéma
     };
 
     const { error: insertError } = await supabase
@@ -281,31 +290,37 @@ export async function updateAddressAction(
     }
 
     // Mettre à jour l'adresse
-    // CRITIQUE : Mapping exact des champs code -> base de données
-    // La table utilise 'name' (nom complet) et 'address_line1' (pas 'address')
-    const updatePayload: Record<string, any> = {};
+    // CRITIQUE : Construction stricte selon le schéma DB réel
+    // La table contient UNIQUEMENT : id, user_id, name, address_line1, address_line2, city, postal_code, country, is_default
+    // On ne doit PAS envoyer : label, first_name, last_name, phone, address_complement, etc.
+    const updatePayload: {
+      name?: string;
+      address_line1?: string;
+      address_line2?: string | null;
+      city?: string;
+      postal_code?: string;
+      country?: string;
+      is_default?: boolean;
+    } = {};
     
-    if (data.label !== undefined) updatePayload.label = data.label;
     // Fusion first_name + last_name en name si au moins un est défini
     if (data.first_name !== undefined || data.last_name !== undefined) {
       // Si on a les deux, on les fusionne
       if (data.first_name !== undefined && data.last_name !== undefined) {
         updatePayload.name = `${data.first_name} ${data.last_name}`.trim();
       } else if (data.first_name !== undefined) {
-        // Si on a seulement first_name, on le met tel quel (ou on pourrait garder l'ancien last_name)
         updatePayload.name = data.first_name;
       } else if (data.last_name !== undefined) {
-        // Si on a seulement last_name
         updatePayload.name = data.last_name;
       }
     }
     if (data.address !== undefined) updatePayload.address_line1 = data.address; // Mapping: address -> address_line1
-    if (data.address_complement !== undefined) updatePayload.address_complement = data.address_complement;
+    if (data.address_complement !== undefined) updatePayload.address_line2 = data.address_complement || null; // Mapping: address_complement -> address_line2
     if (data.city !== undefined) updatePayload.city = data.city;
     if (data.postal_code !== undefined) updatePayload.postal_code = data.postal_code;
     if (data.country !== undefined) updatePayload.country = data.country;
-    if (data.phone !== undefined) updatePayload.phone = data.phone;
     if (data.is_default !== undefined) updatePayload.is_default = data.is_default;
+    // NOTE : On n'inclut PAS 'label', 'phone', 'first_name', 'last_name' ou tout autre champ hors schéma
 
     const { error: updateError } = await supabase
       .from("user_addresses")
