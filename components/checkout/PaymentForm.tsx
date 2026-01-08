@@ -72,11 +72,15 @@ export default function PaymentForm() {
     setErrorMessage(null);
 
     try {
+      console.log("🚀 Début confirmation paiement Stripe...");
       console.log("📦 Adresse de livraison à envoyer:", shippingAddress);
       console.log("👤 Utilisateur connecté:", user.email);
+      console.log("🔑 Stripe initialisé:", !!stripe);
+      console.log("🔑 Elements initialisé:", !!elements);
 
       // Confirmer le paiement avec Stripe
-      const { error } = await stripe.confirmPayment({
+      console.log("📤 Appel stripe.confirmPayment...");
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           // Redirection après paiement réussi
@@ -101,13 +105,24 @@ export default function PaymentForm() {
 
       // Si erreur, l'afficher
       if (error) {
-        console.error("❌ Erreur Stripe:", error);
+        console.error("❌ Erreur Stripe lors de la confirmation:", {
+          type: error.type,
+          code: error.code,
+          message: error.message,
+          decline_code: error.decline_code,
+        });
         setErrorMessage(
           error.message || "Une erreur est survenue lors du paiement"
         );
         setIsLoading(false);
+      } else {
+        console.log("✅ Paiement confirmé avec succès:", {
+          paymentIntentId: paymentIntent?.id,
+          status: paymentIntent?.status,
+        });
+        console.log("⏳ Redirection vers /checkout/success en cours...");
+        // Si succès, l'utilisateur sera redirigé vers /checkout/success
       }
-      // Si succès, l'utilisateur sera redirigé vers /checkout/success
     } catch (err) {
       console.error("❌ Erreur lors du paiement:", err);
       setErrorMessage("Une erreur inattendue est survenue");

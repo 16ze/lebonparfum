@@ -203,6 +203,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Création du Payment Intent Stripe
+    console.log("📤 Création Payment Intent Stripe:", {
+      amount: totalAmountCents,
+      currency: "eur",
+      metadata,
+    });
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmountCents, // Montant en centimes
       currency: "eur",
@@ -210,6 +216,12 @@ export async function POST(request: NextRequest) {
         enabled: true,
       },
       metadata,
+    });
+
+    console.log("✅ Payment Intent créé:", {
+      id: paymentIntent.id,
+      status: paymentIntent.status,
+      client_secret: paymentIntent.client_secret ? "✅ Présent" : "❌ Manquant",
     });
 
     // Retourner le clientSecret au frontend

@@ -53,13 +53,25 @@ export async function POST(request: NextRequest) {
     // Vérifier la signature du webhook (SÉCURITÉ)
     let event: Stripe.Event;
     try {
+      console.log("🔐 Vérification signature webhook...");
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log("✅ Signature vérifiée avec succès");
     } catch (err) {
       console.error("❌ Erreur de vérification de signature:", err);
+      if (err instanceof Error) {
+        console.error("Détails erreur signature:", {
+          message: err.message,
+          name: err.name,
+        });
+      }
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    console.log("✅ Webhook Stripe reçu:", event.type);
+    console.log("✅ Webhook Stripe reçu:", {
+      type: event.type,
+      id: event.id,
+      created: event.created,
+    });
 
     // Gérer l'événement payment_intent.succeeded
     if (event.type === "payment_intent.succeeded") {
