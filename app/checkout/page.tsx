@@ -102,11 +102,14 @@ export default function CheckoutPage() {
 
         console.log("✅ Payment Intent créé:", {
           clientSecret: data.clientSecret ? "✅ Présent" : "❌ Manquant",
+          clientSecretPreview: data.clientSecret ? `${data.clientSecret.substring(0, 20)}...` : "null",
           amount: data.amount,
         });
         if (!data.clientSecret) {
+          console.error("❌ ERREUR CRITIQUE : Pas de clientSecret retourné par le serveur !");
           throw new Error("Le serveur n'a pas retourné de clientSecret");
         }
+        console.log("💾 clientSecret défini dans le state");
         setClientSecret(data.clientSecret);
       } catch (err) {
         console.error("❌ Erreur lors de la création du payment intent:", err);
@@ -235,9 +238,12 @@ export default function CheckoutPage() {
               </div>
             </div>
           ) : clientSecret ? (
-            <Elements stripe={getStripe()} options={stripeOptions}>
-              <CheckoutForm paymentForm={<PaymentForm />} />
-            </Elements>
+            <>
+              {console.log("🎨 Rendu Elements avec clientSecret:", clientSecret ? `${clientSecret.substring(0, 20)}...` : "null")}
+              <Elements stripe={getStripe()} options={stripeOptions}>
+                <CheckoutForm paymentForm={<PaymentForm />} />
+              </Elements>
+            </>
           ) : (
             <CheckoutForm />
           )}
