@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useOptimistic } from "react";
+import { useState, useEffect } from "react";
+import * as React from "react";
 import { Heart } from "lucide-react";
 import { toggleWishlistAction } from "@/app/wishlist/actions";
 import { useAuth } from "@/context/AuthContext";
@@ -33,11 +34,13 @@ export default function WishlistButton({
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   
-  // useOptimistic pour feedback immédiat
-  const [optimisticState, setOptimisticState] = useOptimistic(
-    initialIsActive,
-    (currentState: boolean) => !currentState
-  );
+  // State local pour feedback immédiat (optimistic UI)
+  const [isActive, setIsActive] = useState(initialIsActive);
+  
+  // Mettre à jour le state local si initialIsActive change (après refresh)
+  React.useEffect(() => {
+    setIsActive(initialIsActive);
+  }, [initialIsActive]);
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -49,8 +52,9 @@ export default function WishlistButton({
       return;
     }
 
-    // Optimistic update
-    setOptimisticState(!optimisticState);
+    // Optimistic update (feedback immédiat)
+    const previousState = isActive;
+    setIsActive(!isActive);
     setIsPending(true);
 
     try {
@@ -58,7 +62,7 @@ export default function WishlistButton({
       
       if (!result.success) {
         // En cas d'erreur, revenir à l'état précédent
-        setOptimisticState(optimisticState);
+        setIsActive(previousState);
         console.error("❌ Erreur toggle wishlist:", result.error);
       } else {
         // Revalider les pages pour mettre à jour l'UI
@@ -66,7 +70,7 @@ export default function WishlistButton({
       }
     } catch (error) {
       // En cas d'erreur, revenir à l'état précédent
-      setOptimisticState(optimisticState);
+      setIsActive(previousState);
       console.error("❌ Erreur inattendue toggle wishlist:", error);
     } finally {
       setIsPending(false);
@@ -80,11 +84,11 @@ export default function WishlistButton({
         onClick={handleClick}
         disabled={isPending}
         className={`absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-200 active:scale-90 z-10 ${className}`}
-        aria-label={optimisticState ? "Retirer des favoris" : "Ajouter aux favoris"}
+        aria-label={isActive ? "Retirer des favoris" : "Ajouter aux favoris"}
       >
         <Heart
           className={`w-5 h-5 transition-all duration-200 ${
-            optimisticState
+            isActive
               ? "fill-black text-black"
               : "text-black"
           }`}
@@ -100,19 +104,19 @@ export default function WishlistButton({
       onClick={handleClick}
       disabled={isPending}
       className={`flex items-center gap-2 text-xs uppercase tracking-widest font-medium transition-colors hover:opacity-70 ${
-        optimisticState ? "text-black" : "text-black/60"
+        isActive ? "text-black" : "text-black/60"
       } ${className}`}
-      aria-label={optimisticState ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={isActive ? "Retirer des favoris" : "Ajouter aux favoris"}
     >
       <Heart
         className={`w-4 h-4 transition-all duration-200 ${
-          optimisticState
+          isActive
             ? "fill-black text-black"
             : "text-black/60"
         }`}
         strokeWidth={1.5}
       />
-      <span>{optimisticState ? "Retirer des favoris" : "Ajouter aux favoris"}</span>
+      <span>{isActive ? "Retirer des favoris" : "Ajouter aux favoris"}</span>
     </button>
   );
 }
