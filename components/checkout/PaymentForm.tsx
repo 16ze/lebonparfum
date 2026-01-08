@@ -148,17 +148,26 @@ export default function PaymentForm() {
           status: paymentIntent?.status,
         });
         
-        // Si le statut est "succeeded", rediriger manuellement
+        // Si le statut est "succeeded", rediriger manuellement avec payment_intent dans l'URL
         if (paymentIntent?.status === "succeeded") {
           console.log("💰 Paiement réussi ! Redirection vers /checkout/success...");
-          window.location.href = "/checkout/success";
+          // IMPORTANT : Inclure payment_intent et redirect_status dans l'URL
+          window.location.href = `/checkout/success?payment_intent=${paymentIntent.id}&redirect_status=succeeded`;
         } else if (paymentIntent?.status === "requires_action") {
           console.log("⏳ Action supplémentaire requise (ex: 3D Secure)...");
-          // Stripe redirigera automatiquement si nécessaire
+          // Stripe redirigera automatiquement vers return_url avec les paramètres nécessaires
+          // Ne rien faire ici, Stripe gère la redirection
         } else {
           console.log("⚠️ Statut inattendu:", paymentIntent?.status);
-          // Rediriger quand même vers success si confirmé
-          window.location.href = "/checkout/success";
+          // Si le payment intent existe mais avec un statut inattendu, rediriger quand même
+          // avec le payment_intent_id pour permettre le debug
+          if (paymentIntent?.id) {
+            window.location.href = `/checkout/success?payment_intent=${paymentIntent.id}&redirect_status=${paymentIntent.status}`;
+          } else {
+            console.error("❌ Pas de payment_intent_id disponible pour la redirection");
+            setErrorMessage("Le paiement a été traité mais le statut est inattendu. Veuillez contacter le support.");
+            setIsLoading(false);
+          }
         }
       }
     } catch (err) {
