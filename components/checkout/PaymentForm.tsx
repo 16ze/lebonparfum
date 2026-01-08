@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import {
   PaymentElement,
   useStripe,
@@ -28,6 +28,17 @@ export default function PaymentForm() {
   const { user, isLoading: isAuthLoading, openAuthDrawer } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Debug: Log l'état de Stripe et Elements
+  useEffect(() => {
+    console.log("🔍 PaymentForm - État Stripe/Elements:", {
+      stripe: !!stripe,
+      elements: !!elements,
+      user: !!user,
+      isAuthLoading,
+      isAddressComplete: isAddressComplete(),
+    });
+  }, [stripe, elements, user, isAuthLoading, isAddressComplete]);
 
   /**
    * handleSubmit - Gère la soumission du formulaire de paiement
@@ -115,6 +126,12 @@ export default function PaymentForm() {
   const isButtonDisabled =
     !stripe || !elements || isLoading || !isAddressComplete() || !user || isAuthLoading;
 
+  // Message d'erreur si Stripe ou Elements ne sont pas chargés
+  const stripeError =
+    !stripe || !elements
+      ? "Le module de paiement est en cours de chargement..."
+      : null;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Alerte si l'utilisateur n'est pas connecté */}
@@ -160,6 +177,24 @@ export default function PaymentForm() {
       <div className={`mb-6 ${!user ? "opacity-50 pointer-events-none" : ""}`}>
         <PaymentElement />
       </div>
+
+      {/* Message d'erreur Stripe/Elements */}
+      {stripeError && (
+        <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-amber-800 font-medium mb-1">
+              Chargement du module de paiement
+            </p>
+            <p className="text-xs text-amber-700">{stripeError}</p>
+            {!stripe && (
+              <p className="text-xs text-amber-700 mt-2">
+                Vérifiez que NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY est configurée dans .env.local
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Message d'erreur */}
       {errorMessage && (

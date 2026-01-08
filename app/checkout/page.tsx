@@ -47,6 +47,7 @@ export default function CheckoutPage() {
         }));
 
         // Appeler l'API pour créer le Payment Intent
+        console.log("📤 Création du Payment Intent avec items:", items);
         const response = await fetch("/api/create-payment-intent", {
           method: "POST",
           headers: {
@@ -56,19 +57,37 @@ export default function CheckoutPage() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({
+            message: `Erreur HTTP ${response.status}`,
+          }));
+          console.error("❌ Erreur API create-payment-intent:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
           throw new Error(errorData.message || "Erreur lors de la création du paiement");
         }
 
         const data = await response.json();
+        console.log("✅ Payment Intent créé:", {
+          clientSecret: data.clientSecret ? "✅ Présent" : "❌ Manquant",
+          amount: data.amount,
+        });
+        if (!data.clientSecret) {
+          throw new Error("Le serveur n'a pas retourné de clientSecret");
+        }
         setClientSecret(data.clientSecret);
       } catch (err) {
-        console.error("Erreur lors de la création du payment intent:", err);
-        setError(
+        console.error("❌ Erreur lors de la création du payment intent:", err);
+        const errorMessage =
           err instanceof Error
             ? err.message
-            : "Une erreur est survenue lors de la création du paiement"
-        );
+            : "Une erreur est survenue lors de la création du paiement";
+        setError(errorMessage);
+        console.error("❌ Détails de l'erreur:", {
+          message: errorMessage,
+          cartItems: cartItems.length,
+        });
       } finally {
         setIsLoading(false);
       }
