@@ -8,7 +8,17 @@ set -e
 echo "🔍 Vérification de Stripe CLI..."
 
 # Vérifier si Stripe CLI est installé
-if ! command -v stripe &> /dev/null; then
+STRIPE_CMD=""
+if command -v stripe &> /dev/null; then
+    STRIPE_CMD="stripe"
+elif [ -f "$HOME/.local/bin/stripe" ]; then
+    STRIPE_CMD="$HOME/.local/bin/stripe"
+    export PATH="$HOME/.local/bin:$PATH"
+elif [ -f "$HOME/Downloads/stripe" ]; then
+    STRIPE_CMD="$HOME/Downloads/stripe"
+fi
+
+if [ -z "$STRIPE_CMD" ] || ! command -v "$STRIPE_CMD" &> /dev/null; then
     echo "❌ Stripe CLI n'est pas installé."
     echo ""
     echo "📦 Installation de Stripe CLI..."
@@ -16,8 +26,8 @@ if ! command -v stripe &> /dev/null; then
     echo "Pour macOS (avec Homebrew):"
     echo "  brew install stripe/stripe-cli/stripe"
     echo ""
-    echo "Pour Linux/Windows:"
-    echo "  https://stripe.com/docs/stripe-cli#install"
+    echo "Ou téléchargez depuis:"
+    echo "  https://github.com/stripe/stripe-cli/releases"
     echo ""
     echo "Après l'installation, exécutez:"
     echo "  stripe login"
@@ -25,12 +35,12 @@ if ! command -v stripe &> /dev/null; then
     exit 1
 fi
 
-echo "✅ Stripe CLI est installé"
+echo "✅ Stripe CLI est installé: $STRIPE_CMD"
 
 # Vérifier si l'utilisateur est connecté
-if ! stripe config --list &> /dev/null; then
+if ! "$STRIPE_CMD" config --list &> /dev/null; then
     echo "🔐 Vous devez vous connecter à Stripe:"
-    echo "  stripe login"
+    echo "  $STRIPE_CMD login"
     exit 1
 fi
 
@@ -53,5 +63,5 @@ echo "🚀 Démarrage de Stripe CLI sur le port $PORT..."
 echo ""
 
 # Démarrer Stripe listen
-stripe listen --forward-to localhost:${PORT}/api/webhooks/stripe
+"$STRIPE_CMD" listen --forward-to localhost:${PORT}/api/webhooks/stripe
 

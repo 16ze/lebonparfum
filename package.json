@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
-    "stripe:listen": "stripe listen --forward-to localhost:3001/api/webhooks/stripe || stripe listen --forward-to localhost:3000/api/webhooks/stripe",
+    "stripe:listen": "stripe listen --forward-to localhost:3001/api/webhooks/stripe || (lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1 && stripe listen --forward-to localhost:3000/api/webhooks/stripe || stripe listen --forward-to localhost:3001/api/webhooks/stripe)",
     "stripe:listen:3001": "stripe listen --forward-to localhost:3001/api/webhooks/stripe",
     "stripe:listen:auto": "bash -c 'PORT=$(lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1 && echo 3001 || echo 3000); stripe listen --forward-to localhost:$PORT/api/webhooks/stripe'"
   },
