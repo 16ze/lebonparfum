@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { usePathname, useSearchParams } from "next/navigation";
-import Header from "./Header";
 import Footer from "./Footer";
+import Header from "./Header";
 
 /**
  * ConditionalLayout - Affiche Header et Footer sauf sur certaines routes

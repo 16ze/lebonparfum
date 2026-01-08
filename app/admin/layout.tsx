@@ -31,8 +31,8 @@ export default async function AdminLayout({
           {/* Header secondaire (masqué si embed=true) */}
           <AdminHeader />
 
-          {/* Contenu de la page (padding responsive + espace pour bouton hamburger mobile) */}
-          <div className="pt-16 md:pt-4 px-4 md:px-8 pb-4 md:pb-8">{children}</div>
+          {/* Contenu de la page (padding responsive) */}
+          <div className="p-4 md:p-8">{children}</div>
         </main>
       </div>
     </AuthGuard>

@@ -21,11 +21,15 @@ import type {
  * @returns { clientSecret: string, amount: number, shippingFee: number }
  */
 export async function POST(request: NextRequest) {
+  console.log("🚀 [API] ========== DÉBUT REQUÊTE CREATE-PAYMENT-INTENT ==========");
+
   try {
     // Vérification de la clé Stripe secrète
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    console.log(`🔑 [API] STRIPE_SECRET_KEY présente: ${stripeSecretKey ? `✅ OUI (commence par: ${stripeSecretKey.substring(0, 7)}...)` : '❌ NON'}`);
+
     if (!stripeSecretKey) {
-      console.error("❌ STRIPE_SECRET_KEY manquante dans les variables d'environnement");
+      console.error("❌ [API] STRIPE_SECRET_KEY manquante dans les variables d'environnement");
       return NextResponse.json<PaymentIntentError>(
         {
           error: "configuration_error",
@@ -37,13 +41,16 @@ export async function POST(request: NextRequest) {
 
     // Initialisation de Stripe (utilise la version par défaut la plus récente)
     const stripe = new Stripe(stripeSecretKey);
+    console.log("✅ [API] Stripe initialisé");
 
     // Récupération du body de la requête
     const body = await request.json();
     const { items } = body as { items: PaymentCartItem[] };
+    console.log(`📦 [API] Items reçus:`, JSON.stringify(items, null, 2));
 
     // Validation des données reçues
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error("❌ [API] Panier vide ou invalide");
       return NextResponse.json<PaymentIntentError>(
         {
           error: "validation_error",
@@ -52,6 +59,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    console.log(`✅ [API] Validation items OK (${items.length} items)`);
 
     // Validation de chaque item
     for (const item of items) {
@@ -68,12 +76,15 @@ export async function POST(request: NextRequest) {
 
     // Récupération du client Supabase pour vérifier les prix
     const supabase = await createClient();
+    console.log("✅ [API] Client Supabase créé");
 
     // Récupérer les IDs des produits (peuvent être des slugs ou des UUIDs)
     const productIds = items.map((item) => item.id);
+    console.log(`🔍 [API] Recherche produits par IDs:`, productIds);
 
     // **SÉCURITÉ : Récupérer les VRAIS prix depuis la base de données**
     // On fait deux requêtes : une par slug, une par id, puis on fusionne
+    console.log("🔍 [API] Requête Supabase pour récupérer les produits...");
     const [slugResults, idResults] = await Promise.all([
       supabase
         .from("products")
@@ -85,20 +96,32 @@ export async function POST(request: NextRequest) {
         .in("id", productIds),
     ]);
 
+    console.log("📊 [API] Résultats Supabase slugResults:", {
+      data: slugResults.data?.length || 0,
+      error: slugResults.error,
+    });
+    console.log("📊 [API] Résultats Supabase idResults:", {
+      data: idResults.data?.length || 0,
+      error: idResults.error,
+    });
+
     // Fusionner les résultats (dédoublonné par id)
-    const productsMap = new Map<string, (typeof slugResults.data)[0]>();
-    
+    type ProductFromDB = NonNullable<typeof slugResults.data>[0];
+    const productsMap = new Map<string, ProductFromDB>();
+
     slugResults.data?.forEach((product) => {
       productsMap.set(product.id, product);
     });
-    
+
     idResults.data?.forEach((product) => {
       productsMap.set(product.id, product);
     });
 
     const products = Array.from(productsMap.values());
+    console.log(`✅ [API] Produits trouvés dans DB: ${products.length}`, products.map(p => ({ id: p.id, name: p.name, price: p.price })));
 
     if (!products || products.length === 0) {
+      console.error("❌ [API] Aucun produit valide trouvé dans la base de données");
       return NextResponse.json<PaymentIntentError>(
         {
           error: "validation_error",
@@ -178,6 +201,15 @@ export async function POST(request: NextRequest) {
     // Montant total (produits + livraison)
     const totalAmountCents = subtotalCents + shippingFeeCents;
 
+    console.log("💰 [API] Calcul montants:", {
+      subtotalCents,
+      subtotalEuros,
+      shippingFeeCents,
+      shippingFeeEuros: shippingFeeCents / 100,
+      totalAmountCents,
+      totalAmountEuros: totalAmountCents / 100,
+    });
+
     // Préparer les metadata du panier pour Stripe
     // Format léger : [{ id, qty }, ...] en JSON string
     const cartMetadata = JSON.stringify(
@@ -186,6 +218,7 @@ export async function POST(request: NextRequest) {
 
     // Récupérer l'utilisateur connecté (si connecté) - réutilise le supabase déjà créé ligne 70
     const { data: { user } } = await supabase.auth.getUser();
+    console.log(`👤 [API] Utilisateur: ${user ? `✅ Connecté (${user.id})` : '❌ Non connecté (guest)'}`);
 
     // Créer les metadata
     const metadata: Record<string, string> = {
@@ -203,9 +236,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Création du Payment Intent Stripe
-    console.log("📤 Création Payment Intent Stripe:", {
+    console.log("📤 [API] ========== TENTATIVE CRÉATION STRIPE PAYMENT INTENT ==========");
+    console.log("📤 [API] Paramètres envoyés à Stripe:", {
       amount: totalAmountCents,
       currency: "eur",
+      automatic_payment_methods: { enabled: true },
       metadata,
     });
 
@@ -218,20 +253,28 @@ export async function POST(request: NextRequest) {
       metadata,
     });
 
-    console.log("✅ Payment Intent créé:", {
+    console.log("✅ [API] ========== PAYMENT INTENT CRÉÉ AVEC SUCCÈS ==========");
+    console.log("✅ [API] Payment Intent détails:", {
       id: paymentIntent.id,
       status: paymentIntent.status,
-      client_secret: paymentIntent.client_secret ? "✅ Présent" : "❌ Manquant",
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      client_secret: paymentIntent.client_secret ? `✅ Présent (${paymentIntent.client_secret.substring(0, 20)}...)` : "❌ Manquant",
     });
 
     // Retourner le clientSecret au frontend
-    return NextResponse.json<CreatePaymentIntentResponse>({
+    const response = {
       clientSecret: paymentIntent.client_secret || "",
       amount: totalAmountCents,
       shippingFee: shippingFeeCents,
-    });
+    };
+    console.log("📤 [API] ========== RÉPONSE ENVOYÉE AU FRONTEND ==========");
+    console.log("📤 [API] Réponse:", response);
+
+    return NextResponse.json<CreatePaymentIntentResponse>(response);
   } catch (error) {
-    console.error("❌ Erreur lors de la création du payment intent:", error);
+    console.error("❌ [API] ========== ERREUR DANS CREATE-PAYMENT-INTENT ==========");
+    console.error("❌ [API] Erreur capturée:", error);
 
     // Log détaillé pour le debugging
     if (error instanceof Error) {

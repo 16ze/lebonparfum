@@ -161,19 +161,19 @@ export default function OrderDetailsModal({
           </div>
 
           {order.shipping_address ? (
-            <div className="space-y-1">
-              <p className="text-sm font-medium">
-                {order.shipping_address.first_name}{" "}
-                {order.shipping_address.last_name}
-              </p>
-              <p className="text-sm">{order.shipping_address.address}</p>
-              <p className="text-sm">
-                {order.shipping_address.postal_code}{" "}
-                {order.shipping_address.city}
-              </p>
-              <p className="text-sm uppercase tracking-wide">
-                {order.shipping_address.country}
-              </p>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">
+              {order.shipping_address.first_name}{" "}
+              {order.shipping_address.last_name}
+            </p>
+            <p className="text-sm">{order.shipping_address.address}</p>
+            <p className="text-sm">
+              {order.shipping_address.postal_code}{" "}
+              {order.shipping_address.city}
+            </p>
+            <p className="text-sm uppercase tracking-wide">
+              {order.shipping_address.country}
+            </p>
               {order.shipping_address.phone && (
                 <p className="text-sm text-gray-600 mt-2">
                   <span className="text-xs uppercase tracking-wider text-gray-400">
@@ -201,7 +201,7 @@ export default function OrderDetailsModal({
                 d'adresses. Contactez le client via son email pour obtenir les
                 informations de livraison.
               </p>
-            </div>
+          </div>
           )}
         </div>
 

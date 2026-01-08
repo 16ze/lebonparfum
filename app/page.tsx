@@ -10,9 +10,10 @@ export default function Home() {
     <main>
       <Hero />
       <CategoryGrid />
-      <HighlightSection />
-      <Showcase />
       <CampaignVideo />
+      <Showcase />
+      <HighlightSection />
+      
       <Services />
     </main>
   );

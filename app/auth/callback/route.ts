@@ -58,7 +58,10 @@ export async function GET(request: Request) {
     if (!error) {
       console.log("✅ [CALLBACK] Session créée avec succès !");
       console.log("👤 [CALLBACK] User:", data?.user?.email || "non disponible");
-      console.log("🔐 [CALLBACK] Session ID:", data?.session?.access_token ? "présent" : "absent");
+      console.log(
+        "🔐 [CALLBACK] Session ID:",
+        data?.session?.access_token ? "présent" : "absent"
+      );
 
       // Si ça marche, on redirige vers le site connecté
       const forwardedHost = request.headers.get("x-forwarded-host"); // Pour Vercel
@@ -74,10 +77,10 @@ export async function GET(request: Request) {
       }
 
       console.log("➡️ [CALLBACK] Redirection vers:", redirectUrl);
-      
+
       // CRITIQUE : S'assurer que les cookies sont bien définis dans la réponse
       const response = NextResponse.redirect(redirectUrl);
-      
+
       // Les cookies sont déjà définis via setAll, mais on peut forcer leur envoi
       // en définissant explicitement les en-têtes Set-Cookie si nécessaire
       return response;

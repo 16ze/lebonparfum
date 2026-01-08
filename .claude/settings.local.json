@@ -7,7 +7,11 @@
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
       "Bash(git checkout:*)",
-      "Bash(./stripe payment_intents:*)"
+      "Bash(./stripe payment_intents:*)",
+      "Bash(stripe listen:*)",
+      "Bash(chmod:*)",
+      "Bash(/Users/bryandev/Documents/lebonparfum/scripts/install-stripe-direct.sh:*)",
+      "Bash(cat:*)"
     ]
   }
 }

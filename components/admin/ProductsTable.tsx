@@ -100,22 +100,23 @@ export default function ProductsTable({ products }: ProductsTableProps) {
   return (
     <>
       {/* Header avec titre + bouton ajouter */}
-      <div className="flex items-center justify-between gap-3 md:gap-4 mb-6 md:mb-8">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg md:text-3xl uppercase tracking-widest font-bold mb-0.5 md:mb-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl uppercase tracking-widest font-bold mb-1 md:mb-2">
             Produits
           </h1>
-          <p className="text-[10px] md:text-sm text-gray-500 uppercase tracking-wider">
-            {filteredProducts.length} / {products.length}
+          <p className="text-xs md:text-sm text-gray-500 uppercase tracking-wider">
+            {filteredProducts.length} / {products.length} produit(s)
           </p>
         </div>
 
         <button
           onClick={handleAdd}
-          className="bg-black text-white px-3 md:px-6 py-2 md:py-3 uppercase tracking-wider text-[10px] md:text-sm hover:bg-black/80 transition-colors flex items-center justify-center gap-1.5 md:gap-2 flex-shrink-0"
+          className="bg-black text-white px-4 md:px-6 py-2 md:py-3 uppercase tracking-wider text-xs md:text-sm hover:bg-black/80 transition-colors flex items-center justify-center gap-2 w-full md:w-auto"
         >
-          <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2} />
-          <span className="hidden sm:inline">Ajouter</span>
+          <Plus className="w-4 h-4" strokeWidth={2} />
+          <span className="hidden sm:inline">Ajouter un produit</span>
+          <span className="sm:hidden">Ajouter</span>
         </button>
       </div>
 

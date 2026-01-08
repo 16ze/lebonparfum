@@ -59,16 +59,24 @@ export default function CheckoutPage() {
         }));
 
         // Appeler l'API pour créer le Payment Intent
-        console.log("📤 Création du Payment Intent avec items:", items);
-        
+        console.log("🚀 [FRONTEND] ========== DÉBUT CRÉATION PAYMENT INTENT ==========");
+        console.log("📤 [FRONTEND] Items à envoyer à l'API:", items);
+        console.log("📤 [FRONTEND] Body JSON stringifié:", JSON.stringify({ items }));
+
         let response: Response;
         try {
+          console.log("⏳ [FRONTEND] Appel fetch vers /api/create-payment-intent...");
           response = await fetch("/api/create-payment-intent", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ items }),
+          });
+          console.log("📥 [FRONTEND] Réponse fetch reçue:", {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
           });
         } catch (fetchError) {
           console.error("❌ Erreur réseau lors du fetch:", fetchError);
@@ -112,17 +120,21 @@ export default function CheckoutPage() {
           throw new Error("Réponse serveur invalide (format JSON attendu)");
         }
 
-        console.log("✅ Payment Intent créé:", {
+        console.log("✅ [FRONTEND] ========== PAYMENT INTENT CRÉÉ AVEC SUCCÈS ==========");
+        console.log("✅ [FRONTEND] Données reçues de l'API:", {
           clientSecret: data.clientSecret ? "✅ Présent" : "❌ Manquant",
           clientSecretPreview: data.clientSecret ? `${data.clientSecret.substring(0, 20)}...` : "null",
+          clientSecretLength: data.clientSecret?.length,
           amount: data.amount,
         });
         if (!data.clientSecret) {
-          console.error("❌ ERREUR CRITIQUE : Pas de clientSecret retourné par le serveur !");
+          console.error("❌ [FRONTEND] ERREUR CRITIQUE : Pas de clientSecret retourné par le serveur !");
+          console.error("❌ [FRONTEND] Données complètes reçues:", data);
           throw new Error("Le serveur n'a pas retourné de clientSecret");
         }
-        console.log("💾 clientSecret défini dans le state");
+        console.log("💾 [FRONTEND] Enregistrement du clientSecret dans le state...");
         setClientSecret(data.clientSecret);
+        console.log("✅ [FRONTEND] clientSecret défini dans le state avec succès");
       } catch (err) {
         console.error("❌ Erreur lors de la création du payment intent:", err);
         const errorMessage =

@@ -41,7 +41,7 @@ export default function Header() {
   // Animations GSAP uniquement sur la page d'accueil
   useEffect(() => {
     const ctx = gsap.context(() => {
-      if (!isHome) {
+    if (!isHome) {
         // Sur les autres pages : s'assurer que le logo est normal
         if (logoRef.current) {
           gsap.set(logoRef.current, {
@@ -51,8 +51,8 @@ export default function Header() {
             clearProps: "transform,color",
           });
         }
-        return;
-      }
+      return;
+    }
 
       // Utiliser matchMedia pour des valeurs responsives
       const mm = gsap.matchMedia();
@@ -78,7 +78,7 @@ export default function Header() {
             transformOrigin: "center top",
             color: "#FFFFFF",
           });
-        });
+      });
       }
 
       // 1. Animation Transparent → White basée sur la position du scroll
@@ -290,11 +290,11 @@ export default function Header() {
             </span>
             {/* Icône uniquement sur mobile */}
             <div className="relative md:hidden">
-              <ShoppingBag
+            <ShoppingBag
                 size={20}
-                strokeWidth={1.5}
-                style={{ stroke: textColor }}
-              />
+              strokeWidth={1.5}
+              style={{ stroke: textColor }}
+            />
               {/* Badge uniquement sur mobile */}
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center">

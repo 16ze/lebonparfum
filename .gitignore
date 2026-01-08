@@ -36,3 +36,14 @@ yarn-error.log*
 next-env.d.ts
 .env.local.backup
 .env.local.bak*
+supabase/migrations/ # ignore all files in the migrations folder
+supabase/seed.sql # ignore the seed.sql file  
+supabase/functions/ # ignore all files in the functions folder
+supabase/storage/ # ignore all files in the storage folder
+supabase/schema.prisma # ignore the schema.prisma file
+supabase/project.toml # ignore the project.toml file
+supabase/README.md # ignore the README.md file
+supabase/README.md # ignore the README.md file
+supabase/README.md # ignore the README.md file
+supabase/README.md # ignore the README.md file
+
