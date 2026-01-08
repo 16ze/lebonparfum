@@ -36,14 +36,17 @@ fi
 
 echo "✅ Connecté à Stripe"
 
-# Détecter le port Next.js (3000 ou 3001)
-PORT=3000
-if lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    PORT=3001
-elif ! lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "⚠️  Aucun serveur Next.js détecté sur les ports 3000 ou 3001"
-    echo "   Assurez-vous que 'npm run dev' est en cours d'exécution"
-    echo ""
+# Détecter le port Next.js (priorité à 3001)
+PORT=3001
+if ! lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        PORT=3000
+    else
+        echo "⚠️  Aucun serveur Next.js détecté sur les ports 3000 ou 3001"
+        echo "   Assurez-vous que 'npm run dev' est en cours d'exécution"
+        echo "   Utilisation du port 3001 par défaut..."
+        echo ""
+    fi
 fi
 
 echo "🚀 Démarrage de Stripe CLI sur le port $PORT..."
