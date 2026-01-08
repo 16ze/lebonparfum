@@ -47,10 +47,14 @@ export default function WishlistGrid({ wishlist }: WishlistGridProps) {
   };
 
   const handleAddToCart = (product: WishlistItem["products"]) => {
+    // CRITIQUE : Convertir le prix de centimes (Supabase) vers euros (panier)
+    // Le panier stocke les prix en euros, alors que Supabase les stocke en centimes
+    const priceInEuros = product.price / 100;
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: priceInEuros,
       image: product.image_url,
       slug: product.slug,
     });
