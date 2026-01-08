@@ -436,6 +436,7 @@ export async function toggleWishlistAction(productId: string) {
       }
 
       revalidatePath("/account/wishlist");
+      revalidatePath("/");
       return { success: true, error: null, inWishlist: false };
     } else {
       // Ajouter à la wishlist
@@ -452,6 +453,7 @@ export async function toggleWishlistAction(productId: string) {
       }
 
       revalidatePath("/account/wishlist");
+      revalidatePath("/");
       return { success: true, error: null, inWishlist: true };
     }
   } catch (error) {

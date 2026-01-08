@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import AccordionItem from "./AccordionItem";
+import WishlistButton from "@/components/ui/WishlistButton";
 import { Check, AlertCircle } from "lucide-react";
 
 /**
@@ -26,6 +27,7 @@ interface ProductInfoProps {
   variants: { id: string; label: string; value: string }[];
   image?: string; // URL de l'image du produit
   stock?: number; // Quantité en stock
+  isWishlisted?: boolean; // Si le produit est dans la wishlist
   notes?: string;
   ingredients?: string;
   shipping?: string;
@@ -45,6 +47,7 @@ export default function ProductInfo({
   notes,
   ingredients,
   shipping,
+  isWishlisted = false,
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(variants[0]?.id);
   const { addToCart, openCart } = useCart();
@@ -154,7 +157,7 @@ export default function ProductInfo({
       <button
         onClick={handleAddToCart}
         disabled={isOutOfStock}
-        className={`w-full py-4 uppercase tracking-widest text-xs font-bold transition-colors mb-8 ${
+        className={`w-full py-4 uppercase tracking-widest text-xs font-bold transition-colors mb-4 ${
           isOutOfStock
             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
             : "bg-black text-white hover:bg-gray-800"
@@ -162,6 +165,15 @@ export default function ProductInfo({
       >
         {isOutOfStock ? "Rupture de stock" : "Ajouter au panier"}
       </button>
+
+      {/* Bouton Wishlist */}
+      <div className="mb-8">
+        <WishlistButton
+          productId={productId}
+          initialIsActive={isWishlisted}
+          variant="text"
+        />
+      </div>
 
       {/* Accordéons */}
       <div className="space-y-0">

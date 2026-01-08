@@ -5,6 +5,7 @@ import { createBuildClient } from "@/utils/supabase/build";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductCard from "@/components/product/ProductCard";
+import { getWishlistIds } from "@/app/wishlist/actions";
 
 /**
  * Page Produit Dynamique - Style Byredo/Aesop
@@ -157,6 +158,10 @@ export default async function ProductPage({
     { id: "100ml", label: "100ML", value: "100ml" },
   ];
 
+  // Récupérer les IDs de la wishlist pour afficher l'état des cœurs
+  const wishlistIds = await getWishlistIds();
+  const isWishlisted = wishlistIds.includes(typedProduct.id);
+
   return (
     <main className="min-h-screen bg-white pt-[120px] pb-20">
       {/* Section Principale : Galerie + Infos */}
@@ -182,6 +187,7 @@ export default async function ProductPage({
             notes={typedProduct.notes || undefined}
             ingredients={undefined}
             shipping="Livraison gratuite à partir de 100€ d'achat. Retours acceptés sous 14 jours. Emballage premium inclus."
+            isWishlisted={isWishlisted}
           />
         </div>
       </div>
@@ -212,6 +218,7 @@ export default async function ProductPage({
                   price={relatedProduct.price}
                   imageUrl={relatedProduct.image_url}
                   stock={relatedProduct.stock}
+                  isWishlisted={wishlistIds.includes(relatedProduct.id)}
                 />
               ))}
             </div>

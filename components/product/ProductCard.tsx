@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 /**
  * ProductCard - Carte produit minimaliste style Byredo
@@ -11,6 +12,7 @@ import Link from "next/link";
  * - Zoom subtil au hover
  * - Informations : Nom, Collection (discret), Prix
  * - Badge stock si rupture
+ * - Bouton wishlist (cœur) en position absolue
  */
 interface ProductCardProps {
   id: string;
@@ -20,15 +22,18 @@ interface ProductCardProps {
   price: number;
   imageUrl?: string | null;
   stock?: number;
+  isWishlisted?: boolean; // Si le produit est dans la wishlist
 }
 
 export default function ProductCard({
+  id,
   name,
   slug,
   collection,
   price,
   imageUrl,
   stock = 0,
+  isWishlisted = false,
 }: ProductCardProps) {
   // Image placeholder si pas d'URL fournie
   const imageSrc =
@@ -46,43 +51,54 @@ export default function ProductCard({
   const isOutOfStock = stock === 0;
 
   return (
-    <Link href={`/product/${slug}`} className="group block">
-      {/* Container Image */}
-      <div className="relative w-full aspect-square overflow-hidden bg-[#f5f5f5]">
-        <Image
-          src={imageSrc}
-          alt={name}
-          fill
-          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-        />
+    <div className="group block">
+      <Link href={`/product/${slug}`} className="block">
+        {/* Container Image */}
+        <div className="relative w-full aspect-square overflow-hidden bg-[#f5f5f5]">
+          <Image
+            src={imageSrc}
+            alt={name}
+            fill
+            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+          />
 
-        {/* Badge Rupture */}
-        {isOutOfStock && (
-          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1">
-            <span className="text-[10px] uppercase tracking-widest font-medium text-gray-500">
-              Bientôt disponible
-            </span>
-          </div>
-        )}
-      </div>
+          {/* Badge Rupture */}
+          {isOutOfStock && (
+            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 z-10">
+              <span className="text-[10px] uppercase tracking-widest font-medium text-gray-500">
+                Bientôt disponible
+              </span>
+            </div>
+          )}
+
+          {/* Bouton Wishlist */}
+          <WishlistButton
+            productId={id}
+            initialIsActive={isWishlisted}
+            variant="icon"
+          />
+        </div>
+      </Link>
 
       {/* Informations */}
-      <div className="mt-4 space-y-1">
-        {/* Collection (discret) */}
-        <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          {collection}
-        </p>
+      <Link href={`/product/${slug}`}>
+        <div className="mt-4 space-y-1">
+          {/* Collection (discret) */}
+          <p className="text-[10px] uppercase tracking-widest text-gray-400">
+            {collection}
+          </p>
 
-        {/* Nom du produit */}
-        <h3 className="text-sm font-medium uppercase tracking-wide text-black group-hover:underline underline-offset-4 transition-all">
-          {name}
-        </h3>
+          {/* Nom du produit */}
+          <h3 className="text-sm font-medium uppercase tracking-wide text-black group-hover:underline underline-offset-4 transition-all">
+            {name}
+          </h3>
 
-        {/* Prix */}
-        <p className="text-sm text-black">{formattedPrice}</p>
-      </div>
-    </Link>
+          {/* Prix */}
+          <p className="text-sm text-black">{formattedPrice}</p>
+        </div>
+      </Link>
+    </div>
   );
 }
 

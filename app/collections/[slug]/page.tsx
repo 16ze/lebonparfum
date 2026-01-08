@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { slugToCollectionName } from "@/lib/collections";
 import ProductCard from "@/components/product/ProductCard";
+import { getWishlistIds } from "@/app/wishlist/actions";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -67,6 +68,9 @@ export default async function CollectionPage({
   // Préparer les produits pour ProductCard
   const typedProducts = products || [];
 
+  // Récupérer les IDs de la wishlist pour afficher l'état des cœurs
+  const wishlistIds = await getWishlistIds();
+
   return (
     <main className="min-h-screen bg-white pt-[120px] pb-20">
       <div className="max-w-[1800px] mx-auto px-4 md:px-8">
@@ -103,6 +107,7 @@ export default async function CollectionPage({
                 price={Number(product.price)}
                 imageUrl={product.image_url}
                 stock={product.stock || 0}
+                isWishlisted={wishlistIds.includes(product.id)}
               />
             ))}
           </div>
