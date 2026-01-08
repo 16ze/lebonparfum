@@ -27,6 +27,18 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   /**
+   * Debug: Log le clientSecret quand il est disponible
+   */
+  useEffect(() => {
+    if (clientSecret) {
+      console.log("🎨 clientSecret disponible pour Stripe Elements:", {
+        preview: `${clientSecret.substring(0, 20)}...`,
+        length: clientSecret.length,
+      });
+    }
+  }, [clientSecret]);
+
+  /**
    * Créer le Payment Intent au montage du composant
    */
   useEffect(() => {
@@ -238,12 +250,9 @@ export default function CheckoutPage() {
               </div>
             </div>
           ) : clientSecret ? (
-            <>
-              {console.log("🎨 Rendu Elements avec clientSecret:", clientSecret ? `${clientSecret.substring(0, 20)}...` : "null")}
-              <Elements stripe={getStripe()} options={stripeOptions}>
-                <CheckoutForm paymentForm={<PaymentForm />} />
-              </Elements>
-            </>
+            <Elements stripe={getStripe()} options={stripeOptions}>
+              <CheckoutForm paymentForm={<PaymentForm />} />
+            </Elements>
           ) : (
             <CheckoutForm />
           )}
