@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { toggleWishlistAction } from "@/app/account/actions";
+import { toggleWishlistAction } from "@/app/wishlist/actions";
 import Link from "next/link";
 
 /**
@@ -35,23 +35,27 @@ interface WishlistGridProps {
 }
 
 export default function WishlistGrid({ wishlist }: WishlistGridProps) {
-  const { addItem } = useCart();
+  const { addToCart, openCart } = useCart();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleRemove = async (productId: string) => {
     setRemovingId(productId);
     await toggleWishlistAction(productId);
     setRemovingId(null);
+    // Recharger la page pour mettre à jour la liste
+    window.location.reload();
   };
 
   const handleAddToCart = (product: WishlistItem["products"]) => {
-    addItem({
+    addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image_url,
-      qty: 1,
+      slug: product.slug,
     });
+    // Ouvrir le drawer pour montrer que le produit a été ajouté
+    openCart();
   };
 
   if (wishlist.length === 0) {
