@@ -123,8 +123,9 @@ export default function PaymentForm() {
   };
 
   // Vérifier si le bouton doit être désactivé
-  const isButtonDisabled =
-    !stripe || !elements || isLoading || !isAddressComplete() || !user || isAuthLoading;
+  // STRICTEMENT : seulement Stripe, Elements et isLoading
+  // Les validations (user, address) sont gérées dans handleSubmit, pas ici
+  const isButtonDisabled = !stripe || !elements || isLoading;
 
   // Message d'erreur si Stripe ou Elements ne sont pas chargés
   const stripeError =
@@ -213,13 +214,7 @@ export default function PaymentForm() {
             : "bg-black text-white hover:bg-gray-800"
         }`}
       >
-        {isLoading
-          ? "Traitement en cours..."
-          : !user
-          ? "🔒 Connectez-vous pour payer"
-          : !isAddressComplete()
-          ? "Remplissez l'adresse"
-          : "Payer maintenant"}
+        {isLoading ? "TRAITEMENT..." : "PAYER MAINTENANT"}
       </button>
 
       {/* Indication de sécurité */}
