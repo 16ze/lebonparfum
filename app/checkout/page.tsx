@@ -48,18 +48,42 @@ export default function CheckoutPage() {
 
         // Appeler l'API pour créer le Payment Intent
         console.log("📤 Création du Payment Intent avec items:", items);
-        const response = await fetch("/api/create-payment-intent", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ items }),
-        });
+        
+        let response: Response;
+        try {
+          response = await fetch("/api/create-payment-intent", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ items }),
+          });
+        } catch (fetchError) {
+          console.error("❌ Erreur réseau lors du fetch:", fetchError);
+          const errorMessage =
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Erreur réseau inconnue";
+          
+          // Si c'est une erreur "Failed to fetch", c'est probablement que le serveur n'est pas démarré
+          if (errorMessage.includes("Failed to fetch") || errorMessage.includes("fetch")) {
+            throw new Error(
+              "Impossible de contacter le serveur. Vérifiez que le serveur Next.js est démarré (npm run dev)."
+            );
+          }
+          
+          throw new Error(`Erreur réseau: ${errorMessage}`);
+        }
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({
-            message: `Erreur HTTP ${response.status}`,
-          }));
+          let errorData: { message?: string };
+          try {
+            errorData = await response.json();
+          } catch {
+            errorData = {
+              message: `Erreur HTTP ${response.status} ${response.statusText}`,
+            };
+          }
           console.error("❌ Erreur API create-payment-intent:", {
             status: response.status,
             statusText: response.statusText,
@@ -68,7 +92,14 @@ export default function CheckoutPage() {
           throw new Error(errorData.message || "Erreur lors de la création du paiement");
         }
 
-        const data = await response.json();
+        let data: { clientSecret?: string; amount?: number };
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error("❌ Erreur lors du parsing de la réponse JSON:", jsonError);
+          throw new Error("Réponse serveur invalide (format JSON attendu)");
+        }
+
         console.log("✅ Payment Intent créé:", {
           clientSecret: data.clientSecret ? "✅ Présent" : "❌ Manquant",
           amount: data.amount,
