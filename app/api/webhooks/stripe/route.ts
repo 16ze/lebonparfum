@@ -81,16 +81,41 @@ export async function POST(request: NextRequest) {
         id: paymentIntent.id,
         amount: paymentIntent.amount,
         metadata: paymentIntent.metadata,
+        hasShipping: !!paymentIntent.shipping,
+        receiptEmail: paymentIntent.receipt_email,
       });
 
       // Créer la commande dans Supabase
-      await createOrderFromPaymentIntent(paymentIntent);
+      console.log("📦 Début création commande dans Supabase...");
+      try {
+        await createOrderFromPaymentIntent(paymentIntent);
+        console.log("✅ Commande créée avec succès dans Supabase");
+      } catch (orderError) {
+        console.error("❌ Erreur lors de la création de la commande:", orderError);
+        if (orderError instanceof Error) {
+          console.error("Détails erreur:", {
+            message: orderError.message,
+            stack: orderError.stack,
+          });
+        }
+        // On ne fait pas échouer le webhook (Stripe considère que c'est traité)
+        // Mais on log l'erreur pour debug
+      }
+    } else {
+      console.log("ℹ️ Type d'événement non géré:", event.type);
     }
 
     // Retourner 200 pour confirmer la réception
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("❌ Erreur dans le webhook Stripe:", error);
+    if (error instanceof Error) {
+      console.error("Détails erreur webhook:", {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      });
+    }
     return NextResponse.json({ error: "Webhook error" }, { status: 500 });
   }
 }
@@ -108,23 +133,50 @@ export async function POST(request: NextRequest) {
 async function createOrderFromPaymentIntent(
   paymentIntent: Stripe.PaymentIntent
 ) {
+  console.log("🔧 Début createOrderFromPaymentIntent...");
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  console.log("🔍 Vérification configuration Supabase:", {
+    hasUrl: !!supabaseUrl,
+    hasServiceKey: !!supabaseServiceKey,
+    url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "manquant",
+  });
+
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("❌ Configuration Supabase manquante:", {
+      url: !!supabaseUrl,
+      serviceKey: !!supabaseServiceKey,
+    });
     throw new Error("Supabase configuration manquante");
   }
 
   // Créer un client Supabase avec Service Role (bypass RLS)
+  console.log("🔌 Création client Supabase avec Service Role...");
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  console.log("✅ Client Supabase créé");
 
   // 1. Récupérer les items du panier depuis les metadata
+  console.log("📋 Récupération des items depuis metadata...");
   const cartItemsJson = paymentIntent.metadata.cart_items;
+  console.log("🔍 Metadata cart_items:", {
+    present: !!cartItemsJson,
+    length: cartItemsJson?.length || 0,
+    preview: cartItemsJson ? cartItemsJson.substring(0, 100) + "..." : "null",
+  });
+  
   if (!cartItemsJson) {
+    console.error("❌ cart_items manquant dans les metadata du PaymentIntent");
+    console.error("📋 Metadata disponibles:", Object.keys(paymentIntent.metadata));
     throw new Error("cart_items manquant dans les metadata");
   }
 
   const cartItems: StripeMetadataCart[] = JSON.parse(cartItemsJson);
+  console.log("✅ Items récupérés:", {
+    count: cartItems.length,
+    items: cartItems.map(i => ({ id: i.id, qty: i.qty })),
+  });
 
   // Récupérer le user_id depuis les metadata (si présent)
   const userId = paymentIntent.metadata.user_id || null;
@@ -235,6 +287,15 @@ async function createOrderFromPaymentIntent(
   const totalAmountCents = subtotalCents + shippingFeeCents;
 
   // 5. Créer la commande dans Supabase
+  console.log("💾 Insertion commande dans Supabase...");
+  console.log("📦 Données commande:", {
+    stripe_payment_id: paymentIntent.id,
+    user_id: userId || "invité",
+    amount: totalAmountCents,
+    itemsCount: orderItems.length,
+    hasShippingAddress: !!shippingAddress,
+  });
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -250,10 +311,20 @@ async function createOrderFromPaymentIntent(
 
   if (orderError) {
     console.error("❌ Erreur lors de la création de la commande:", orderError);
+    console.error("❌ Détails erreur Supabase:", {
+      message: orderError.message,
+      details: orderError.details,
+      hint: orderError.hint,
+      code: orderError.code,
+    });
     throw new Error(`Échec création commande: ${orderError.message}`);
   }
 
-  console.log("✅ Commande créée:", order.id);
+  console.log("✅ Commande créée dans Supabase:", {
+    id: order.id,
+    stripe_payment_id: order.stripe_payment_id,
+    amount: order.amount,
+  });
 
   // 6. Décrémenter le stock de chaque produit
   for (const update of stockUpdates) {
