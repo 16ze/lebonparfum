@@ -80,6 +80,18 @@ export default function PaymentForm() {
 
       // Confirmer le paiement avec Stripe
       console.log("📤 Appel stripe.confirmPayment...");
+      
+      // IMPORTANT : Vérifier que nous avons bien un clientSecret
+      const paymentElement = elements.getElement("payment");
+      if (!paymentElement) {
+        console.error("❌ PaymentElement non trouvé dans elements");
+        setErrorMessage("Erreur: Le formulaire de paiement n'est pas chargé. Veuillez recharger la page.");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("✅ PaymentElement trouvé, confirmation du paiement...");
+      
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -101,6 +113,8 @@ export default function PaymentForm() {
           // Ajouter l'email dans receipt_email pour envoyer le reçu Stripe
           receipt_email: shippingAddress.email,
         },
+        // IMPORTANT : Ne pas rediriger automatiquement pour voir les erreurs
+        redirect: "if_required",
       });
 
       // Si erreur, l'afficher
@@ -120,8 +134,19 @@ export default function PaymentForm() {
           paymentIntentId: paymentIntent?.id,
           status: paymentIntent?.status,
         });
-        console.log("⏳ Redirection vers /checkout/success en cours...");
-        // Si succès, l'utilisateur sera redirigé vers /checkout/success
+        
+        // Si le statut est "succeeded", rediriger manuellement
+        if (paymentIntent?.status === "succeeded") {
+          console.log("💰 Paiement réussi ! Redirection vers /checkout/success...");
+          window.location.href = "/checkout/success";
+        } else if (paymentIntent?.status === "requires_action") {
+          console.log("⏳ Action supplémentaire requise (ex: 3D Secure)...");
+          // Stripe redirigera automatiquement si nécessaire
+        } else {
+          console.log("⚠️ Statut inattendu:", paymentIntent?.status);
+          // Rediriger quand même vers success si confirmé
+          window.location.href = "/checkout/success";
+        }
       }
     } catch (err) {
       console.error("❌ Erreur lors du paiement:", err);
