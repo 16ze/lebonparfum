@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import Drawer from "@/components/ui/Drawer";
 import ImageUpload from "./ImageUpload";
 import { createProduct, updateProduct } from "@/app/admin/products/actions";
+import { createClient } from "@/utils/supabase/client";
 
 interface Product {
   id: string;
@@ -15,6 +16,18 @@ interface Product {
   price: number;
   stock: number;
   image_url?: string | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 interface ProductModalProps {
@@ -45,6 +58,13 @@ export default function ProductModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // États pour catégories et tags
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+
   useEffect(() => {
     if (isEditMode && product) {
       setFormData({
@@ -69,6 +89,61 @@ export default function ProductModal({
     setError(null);
   }, [isEditMode, product, isOpen]);
 
+  // Charger les catégories et tags disponibles + relations existantes
+  useEffect(() => {
+    const loadData = async () => {
+      if (!isOpen) return;
+
+      setIsLoadingData(true);
+      const supabase = createClient();
+
+      try {
+        // Récupérer toutes les catégories
+        const { data: categories } = await supabase
+          .from("categories")
+          .select("id, name, slug")
+          .order("name");
+
+        // Récupérer tous les tags
+        const { data: tags } = await supabase
+          .from("tags")
+          .select("id, name, slug")
+          .order("name");
+
+        setAvailableCategories(categories || []);
+        setAvailableTags(tags || []);
+
+        // Si mode édition, récupérer les relations existantes
+        if (isEditMode && product) {
+          const [categoryRelations, tagRelations] = await Promise.all([
+            supabase
+              .from("product_categories")
+              .select("category_id")
+              .eq("product_id", product.id),
+            supabase
+              .from("product_tags")
+              .select("tag_id")
+              .eq("product_id", product.id),
+          ]);
+
+          setSelectedCategoryIds(
+            categoryRelations.data?.map((r) => r.category_id) || []
+          );
+          setSelectedTagIds(tagRelations.data?.map((r) => r.tag_id) || []);
+        } else {
+          setSelectedCategoryIds([]);
+          setSelectedTagIds([]);
+        }
+      } catch (err) {
+        console.error("❌ Erreur chargement données:", err);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [isOpen, isEditMode, product]);
+
   const handleNameChange = (name: string) => {
     setFormData((prev) => ({ ...prev, name }));
 
@@ -88,6 +163,24 @@ export default function ProductModal({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Toggle catégorie
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  // Toggle tag
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,9 +221,20 @@ export default function ProductModal({
 
       let result;
       if (isEditMode && product) {
-        result = await updateProduct(product.id, productData, imageFile || undefined);
+        result = await updateProduct(
+          product.id,
+          productData,
+          imageFile || undefined,
+          selectedCategoryIds,
+          selectedTagIds
+        );
       } else {
-        result = await createProduct(productData, imageFile || undefined);
+        result = await createProduct(
+          productData,
+          imageFile || undefined,
+          selectedCategoryIds,
+          selectedTagIds
+        );
       }
 
       if (!result.success) {
@@ -215,7 +319,7 @@ export default function ProductModal({
             </div>
 
             {/* Section Marque */}
-            <div className="px-4 md:px-6 py-4 md:py-6 flex-1">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="brand" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Marque *
               </label>
@@ -230,6 +334,72 @@ export default function ProductModal({
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
                 placeholder="Ex: Byredo"
               />
+            </div>
+
+            {/* Section Catégories */}
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
+                Catégories
+              </label>
+              {isLoadingData ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Chargement...
+                </div>
+              ) : availableCategories.length === 0 ? (
+                <p className="text-xs text-gray-400">Aucune catégorie disponible</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => toggleCategory(category.id)}
+                      disabled={isLoading}
+                      className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors disabled:opacity-50 ${
+                        selectedCategoryIds.includes(category.id)
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-black/20 hover:border-black"
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Section Tags */}
+            <div className="px-4 md:px-6 py-4 md:py-6 flex-1">
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
+                Tags
+              </label>
+              {isLoadingData ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Chargement...
+                </div>
+              ) : availableTags.length === 0 ? (
+                <p className="text-xs text-gray-400">Aucun tag disponible</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      disabled={isLoading}
+                      className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors disabled:opacity-50 ${
+                        selectedTagIds.includes(tag.id)
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-black/20 hover:border-black"
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

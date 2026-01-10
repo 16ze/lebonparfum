@@ -9,10 +9,20 @@ import ProductsTable from "@/components/admin/ProductsTable";
 export default async function AdminProductsPage() {
   const supabase = await createClient();
 
-  // Récupérer tous les produits
+  // Récupérer tous les produits avec leurs catégories et tags
   const { data: products, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`
+      *,
+      product_categories(
+        category_id,
+        categories(id, name, slug)
+      ),
+      product_tags(
+        tag_id,
+        tags(id, name, slug)
+      )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {

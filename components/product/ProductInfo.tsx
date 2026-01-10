@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import AccordionItem from "./AccordionItem";
 import WishlistButton from "@/components/ui/WishlistButton";
@@ -31,6 +32,16 @@ interface ProductInfoProps {
   notes?: string;
   ingredients?: string;
   shipping?: string;
+  categories?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  tags?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 }
 
 export default function ProductInfo({
@@ -48,6 +59,8 @@ export default function ProductInfo({
   ingredients,
   shipping,
   isWishlisted = false,
+  categories,
+  tags,
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(variants[0]?.id);
   const { addToCart, openCart } = useCart();
@@ -84,9 +97,25 @@ export default function ProductInfo({
 
   return (
     <div className="md:sticky md:top-32 h-fit">
-      {/* Collection */}
-      <div className="text-xs text-gray-400 uppercase tracking-widest mb-2">
+      {/* Catégories (Famille Olfactive) */}
+      <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">
         {collection}
+        {categories && categories.length > 0 && (
+          <>
+            {" / "}
+            {categories.map((cat, idx) => (
+              <span key={cat.id}>
+                {idx > 0 && " / "}
+                <Link
+                  href={`/category/${cat.slug}`}
+                  className="hover:text-black hover:underline transition-colors"
+                >
+                  {cat.name}
+                </Link>
+              </span>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Titre */}
@@ -94,8 +123,23 @@ export default function ProductInfo({
         {title}
       </h1>
 
-      {/* Prix */}
-      <div className="text-lg font-medium mb-4">{price}</div>
+      {/* Prix + Tags */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="text-lg font-medium">{price}</div>
+        {tags && tags.length > 0 && (
+          <div className="flex items-center gap-2">
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/tag/${tag.slug}`}
+                className="border border-black px-2 py-0.5 text-[10px] uppercase font-medium tracking-wide hover:bg-gray-50 transition-colors"
+              >
+                {tag.name}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Indicateur de Stock */}
       <div className="flex items-center gap-2 mb-6">

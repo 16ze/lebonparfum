@@ -6,7 +6,7 @@
 - Paiement: Stripe
 - Hébergement: Vercel (à déployer)
 
-**Status Général**: 🟡 92% terminé - Phase de sécurisation
+**Status Général**: 🟡 94% terminé - Phase de sécurisation
 
 **GitHub**: https://github.com/16ze/lebonparfum
 
@@ -26,6 +26,17 @@
 - [x] Correction effet rideau section Showcase
 - [x] Section Showcase scroll normal (plus de sticky)
 - [x] Ajustement padding vertical Showcase (style Byredo)
+
+## Système de Catégories & Tags (10 Jan 2026)
+- [x] Création interfaces admin pour Catégories
+- [x] Création interfaces admin pour Tags
+- [x] Assignation catégories/tags aux produits (formulaire admin)
+- [x] Affichage catégories/tags sur page produit publique
+- [x] Pages de résultats par catégorie (`/category/[slug]`)
+- [x] Pages de résultats par tag (`/tag/[slug]`)
+- [x] Navigation cliquable (catégories et tags → pages de filtrage)
+- [x] Badges stylisés (noir pour catégories, bordure pour tags)
+- [x] Tables pivot many-to-many (product_categories, product_tags)
 
 ---
 
@@ -47,10 +58,10 @@
 - [ ] Logs des erreurs avec Sentry
 
 ### 2. Sécurité Supabase
-- [ ] Activer RLS (Row Level Security) sur toutes les tables
-- [ ] Auditer les policies Supabase
-- [ ] Révoquer clés API publiques inutilisées
-- [ ] Configurer IP allowlist (production)
+- [x] Activer RLS (Row Level Security) sur toutes les tables
+- [x] Auditer les policies Supabase
+- [x] Révoquer clés API publiques inutilisées
+
 
 ### 3. Protection Stripe
 - [x] Vérifier signature webhook en prod
@@ -289,9 +300,25 @@
 - Logs complets ajoutés pour debugging futur
 - Produits testés: coco-vanille-mancera, creme-brulee-khalil, etc.
 
+## Système Catégories & Tags (10 Jan 2026)
+- Architecture many-to-many complète via tables pivot
+- Admin CRUD complet pour catégories et tags
+- Formulaire produit avec multi-select (badges cliquables)
+- Pages publiques de filtrage (`/category/[slug]`, `/tag/[slug]`)
+- Navigation cliquable depuis les fiches produits
+- SEO: generateStaticParams pour pré-génération au build
+- Style Byredo: catégories (noir), tags (bordure)
+- Fichiers créés:
+  - `app/category/[slug]/page.tsx`
+  - `app/tag/[slug]/page.tsx`
+  - `app/admin/categories/` (page + actions + modals + tables)
+  - `app/admin/tags/` (page + actions + modals + tables)
+  - Modifications: ProductModal, ProductInfo, ProductsTable
+
 ## Issues Connues
 - Aucune issue bloquante détectée
 - Flux de paiement opérationnel
+- Système de catégories/tags opérationnel
 - À nettoyer: logs console avant production
 
 ---

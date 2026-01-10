@@ -27,6 +27,22 @@ interface Product {
   price: number;
   stock: number;
   image_url?: string | null;
+  product_categories?: Array<{
+    category_id: string;
+    categories: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+  product_tags?: Array<{
+    tag_id: string;
+    tags: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
 }
 
 interface ProductsTableProps {
@@ -197,6 +213,9 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                     Marque
                   </th>
                   <th className="text-left px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
+                    Catégories / Tags
+                  </th>
+                  <th className="text-left px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
                     Prix
                   </th>
                   <th className="text-left px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
@@ -245,6 +264,38 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                       <p className="text-xs lg:text-sm uppercase tracking-wide text-gray-600">
                         {product.brand}
                       </p>
+                    </td>
+
+                    {/* Catégories / Tags */}
+                    <td className="px-4 lg:px-6 py-3 lg:py-4">
+                      <div className="flex flex-col gap-2">
+                        {/* Catégories */}
+                        {product.product_categories && product.product_categories.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {product.product_categories.map((pc) => (
+                              <span
+                                key={pc.category_id}
+                                className="text-xs px-2 py-1 bg-black text-white uppercase tracking-wider"
+                              >
+                                {pc.categories.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {/* Tags */}
+                        {product.product_tags && product.product_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {product.product_tags.map((pt) => (
+                              <span
+                                key={pt.tag_id}
+                                className="text-xs px-2 py-1 border border-black/20 uppercase tracking-wider"
+                              >
+                                {pt.tags.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     {/* Prix */}
@@ -402,6 +453,41 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                     </span>
                   </div>
                 </div>
+
+                {/* Catégories & Tags */}
+                {((product.product_categories && product.product_categories.length > 0) ||
+                  (product.product_tags && product.product_tags.length > 0)) && (
+                  <div className="pt-2 border-t border-black/5">
+                    <div className="flex flex-col gap-2">
+                      {/* Catégories */}
+                      {product.product_categories && product.product_categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {product.product_categories.map((pc) => (
+                            <span
+                              key={pc.category_id}
+                              className="text-xs px-2 py-1 bg-black text-white uppercase tracking-wider"
+                            >
+                              {pc.categories.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Tags */}
+                      {product.product_tags && product.product_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {product.product_tags.map((pt) => (
+                            <span
+                              key={pt.tag_id}
+                              className="text-xs px-2 py-1 border border-black/20 uppercase tracking-wider"
+                            >
+                              {pt.tags.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

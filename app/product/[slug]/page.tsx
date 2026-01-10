@@ -29,6 +29,20 @@ interface Product {
   image_url: string | null;
   stock: number;
   category: string | null;
+  product_categories?: Array<{
+    categories: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+  product_tags?: Array<{
+    tags: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
 }
 
 /**
@@ -112,10 +126,18 @@ export default async function ProductPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Récupérer le produit depuis Supabase
+  // Récupérer le produit depuis Supabase avec ses catégories et tags
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`
+      *,
+      product_categories (
+        categories ( id, name, slug )
+      ),
+      product_tags (
+        tags ( id, name, slug )
+      )
+    `)
     .eq("slug", slug)
     .single();
 
@@ -188,6 +210,8 @@ export default async function ProductPage({
             ingredients={undefined}
             shipping="Livraison gratuite à partir de 100€ d'achat. Retours acceptés sous 14 jours. Emballage premium inclus."
             isWishlisted={isWishlisted}
+            categories={typedProduct.product_categories?.map(pc => pc.categories)}
+            tags={typedProduct.product_tags?.map(pt => pt.tags)}
           />
         </div>
       </div>

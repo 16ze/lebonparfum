@@ -28,7 +28,9 @@ interface ProductFormData {
  */
 export async function createProduct(
   productData: ProductFormData,
-  imageFile?: File
+  imageFile?: File,
+  categoryIds?: string[],
+  tagIds?: string[]
 ) {
   try {
     const supabase = await createClient();
@@ -111,6 +113,31 @@ export async function createProduct(
       };
     }
 
+    // Gérer les relations catégories et tags
+    if (data && data.id) {
+      const productId = data.id;
+
+      // Insérer les relations catégories
+      if (categoryIds && categoryIds.length > 0) {
+        const categoryRelations = categoryIds.map((catId) => ({
+          product_id: productId,
+          category_id: catId,
+        }));
+
+        await supabase.from("product_categories").insert(categoryRelations);
+      }
+
+      // Insérer les relations tags
+      if (tagIds && tagIds.length > 0) {
+        const tagRelations = tagIds.map((tagId) => ({
+          product_id: productId,
+          tag_id: tagId,
+        }));
+
+        await supabase.from("product_tags").insert(tagRelations);
+      }
+    }
+
     // Revalider la page produits
     revalidatePath("/admin/products");
     revalidatePath("/");
@@ -135,7 +162,9 @@ export async function createProduct(
 export async function updateProduct(
   productId: string,
   productData: ProductFormData,
-  imageFile?: File
+  imageFile?: File,
+  categoryIds?: string[],
+  tagIds?: string[]
 ) {
   try {
     const supabase = await createClient();
@@ -237,6 +266,33 @@ export async function updateProduct(
         success: false,
         error: error.message,
       };
+    }
+
+    // Mettre à jour les relations catégories et tags
+    // 1. Supprimer les anciennes relations
+    await Promise.all([
+      supabase.from("product_categories").delete().eq("product_id", productId),
+      supabase.from("product_tags").delete().eq("product_id", productId),
+    ]);
+
+    // 2. Insérer les nouvelles relations catégories
+    if (categoryIds && categoryIds.length > 0) {
+      const categoryRelations = categoryIds.map((catId) => ({
+        product_id: productId,
+        category_id: catId,
+      }));
+
+      await supabase.from("product_categories").insert(categoryRelations);
+    }
+
+    // 3. Insérer les nouvelles relations tags
+    if (tagIds && tagIds.length > 0) {
+      const tagRelations = tagIds.map((tagId) => ({
+        product_id: productId,
+        tag_id: tagId,
+      }));
+
+      await supabase.from("product_tags").insert(tagRelations);
     }
 
     // Revalider les pages
