@@ -81,7 +81,7 @@ export default function Showcase() {
   return (
     <section
       ref={sectionRef}
-      className="sticky top-0 z-0 w-full bg-white py-12 lg:py-0 h-[100dvh] mb-12"
+      className="relative w-full bg-white py-12 lg:py-24 min-h-screen"
     >
       {/* Layout Desktop : Grid 3 colonnes */}
       <div className="hidden lg:grid lg:grid-cols-12 h-full max-w-[1800px] mx-auto">
