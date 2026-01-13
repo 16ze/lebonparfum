@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { checkIsAdmin } from "@/lib/auth";
 
 /**
  * Actions serveur pour la gestion des catégories
@@ -19,6 +20,15 @@ interface CategoryData {
  */
 export async function createCategory(data: CategoryData) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà
@@ -66,6 +76,15 @@ export async function createCategory(data: CategoryData) {
  */
 export async function updateCategory(id: string, data: CategoryData) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà (sauf pour cette catégorie)
@@ -117,6 +136,15 @@ export async function updateCategory(id: string, data: CategoryData) {
  */
 export async function deleteCategory(id: string) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase.from("categories").delete().eq("id", id);

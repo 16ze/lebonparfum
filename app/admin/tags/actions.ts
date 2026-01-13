@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { checkIsAdmin } from "@/lib/auth";
 
 /**
  * Actions serveur pour la gestion des tags
@@ -17,6 +18,15 @@ interface TagData {
  */
 export async function createTag(data: TagData) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà
@@ -64,6 +74,15 @@ export async function createTag(data: TagData) {
  */
 export async function updateTag(id: string, data: TagData) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà (sauf pour ce tag)
@@ -112,6 +131,15 @@ export async function updateTag(id: string, data: TagData) {
  */
 export async function deleteTag(id: string) {
   try {
+    // Vérifier les permissions admin
+    const auth = await checkIsAdmin();
+    if (!auth.isAdmin) {
+      return {
+        success: false,
+        error: auth.error || "Accès refusé",
+      };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase.from("tags").delete().eq("id", id);
