@@ -46,7 +46,8 @@
 - [x] Documentation complète (docs/RATE_LIMITING_SETUP.md)
 - [x] Script de test automatique (scripts/test-rate-limit.sh)
 - [x] Variables d'environnement (.env.local.example)
-- [ ] Configuration compte Upstash production
+- [x] Configuration compte Upstash (eminent-horse-27385)
+- [x] Tests locaux validés (auth: 5/15min, admin: 20/min, public: 100/min)
 - [ ] Tests en production avec vraies requêtes
 
 ---
@@ -338,6 +339,12 @@
 - Sliding window algorithm pour précision maximale
 - Fail-open en cas d'erreur Redis (disponibilité > sécurité)
 - Analytics Upstash intégrées pour monitoring
+- Tests locaux réussis:
+  - Auth: 5 requêtes passées, 6-10 bloquées (429)
+  - Admin: 20 requêtes passées, 21-25 bloquées (429)
+  - Public: toutes requêtes passées (limite 100/min)
+  - Headers conformes (x-ratelimit-*, retry-after)
+- Base Redis Upstash: eminent-horse-27385 (Ireland)
 - Fichiers créés:
   - `lib/rate-limit.ts` (configuration Upstash)
   - `middleware.ts` (Next.js Edge Middleware)
