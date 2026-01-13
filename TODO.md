@@ -38,6 +38,17 @@
 - [x] Badges stylisés (noir pour catégories, bordure pour tags)
 - [x] Tables pivot many-to-many (product_categories, product_tags)
 
+## Rate Limiting avec Upstash Redis (10 Jan 2026)
+- [x] Installation packages @upstash/ratelimit + @upstash/redis
+- [x] Configuration lib/rate-limit.ts (4 tiers de protection)
+- [x] Middleware Next.js pour application globale
+- [x] Headers RFC standard (X-RateLimit-*, Retry-After)
+- [x] Documentation complète (docs/RATE_LIMITING_SETUP.md)
+- [x] Script de test automatique (scripts/test-rate-limit.sh)
+- [x] Variables d'environnement (.env.local.example)
+- [ ] Configuration compte Upstash production
+- [ ] Tests en production avec vraies requêtes
+
 ---
 
 # 🔒 SÉCURITÉ (PRIORITÉ HAUTE)
@@ -52,7 +63,7 @@
 ## 🔴 À FAIRE URGENT
 
 ### 1. Protection des API Routes
-- [ ] Ajouter rate limiting (Upstash Redis)
+- [x] Ajouter rate limiting (Upstash Redis)
 - [ ] Vérifier authentification sur toutes les routes /api/admin/*
 - [ ] Implémenter CSRF protection
 - [ ] Logs des erreurs avec Sentry
@@ -314,6 +325,25 @@
   - `app/admin/categories/` (page + actions + modals + tables)
   - `app/admin/tags/` (page + actions + modals + tables)
   - Modifications: ProductModal, ProductInfo, ProductsTable
+
+## Rate Limiting Upstash (10 Jan 2026)
+- Protection multi-niveaux contre brute force et abus d'API
+- 4 tiers de rate limiting configurés:
+  - Auth routes: 5 req/15min (protection login)
+  - Admin routes: 20 req/min
+  - API routes: 30 req/min
+  - Public routes: 100 req/min
+- Middleware Next.js appliqué globalement
+- Headers RFC standard (X-RateLimit-*, Retry-After)
+- Sliding window algorithm pour précision maximale
+- Fail-open en cas d'erreur Redis (disponibilité > sécurité)
+- Analytics Upstash intégrées pour monitoring
+- Fichiers créés:
+  - `lib/rate-limit.ts` (configuration Upstash)
+  - `middleware.ts` (Next.js Edge Middleware)
+  - `docs/RATE_LIMITING_SETUP.md` (documentation complète)
+  - `scripts/test-rate-limit.sh` (tests automatiques)
+  - `.env.local.example` (variables Upstash)
 
 ## Issues Connues
 - Aucune issue bloquante détectée
