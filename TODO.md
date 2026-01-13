@@ -65,7 +65,7 @@
 
 ### 1. Protection des API Routes
 - [x] Ajouter rate limiting (Upstash Redis)
-- [ ] Vérifier authentification sur toutes les routes /api/admin/*
+- [x] Vérifier authentification sur toutes les Server Actions admin
 - [ ] Implémenter CSRF protection
 - [ ] Logs des erreurs avec Sentry
 
@@ -351,6 +351,18 @@
   - `docs/RATE_LIMITING_SETUP.md` (documentation complète)
   - `scripts/test-rate-limit.sh` (tests automatiques)
   - `.env.local.example` (variables Upstash)
+
+## Authentification Admin Server Actions (10 Jan 2026)
+- Correction faille de sécurité critique sur catégories & tags
+- Création helper réutilisable checkIsAdmin() dans lib/auth.ts
+- Protection ajoutée sur 6 Server Actions:
+  - app/admin/categories/actions.ts (create, update, delete)
+  - app/admin/tags/actions.ts (create, update, delete)
+- Vérification double: authentification + rôle is_admin=true
+- Messages d'erreur cohérents pour refus d'accès
+- Note: products et settings avaient déjà ces protections
+- Fichier créé:
+  - `lib/auth.ts` (checkIsAdmin, checkIsAuthenticated)
 
 ## Issues Connues
 - Aucune issue bloquante détectée
