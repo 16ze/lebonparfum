@@ -82,10 +82,12 @@
 - [ ] Limiter retry automatique webhooks
 
 ### 4. Headers de sécurité
-- [ ] Content Security Policy (CSP)
-- [ ] X-Frame-Options: DENY
-- [ ] X-Content-Type-Options: nosniff
-- [ ] Strict-Transport-Security (HSTS)
+- [x] Content Security Policy (CSP)
+- [x] X-Frame-Options: DENY
+- [x] X-Content-Type-Options: nosniff
+- [x] Strict-Transport-Security (HSTS)
+- [x] Referrer-Policy
+- [x] Permissions-Policy
 
 ### 5. Validation des données
 - [x] Valider inputs utilisateur côté serveur (paiement)
@@ -363,6 +365,24 @@
 - Note: products et settings avaient déjà ces protections
 - Fichier créé:
   - `lib/auth.ts` (checkIsAdmin, checkIsAuthenticated)
+
+## Headers de Sécurité HTTP (10 Jan 2026)
+- Configuration complète dans next.config.ts
+- 6 headers de sécurité implémentés:
+  - X-Frame-Options: DENY (anti-clickjacking)
+  - X-Content-Type-Options: nosniff (anti-MIME sniffing)
+  - Strict-Transport-Security: HSTS 1 an + subdomains + preload
+  - Referrer-Policy: strict-origin-when-cross-origin
+  - Permissions-Policy: camera/micro/geo désactivés
+  - Content-Security-Policy: défense XSS multi-couches
+- CSP configuré pour:
+  - Stripe (js.stripe.com, api.stripe.com)
+  - Supabase (*.supabase.co, WebSocket wss://)
+  - Upstash (*.upstash.io)
+  - Images externes (Unsplash, Placehold.co)
+- Tests locaux validés (tous headers présents)
+- Documentation complète: docs/SECURITY_HEADERS.md
+- Score attendu: A sur securityheaders.com
 
 ## Issues Connues
 - Aucune issue bloquante détectée
