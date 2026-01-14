@@ -18,7 +18,8 @@
       "Bash(./scripts/test-rate-limit.sh:*)",
       "Bash(for:*)",
       "Bash(do curl -s -o /dev/null -w \"Requête $i: %{http_code}\\\\n\" http://localhost:3000/)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm run build:*)"
     ]
   }
 }

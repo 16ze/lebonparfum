@@ -61,7 +61,7 @@ export default async function WishlistPage() {
       </div>
 
       {/* Grid des produits */}
-      <WishlistGrid wishlist={wishlist || []} />
+      <WishlistGrid wishlist={wishlist as any || []} />
     </div>
   );
 }

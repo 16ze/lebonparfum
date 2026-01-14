@@ -317,7 +317,7 @@ export function validateAndSanitizeDescription(description: string | null | unde
     return {
       valid: false,
       sanitized: "",
-      error: result.error.errors[0].message,
+      error: result.error.issues[0]?.message || "Description invalide",
     };
   }
 
@@ -360,6 +360,6 @@ export function validateWithSchema<T>(
 
   return {
     valid: false,
-    errors: result.error.errors.map((err) => `${err.path.join(".")}: ${err.message}`),
+    errors: result.error.issues.map((err) => `${err.path.join(".")}: ${err.message}`),
   };
 }

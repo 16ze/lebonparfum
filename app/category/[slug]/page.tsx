@@ -4,6 +4,8 @@ import { createClient } from "@/utils/supabase/server";
 import { createBuildClient } from "@/utils/supabase/build";
 import ProductCard from "@/components/product/ProductCard";
 import { getWishlistIds } from "@/app/wishlist/actions";
+import Image from "next/image";
+import { CATEGORY_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * Page Catégorie Dynamique - Liste des produits par catégorie
@@ -135,10 +137,15 @@ export default async function CategoryPage({
         {/* Image de catégorie (si disponible) */}
         {typedCategory.image_url && (
           <div className="relative w-full h-[300px] md:h-[400px] mb-8 overflow-hidden">
-            <img
+            <Image
               src={typedCategory.image_url}
               alt={typedCategory.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 1800px"
+              placeholder="blur"
+              blurDataURL={CATEGORY_PLACEHOLDER_BLUR}
+              priority
             />
           </div>
         )}

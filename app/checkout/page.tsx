@@ -262,7 +262,7 @@ export default function CheckoutPage() {
               </div>
             </div>
           ) : clientSecret ? (
-            <Elements stripe={getStripe()} options={stripeOptions}>
+            <Elements stripe={getStripe()} options={{ ...stripeOptions, clientSecret }}>
               <CheckoutForm paymentForm={<PaymentForm />} />
             </Elements>
           ) : (

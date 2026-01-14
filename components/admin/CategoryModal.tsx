@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { X, Upload } from "lucide-react";
 import { createCategory, updateCategory } from "@/app/admin/categories/actions";
+import Image from "next/image";
+import { GENERIC_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * CategoryModal - Modal de création/édition de catégorie
@@ -204,10 +206,13 @@ export default function CategoryModal({
                 Aperçu
               </label>
               <div className="relative w-32 h-32 bg-gray-100 rounded-sm overflow-hidden">
-                <img
+                <Image
                   src={imageUrl}
                   alt="Aperçu"
-                  className="object-cover w-full h-full"
+                  fill
+                  className="object-cover"
+                  placeholder="blur"
+                  blurDataURL={GENERIC_PLACEHOLDER_BLUR}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}

@@ -154,10 +154,10 @@ export default function ProfileDrawer() {
       // Déconnexion avec le client Supabase côté client
       const supabase = createClient();
       console.log("🔍 Création client Supabase...");
-      
-      const { error, data } = await supabase.auth.signOut();
-      
-      console.log("🔍 Résultat signOut - error:", error, "data:", data);
+
+      const { error } = await supabase.auth.signOut();
+
+      console.log("🔍 Résultat signOut - error:", error);
 
       if (error) {
         console.error("❌ Erreur lors de la déconnexion:", error.message);

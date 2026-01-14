@@ -4,7 +4,9 @@ import { useMenu } from "@/context/MenuContext";
 import gsap from "gsap";
 import { X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * MenuOverlay - Menu latéral gauche style "Carte Flottante" avec logique Cascading
@@ -593,25 +595,29 @@ export default function MenuOverlay({
 
               {/* COLONNE 3 : Photo du produit au survol */}
               {activeCollectionData && hoveredProduct && (
-                <div className="w-[400px] overflow-hidden bg-gray-50 flex items-center justify-center">
+                <div className="w-[400px] relative overflow-hidden bg-gray-50">
                   {activeCollectionData.products.find(
                     (p) => p.id === hoveredProduct
                   )?.image ? (
-                    <img
+                    <Image
                       src={
                         activeCollectionData.products.find(
                           (p) => p.id === hoveredProduct
-                        )?.image
+                        )?.image || ""
                       }
                       alt={
                         activeCollectionData.products.find(
                           (p) => p.id === hoveredProduct
-                        )?.name
+                        )?.name || "Product"
                       }
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="400px"
+                      placeholder="blur"
+                      blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                     />
                   ) : (
-                    <div className="text-xs text-gray-400 uppercase tracking-widest">
+                    <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 uppercase tracking-widest">
                       Image à venir
                     </div>
                   )}

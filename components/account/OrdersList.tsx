@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Package, ChevronDown, ChevronUp } from "lucide-react";
 import clsx from "clsx";
+import Image from "next/image";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * OrdersList - Liste des commandes client
@@ -119,11 +121,17 @@ export default function OrdersList({ orders }: OrdersListProps) {
                         <div className="flex items-center gap-4">
                           {/* Image */}
                           {item.image_url && (
-                            <img
-                              src={item.image_url}
-                              alt={item.product_name}
-                              className="w-12 h-12 object-cover border border-black/10"
-                            />
+                            <div className="relative w-12 h-12 border border-black/10 flex-shrink-0">
+                              <Image
+                                src={item.image_url}
+                                alt={item.product_name}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                                placeholder="blur"
+                                blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
+                              />
+                            </div>
                           )}
 
                           {/* Nom + Quantité */}
