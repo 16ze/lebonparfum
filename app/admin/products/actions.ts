@@ -3,6 +3,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { uploadProductImage, deleteProductImage } from "@/utils/supabase/storage";
+import {
+  productSchema,
+  validateImageFile,
+  validateAndSanitizeDescription,
+  validateWithSchema,
+} from "@/lib/validation";
 
 /**
  * Server Actions pour la gestion des produits (Admin)
@@ -11,6 +17,11 @@ import { uploadProductImage, deleteProductImage } from "@/utils/supabase/storage
  * - createProduct(): Créer un nouveau produit
  * - updateProduct(): Modifier un produit existant
  * - deleteProduct(): Supprimer un produit
+ *
+ * Sécurité :
+ * - Validation Zod de tous les inputs
+ * - Sanitization HTML des descriptions
+ * - Validation taille et type des images uploadées
  */
 
 interface ProductFormData {
@@ -61,9 +72,36 @@ export async function createProduct(
       };
     }
 
-    // Upload de l'image si fournie
+    // Valider les données avec Zod
+    const validation = validateWithSchema(productSchema, productData);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
+    // Sanitizer la description HTML
+    const descriptionResult = validateAndSanitizeDescription(productData.description);
+    if (!descriptionResult.valid) {
+      return {
+        success: false,
+        error: descriptionResult.error || "Description invalide",
+      };
+    }
+
+    // Valider et uploader l'image si fournie
     let imageUrl = productData.image_url || null;
     if (imageFile) {
+      // Valider le fichier (taille + extension)
+      const fileValidation = validateImageFile(imageFile);
+      if (!fileValidation.valid) {
+        return {
+          success: false,
+          error: fileValidation.error || "Fichier image invalide",
+        };
+      }
+
       const uploadResult = await uploadProductImage(imageFile);
       if (uploadResult.error) {
         return {
@@ -93,10 +131,10 @@ export async function createProduct(
       .from("products")
       .insert([
         {
-          name: productData.name,
+          name: productData.name.trim(),
           slug: productData.slug,
-          brand: productData.brand,
-          description: productData.description,
+          brand: productData.brand.trim(),
+          description: descriptionResult.sanitized, // Utiliser la version sanitized
           price: productData.price,
           stock: productData.stock,
           image_url: imageUrl,
@@ -209,9 +247,36 @@ export async function updateProduct(
       };
     }
 
-    // Upload de la nouvelle image si fournie
+    // Valider les données avec Zod
+    const validation = validateWithSchema(productSchema, productData);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
+    // Sanitizer la description HTML
+    const descriptionResult = validateAndSanitizeDescription(productData.description);
+    if (!descriptionResult.valid) {
+      return {
+        success: false,
+        error: descriptionResult.error || "Description invalide",
+      };
+    }
+
+    // Valider et uploader la nouvelle image si fournie
     let imageUrl = productData.image_url;
     if (imageFile) {
+      // Valider le fichier (taille + extension)
+      const fileValidation = validateImageFile(imageFile);
+      if (!fileValidation.valid) {
+        return {
+          success: false,
+          error: fileValidation.error || "Fichier image invalide",
+        };
+      }
+
       const uploadResult = await uploadProductImage(imageFile);
       if (uploadResult.error) {
         return {
@@ -248,10 +313,10 @@ export async function updateProduct(
     const { data, error } = await supabase
       .from("products")
       .update({
-        name: productData.name,
+        name: productData.name.trim(),
         slug: productData.slug,
-        brand: productData.brand,
-        description: productData.description,
+        brand: productData.brand.trim(),
+        description: descriptionResult.sanitized, // Utiliser la version sanitized
         price: productData.price,
         stock: productData.stock,
         image_url: imageUrl,

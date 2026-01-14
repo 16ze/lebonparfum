@@ -13,7 +13,12 @@
       "Bash(/Users/bryandev/Documents/lebonparfum/scripts/install-stripe-direct.sh:*)",
       "Bash(cat:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(lsof:*)",
+      "Bash(./scripts/test-rate-limit.sh:*)",
+      "Bash(for:*)",
+      "Bash(do curl -s -o /dev/null -w \"Requête $i: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(done)"
     ]
   }
 }

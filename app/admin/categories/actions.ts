@@ -3,9 +3,18 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { checkIsAdmin } from "@/lib/auth";
+import {
+  categorySchema,
+  validateWithSchema,
+  validateAndSanitizeDescription,
+} from "@/lib/validation";
 
 /**
  * Actions serveur pour la gestion des catégories
+ *
+ * Sécurité :
+ * - Validation Zod de tous les inputs
+ * - Sanitization HTML des descriptions
  */
 
 interface CategoryData {
@@ -29,6 +38,24 @@ export async function createCategory(data: CategoryData) {
       };
     }
 
+    // Valider les données avec Zod
+    const validation = validateWithSchema(categorySchema, data);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
+    // Sanitizer la description HTML
+    const descriptionResult = validateAndSanitizeDescription(data.description);
+    if (!descriptionResult.valid) {
+      return {
+        success: false,
+        error: descriptionResult.error || "Description invalide",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà
@@ -45,8 +72,15 @@ export async function createCategory(data: CategoryData) {
       };
     }
 
-    // Créer la catégorie
-    const { error } = await supabase.from("categories").insert([data]);
+    // Créer la catégorie avec données validées et sanitized
+    const { error } = await supabase.from("categories").insert([
+      {
+        name: data.name.trim(),
+        slug: data.slug,
+        description: descriptionResult.sanitized,
+        image_url: data.image_url,
+      },
+    ]);
 
     if (error) {
       console.error("❌ Erreur création catégorie:", error);
@@ -85,6 +119,24 @@ export async function updateCategory(id: string, data: CategoryData) {
       };
     }
 
+    // Valider les données avec Zod
+    const validation = validateWithSchema(categorySchema, data);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
+    // Sanitizer la description HTML
+    const descriptionResult = validateAndSanitizeDescription(data.description);
+    if (!descriptionResult.valid) {
+      return {
+        success: false,
+        error: descriptionResult.error || "Description invalide",
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà (sauf pour cette catégorie)
@@ -102,10 +154,15 @@ export async function updateCategory(id: string, data: CategoryData) {
       };
     }
 
-    // Mettre à jour
+    // Mettre à jour avec données validées et sanitized
     const { error } = await supabase
       .from("categories")
-      .update(data)
+      .update({
+        name: data.name.trim(),
+        slug: data.slug,
+        description: descriptionResult.sanitized,
+        image_url: data.image_url,
+      })
       .eq("id", id);
 
     if (error) {

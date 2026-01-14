@@ -91,10 +91,23 @@
 
 ### 5. Validation des données
 - [x] Valider inputs utilisateur côté serveur (paiement)
-- [ ] Valider inputs utilisateur (zod schema global)
-- [ ] Sanitize HTML dans descriptions produits
-- [ ] Limiter taille upload images (max 5MB)
-- [ ] Vérifier extension fichiers uploadés
+- [x] Valider inputs utilisateur (zod schema global)
+- [x] Sanitize HTML dans descriptions produits
+- [x] Limiter taille upload images (max 5MB)
+- [x] Vérifier extension fichiers uploadés
+
+**Implémentation complète:**
+- `lib/validation.ts` créé avec schémas Zod (produits, catégories, tags)
+- Sanitization HTML avec DOMPurify (balises sécurisées uniquement)
+- Validation taille images: max 5MB
+- Validation extensions: .jpg, .jpeg, .png, .webp, .gif
+- Validation types MIME
+- Intégration dans toutes les Server Actions:
+  - `app/admin/products/actions.ts` (createProduct, updateProduct)
+  - `app/admin/categories/actions.ts` (createCategory, updateCategory)
+  - `app/admin/tags/actions.ts` (createTag, updateTag)
+- Configuration DOMPurify: balises autorisées (p, strong, em, ul, ol, li, a, h1-h6)
+- Messages d'erreur détaillés pour chaque type de validation
 
 ---
 
@@ -159,6 +172,7 @@
 - [x] Toast notifications checkout (succès/erreur)
 - [ ] Page 404 custom
 - [ ] Page 500 custom
+- [ ] ProfileDrawer la déconnexion doit fonctionner et etre visible dans le profile drawer quand on clique sur deconnecter 
 
 ### 2. Accessibilité (A11Y)
 - [ ] Aria labels sur éléments interactifs

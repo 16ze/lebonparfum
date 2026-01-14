@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { checkIsAdmin } from "@/lib/auth";
+import { tagSchema, validateWithSchema } from "@/lib/validation";
 
 /**
  * Actions serveur pour la gestion des tags
@@ -27,6 +28,15 @@ export async function createTag(data: TagData) {
       };
     }
 
+    // Valider les données avec Zod
+    const validation = validateWithSchema(tagSchema, data);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà
@@ -43,8 +53,13 @@ export async function createTag(data: TagData) {
       };
     }
 
-    // Créer le tag
-    const { error } = await supabase.from("tags").insert([data]);
+    // Créer le tag avec données validées
+    const { error } = await supabase.from("tags").insert([
+      {
+        name: data.name.trim(),
+        slug: data.slug,
+      },
+    ]);
 
     if (error) {
       console.error("❌ Erreur création tag:", error);
@@ -83,6 +98,15 @@ export async function updateTag(id: string, data: TagData) {
       };
     }
 
+    // Valider les données avec Zod
+    const validation = validateWithSchema(tagSchema, data);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Données invalides: ${validation.errors?.join(", ")}`,
+      };
+    }
+
     const supabase = await createClient();
 
     // Vérifier si le slug existe déjà (sauf pour ce tag)
@@ -100,8 +124,14 @@ export async function updateTag(id: string, data: TagData) {
       };
     }
 
-    // Mettre à jour
-    const { error } = await supabase.from("tags").update(data).eq("id", id);
+    // Mettre à jour avec données validées
+    const { error } = await supabase
+      .from("tags")
+      .update({
+        name: data.name.trim(),
+        slug: data.slug,
+      })
+      .eq("id", id);
 
     if (error) {
       console.error("❌ Erreur mise à jour tag:", error);
