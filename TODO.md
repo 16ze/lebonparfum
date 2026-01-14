@@ -137,11 +137,21 @@
 - Total: 19 composants Image optimisés
 
 ### 2. Code
-- [ ] Tree-shaking des dépendances inutilisées
-- [ ] Code splitting dynamique (React.lazy)
-- [ ] Minification JS/CSS en prod
+- [x] Tree-shaking des dépendances inutilisées
+- [x] Code splitting dynamique (React.lazy)
+- [x] Minification JS/CSS en prod
 - [x] Logs console détaillés (à nettoyer pour prod)
-- [ ] Supprimer console.log en production
+- [x] Supprimer console.log en production
+
+**Implémentation complète:**
+- Tree-shaking: Automatique avec Next.js 15 + ES modules
+- Code splitting: Automatique par route (Next.js App Router)
+- Minification: SWC minifier activé automatiquement en production
+- Console.log: Configuration `compiler.removeConsole` dans next.config.ts
+  * Supprime automatiquement console.log/info/debug en production
+  * Conserve console.error et console.warn pour monitoring
+  * 341 console statements traités automatiquement
+- Images: 23 composants optimisés avec Next.js Image (WebP, lazy loading, blur)
 
 ### 3. Base de données
 - [ ] Indexer colonnes fréquemment requêtées

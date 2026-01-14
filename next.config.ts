@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Optimisations de production
+  compiler: {
+    // Supprimer console.* en production (sauf console.error et console.warn)
+    removeConsole: process.env.NODE_ENV === "production" ? {
+      exclude: ["error", "warn"],
+    } : false,
+  },
+
   images: {
     remotePatterns: [
       {
