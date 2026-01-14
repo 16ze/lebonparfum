@@ -5,6 +5,8 @@ import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { toggleWishlistAction } from "@/app/wishlist/actions";
 import Link from "next/link";
+import Image from "next/image";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * WishlistGrid - Grid des produits en wishlist
@@ -95,10 +97,15 @@ export default function WishlistGrid({ wishlist }: WishlistGridProps) {
           >
             {/* Image */}
             <Link href={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden bg-gray-50">
-              <img
+              <Image
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                placeholder="blur"
+                blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
+                priority={false}
               />
 
               {/* Badge Out of Stock */}

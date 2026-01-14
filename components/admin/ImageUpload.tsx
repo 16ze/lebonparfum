@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { GENERIC_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * ImageUpload - Composant drag & drop pour upload d'images
@@ -160,6 +161,8 @@ export default function ImageUpload({
               alt="Preview"
               fill
               className="object-contain p-4"
+              placeholder="blur"
+              blurDataURL={GENERIC_PLACEHOLDER_BLUR}
             />
 
             {/* Bouton supprimer */}

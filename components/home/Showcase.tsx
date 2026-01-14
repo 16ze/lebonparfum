@@ -10,6 +10,9 @@ import type { Swiper as SwiperType } from "swiper";
 // Import Swiper styles
 import "swiper/css";
 
+// Image placeholders
+import { LIFESTYLE_PLACEHOLDER_BLUR, PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
+
 /**
  * Showcase - Section synchronisée style Dior
  *
@@ -94,6 +97,8 @@ export default function Showcase() {
               fill
               className="object-cover object-center"
               quality={90}
+              placeholder="blur"
+              blurDataURL={LIFESTYLE_PLACEHOLDER_BLUR}
             />
           </div>
         </div>
@@ -137,6 +142,8 @@ export default function Showcase() {
                     fill
                     className="object-contain p-4"
                     quality={90}
+                    placeholder="blur"
+                    blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                   />
                 </div>
               </SwiperSlide>
@@ -155,6 +162,8 @@ export default function Showcase() {
             fill
             className="object-cover object-center"
             quality={90}
+            placeholder="blur"
+            blurDataURL={LIFESTYLE_PLACEHOLDER_BLUR}
           />
         </div>
 
@@ -196,6 +205,8 @@ export default function Showcase() {
                     fill
                     className="object-contain p-3"
                     quality={90}
+                    placeholder="blur"
+                    blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                   />
                 </div>
               </SwiperSlide>

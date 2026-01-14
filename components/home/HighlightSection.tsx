@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { LIFESTYLE_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * HighlightSection - Campagne publicitaire Full Screen
@@ -26,6 +27,9 @@ export default function HighlightSection() {
           fill
           className="object-cover object-center"
           quality={90}
+          placeholder="blur"
+          blurDataURL={LIFESTYLE_PLACEHOLDER_BLUR}
+          priority
         />
         {/* Overlay sombre pour contraste */}
         <div className="absolute inset-0 bg-black/30" />

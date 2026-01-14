@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Category } from "@/types/category";
+import { CATEGORY_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 interface CategoryCardProps {
   category: Category;
@@ -27,6 +28,8 @@ export default function CategoryCard({ category }: CategoryCardProps) {
           fill
           className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           sizes="(max-width: 1024px) 50vw, 25vw"
+          placeholder="blur"
+          blurDataURL={CATEGORY_PLACEHOLDER_BLUR}
         />
       </div>
 

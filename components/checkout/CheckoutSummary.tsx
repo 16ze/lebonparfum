@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * CheckoutSummary - Résumé du panier pour la page de checkout
@@ -52,6 +53,8 @@ export default function CheckoutSummary() {
                   fill
                   className="object-cover"
                   sizes="80px"
+                  placeholder="blur"
+                  blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">

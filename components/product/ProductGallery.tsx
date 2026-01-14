@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * ProductGallery - Galerie d'images produit
@@ -44,6 +45,8 @@ export default function ProductGallery({
                   className="object-cover"
                   sizes="100vw"
                   quality={90}
+                  placeholder="blur"
+                  blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                 />
               </div>
             </SwiperSlide>
@@ -62,6 +65,8 @@ export default function ProductGallery({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 60vw"
             quality={90}
+            placeholder="blur"
+            blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
           />
         </div>
 
@@ -80,6 +85,8 @@ export default function ProductGallery({
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 30vw"
                   quality={90}
+                  placeholder="blur"
+                  blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                 />
               </div>
             ))}
@@ -101,6 +108,8 @@ export default function ProductGallery({
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 30vw"
                   quality={90}
+                  placeholder="blur"
+                  blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
                 />
               </div>
             ))}

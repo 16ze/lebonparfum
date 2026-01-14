@@ -116,10 +116,25 @@
 ## 🟡 Moyenne priorité
 
 ### 1. Images
-- [ ] Optimiser toutes les images (WebP + lazy loading)
-- [ ] Utiliser Next.js Image component partout
-- [ ] Ajouter blur placeholder
+- [x] Optimiser toutes les images (WebP + lazy loading)
+- [x] Utiliser Next.js Image component partout
+- [x] Ajouter blur placeholder
 - [ ] CDN pour images statiques (Cloudflare)
+
+**Implémentation complète:**
+- `lib/image-placeholders.ts` créé avec placeholders blur optimisés
+- Remplacé dernière balise `<img>` par `<Image>` (WishlistGrid.tsx)
+- Ajouté `placeholder="blur"` + `blurDataURL` à tous les composants:
+  - ProductCard, ProductGallery (4 instances)
+  - WishlistGrid, CategoryCard
+  - CheckoutSummary
+  - Showcase (4 instances), HighlightSection
+  - ImageUpload (admin)
+- Next.js Image optimise automatiquement en WebP
+- Lazy loading automatique (sauf `priority={true}`)
+- `quality={90}` pour images produits/lifestyle
+- Attributs `sizes` responsive sur tous les images
+- Total: 19 composants Image optimisés
 
 ### 2. Code
 - [ ] Tree-shaking des dépendances inutilisées

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import WishlistButton from "@/components/ui/WishlistButton";
+import { PRODUCT_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
 
 /**
  * ProductCard - Carte produit minimaliste style Byredo
@@ -61,6 +62,8 @@ export default function ProductCard({
             fill
             className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+            placeholder="blur"
+            blurDataURL={PRODUCT_PLACEHOLDER_BLUR}
           />
 
           {/* Badge Rupture */}
