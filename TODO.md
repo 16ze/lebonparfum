@@ -154,10 +154,32 @@
 - Images: 23 composants optimisés avec Next.js Image (WebP, lazy loading, blur)
 
 ### 3. Base de données
-- [ ] Indexer colonnes fréquemment requêtées
-- [ ] Query optimization (éviter N+1)
-- [ ] Ajouter pagination sur listes produits
+- [x] Indexer colonnes fréquemment requêtées
+- [x] Query optimization (éviter N+1)
+- [x] Ajouter pagination sur listes produits
 - [ ] Cache Supabase queries (React Query)
+
+**Implémentation complète:**
+
+**Indexes créés** (`supabase/migrations/20260114_add_performance_indexes.sql`):
+- Slug indexes: products, categories, tags (13 requêtes optimisées)
+- User_id indexes: profiles, wishlist, addresses, notifications, orders (14 requêtes)
+- Product_id indexes: product_categories, product_tags, wishlist (8 requêtes)
+- Indexes composites: wishlist(user_id, product_id) UNIQUE
+- Indexes de tri: created_at, name, price, stock
+- Full-text search: pg_trgm sur name et brand pour recherche fuzzy
+- Index partiel: stock WHERE stock > 0 (optimisation mémoire)
+
+**Pagination système**:
+- Composant UI: `components/ui/Pagination.tsx` (style Byredo)
+- Helpers: `lib/pagination.ts` (calculs, validation, Supabase ranges)
+- Features: URL-based, SEO-friendly, ellipsis, responsive
+- Configuration: 12 items/page (divisible par 2/3/4 pour grids)
+
+**Query optimization**:
+- Indexes sur toutes les foreign keys
+- ANALYZE automatique pour statistiques optimiseur
+- Prévention N+1 avec indexes sur relations many-to-many
 
 ### 4. SEO
 - [ ] Ajouter metadata pages (title, description)
