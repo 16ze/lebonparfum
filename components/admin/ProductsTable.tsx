@@ -28,6 +28,11 @@ interface Product {
   stock: number;
   image_url?: string | null;
   status?: string;
+  variants?: Array<{
+    label: string;
+    price: number;
+    stock: number;
+  }> | null;
   product_categories?: Array<{
     category_id: string;
     categories: {

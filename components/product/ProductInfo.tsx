@@ -25,7 +25,7 @@ interface ProductInfoProps {
   price: string; // Prix formaté en string (ex: "15,00 €")
   priceNumeric: number; // Prix en nombre pour les calculs
   description: string;
-  variants: { id: string; label: string; value: string }[];
+  variants: { id: string; label: string; value: string; price?: number; stock?: number }[];
   image?: string; // URL de l'image du produit
   stock?: number; // Quantité en stock
   isWishlisted?: boolean; // Si le produit est dans la wishlist
@@ -65,8 +65,28 @@ export default function ProductInfo({
   const [selectedVariant, setSelectedVariant] = useState(variants[0]?.id);
   const { addToCart, openCart } = useCart();
 
+  // Trouver la variante sélectionnée
+  const currentVariant = variants.find(v => v.id === selectedVariant) || variants[0];
+  
+  // Utiliser le prix et stock de la variante si disponible, sinon utiliser les props
+  const displayPrice = currentVariant?.price 
+    ? new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 2,
+      }).format(currentVariant.price / 100)
+    : price;
+  
+  const displayPriceNumeric = currentVariant?.price 
+    ? currentVariant.price / 100
+    : priceNumeric;
+  
+  const displayStock = currentVariant?.stock !== undefined
+    ? currentVariant.stock
+    : stock;
+
   // Rupture de stock ?
-  const isOutOfStock = stock === 0;
+  const isOutOfStock = displayStock === 0;
 
   /**
    * handleAddToCart - Ajoute le produit au panier et ouvre le drawer
@@ -86,7 +106,7 @@ export default function ProductInfo({
     addToCart({
       id: cartItemId,
       name: productName,
-      price: priceNumeric,
+      price: displayPriceNumeric,
       image: image,
       slug: slug,
     });
@@ -125,7 +145,7 @@ export default function ProductInfo({
 
       {/* Prix + Tags */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="text-lg font-medium">{price}</div>
+        <div className="text-lg font-medium">{displayPrice}</div>
         {tags && tags.length > 0 && (
           <div className="flex items-center gap-2">
             {tags.map((tag) => (
@@ -143,7 +163,7 @@ export default function ProductInfo({
 
       {/* Indicateur de Stock - Scarcity Marketing */}
       <div className="mb-6">
-        {stock === 0 ? (
+        {displayStock === 0 ? (
           // RUPTURE DE STOCK - Badge Rouge
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200">
             <AlertCircle size={12} className="text-red-600" strokeWidth={2} />
@@ -151,7 +171,7 @@ export default function ProductInfo({
               Rupture de stock
             </span>
           </div>
-        ) : stock > 0 && stock <= 5 ? (
+        ) : displayStock > 0 && displayStock <= 5 ? (
           // STOCK FAIBLE - Badge Orange + Message d'urgence
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-200">
@@ -161,7 +181,7 @@ export default function ProductInfo({
               </span>
             </div>
             <p className="text-xs text-orange-600 uppercase tracking-widest font-medium">
-              Vite ! Plus que {stock} exemplaire{stock > 1 ? "s" : ""}.
+              Vite ! Plus que {displayStock} exemplaire{displayStock > 1 ? "s" : ""}.
             </p>
           </div>
         ) : (

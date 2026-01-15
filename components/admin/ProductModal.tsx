@@ -8,6 +8,12 @@ import { createProduct, updateProduct } from "@/app/admin/products/actions";
 import { createClient } from "@/utils/supabase/client";
 import { generateSlug } from "@/lib/validation";
 
+interface ProductVariant {
+  label: string;
+  price: number; // En centimes
+  stock: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -21,6 +27,7 @@ interface Product {
   meta_description?: string | null;
   seo_keywords?: string[] | null;
   status?: string;
+  variants?: ProductVariant[] | null;
 }
 
 interface Category {
@@ -73,6 +80,10 @@ export default function ProductModal({
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  
+  // État pour les variantes
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [useVariants, setUseVariants] = useState(false);
 
   useEffect(() => {
     if (isEditMode && product) {
@@ -102,7 +113,19 @@ export default function ProductModal({
         status: "draft",
       });
       setImageFile(null);
+      setVariants([]);
+      setUseVariants(false);
     }
+    
+    // Charger les variantes si elles existent
+    if (isEditMode && product && product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+      setVariants(product.variants);
+      setUseVariants(true);
+    } else if (isEditMode && product) {
+      setVariants([]);
+      setUseVariants(false);
+    }
+    
     setError(null);
   }, [isEditMode, product, isOpen]);
 
@@ -200,6 +223,27 @@ export default function ProductModal({
     );
   };
 
+  // Fonctions pour gérer les variantes
+  const addVariant = () => {
+    setVariants([...variants, { label: "50ml", price: 0, stock: 0 }]);
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  const updateVariant = (index: number, field: keyof ProductVariant, value: string | number) => {
+    const updated = [...variants];
+    if (field === "price") {
+      updated[index] = { ...updated[index], price: Math.round(Number(value) * 100) }; // Convertir en centimes
+    } else if (field === "stock") {
+      updated[index] = { ...updated[index], stock: Number(value) };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
+    setVariants(updated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -231,6 +275,11 @@ export default function ProductModal({
         ? formData.seo_keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0)
         : null;
 
+      // Préparer les variantes (si activées)
+      const variantsData = useVariants && variants.length > 0 
+        ? variants.filter(v => v.label.trim() && v.price > 0) // Filtrer les variantes vides
+        : null;
+
       const productData = {
         name: formData.name,
         slug: formData.slug,
@@ -243,6 +292,7 @@ export default function ProductModal({
         meta_description: formData.meta_description || null,
         seo_keywords,
         status: formData.status as "draft" | "published" | "archived",
+        variants: variantsData,
       };
 
       let result;
@@ -489,12 +539,116 @@ export default function ProductModal({
                 name="stock"
                 value={formData.stock}
                 onChange={handleChange}
-                required
+                required={!useVariants}
                 min="0"
-                disabled={isLoading}
+                disabled={isLoading || useVariants}
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
                 placeholder="Ex: 50"
               />
+              <p className="text-xs text-gray-400 mt-1">
+                {useVariants ? "Le stock est géré par les variantes ci-dessous" : "Stock global du produit"}
+              </p>
+            </div>
+
+            {/* Section Variantes */}
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-xs uppercase tracking-widest text-gray-500">
+                  Variantes (Tailles)
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useVariants}
+                    onChange={(e) => {
+                      setUseVariants(e.target.checked);
+                      if (!e.target.checked) {
+                        setVariants([]);
+                      } else if (variants.length === 0) {
+                        // Ajouter une variante par défaut si aucune n'existe
+                        const defaultPrice = Math.round(parseFloat(formData.price || "0") * 100);
+                        setVariants([{ label: "50ml", price: defaultPrice, stock: parseInt(formData.stock) || 0 }]);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-xs text-gray-500">Utiliser des variantes</span>
+                </label>
+              </div>
+
+              {useVariants ? (
+                <div className="space-y-3">
+                  {variants.map((variant, index) => (
+                    <div key={index} className="border border-black/10 p-3 space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Label (Taille) */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Taille</label>
+                          <input
+                            type="text"
+                            value={variant.label}
+                            onChange={(e) => updateVariant(index, "label", e.target.value)}
+                            disabled={isLoading}
+                            className="w-full border border-black/20 px-2 py-1 text-xs focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                            placeholder="50ml"
+                          />
+                        </div>
+                        {/* Prix */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Prix (€)</label>
+                          <input
+                            type="number"
+                            value={(variant.price / 100).toFixed(2)}
+                            onChange={(e) => updateVariant(index, "price", e.target.value)}
+                            disabled={isLoading}
+                            step="0.01"
+                            min="0"
+                            className="w-full border border-black/20 px-2 py-1 text-xs focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        {/* Stock */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Stock</label>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={variant.stock}
+                              onChange={(e) => updateVariant(index, "stock", e.target.value)}
+                              disabled={isLoading}
+                              min="0"
+                              className="flex-1 border border-black/20 px-2 py-1 text-xs focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                              placeholder="0"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeVariant(index)}
+                              disabled={isLoading}
+                              className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 border border-red-200 transition-colors disabled:opacity-50"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 text-xs uppercase tracking-wider border border-black/20 hover:bg-black/5 transition-colors disabled:opacity-50"
+                  >
+                    + Ajouter une variante
+                  </button>
+                  {variants.length === 0 && (
+                    <p className="text-xs text-gray-400">Aucune variante. Cliquez sur "Ajouter une variante" pour commencer.</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">Cochez "Utiliser des variantes" pour gérer plusieurs tailles avec des prix et stocks différents.</p>
+              )}
             </div>
 
             {/* Section Statut */}

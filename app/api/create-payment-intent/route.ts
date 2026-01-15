@@ -210,30 +210,43 @@ export async function POST(request: NextRequest) {
       totalAmountEuros: totalAmountCents / 100,
     });
 
+    // Récupérer l'utilisateur connecté (si connecté) - réutilise le supabase déjà créé ligne 70
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log(`👤 [API] Utilisateur: ${user ? `✅ Connecté (${user.id}, ${user.email})` : '❌ Non connecté (guest)'}`);
+
     // Préparer les metadata du panier pour Stripe
     // Format léger : [{ id, qty }, ...] en JSON string
     const cartMetadata = JSON.stringify(
-      items.map((i) => ({ id: i.id, qty: i.quantity }))
+      verifiedItems.map((i) => ({ 
+        id: i.id, // Utiliser l'ID du produit vérifié (pas celui du frontend)
+        qty: i.quantity 
+      }))
     );
 
-    // Récupérer l'utilisateur connecté (si connecté) - réutilise le supabase déjà créé ligne 70
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log(`👤 [API] Utilisateur: ${user ? `✅ Connecté (${user.id})` : '❌ Non connecté (guest)'}`);
+    console.log("📦 [API] Metadata du panier préparées:", {
+      cartItemsCount: verifiedItems.length,
+      cartMetadataPreview: cartMetadata.substring(0, 200) + "...",
+    });
 
-    // Créer les metadata
+    // Créer les metadata COMPLÈTES pour Stripe
     const metadata: Record<string, string> = {
       // Métadonnées utiles pour le suivi
-      items_count: items.length.toString(),
+      items_count: verifiedItems.length.toString(),
       subtotal_euros: (subtotalCents / 100).toFixed(2),
       shipping_fee_euros: (shippingFeeCents / 100).toFixed(2),
+      total_euros: (totalAmountCents / 100).toFixed(2),
       // Stockage du panier dans metadata (source de vérité pour la décrémentation)
       cart_items: cartMetadata,
+      // Identifiant utilisateur (CRITIQUE pour lier la commande)
+      user_id: user?.id || 'guest',
+      // Email client (CRITIQUE pour les notifications et support)
+      customer_email: user?.email || 'guest@example.com',
     };
 
-    // Ajouter le user_id si l'utilisateur est connecté
-    if (user) {
-      metadata.user_id = user.id;
-    }
+    console.log("📋 [API] Metadata complètes à envoyer à Stripe:", {
+      ...metadata,
+      cart_items: cartMetadata.substring(0, 100) + "...", // Aperçu seulement
+    });
 
     // Création du Payment Intent Stripe
     console.log("📤 [API] ========== TENTATIVE CRÉATION STRIPE PAYMENT INTENT ==========");

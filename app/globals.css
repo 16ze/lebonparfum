@@ -40,3 +40,56 @@
     display: none; /* Chrome, Safari and Opera */
   }
 }
+
+/* Micro-interactions globales - Style Byredo */
+@layer base {
+  /* Transitions fluides pour tous les éléments interactifs */
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+
+  /* Hover states subtils pour les boutons */
+  button:not(:disabled):hover {
+    transition-duration: 200ms;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.98);
+    transition-duration: 100ms;
+  }
+
+  /* Focus states accessibles */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+  }
+
+  /* Disabled states */
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Smooth scroll pour les ancres */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Micro-interaction pour les liens */
+  a:not(:disabled):hover {
+    opacity: 0.7;
+  }
+}

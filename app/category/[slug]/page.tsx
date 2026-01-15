@@ -6,6 +6,7 @@ import ProductCard from "@/components/product/ProductCard";
 import { getWishlistIds } from "@/app/wishlist/actions";
 import Image from "next/image";
 import { CATEGORY_PLACEHOLDER_BLUR } from "@/lib/image-placeholders";
+import { generateCategoryMetadata, generateCategorySchema } from "@/lib/metadata";
 
 /**
  * Page Catégorie Dynamique - Liste des produits par catégorie
@@ -52,7 +53,7 @@ export async function generateStaticParams() {
 }
 
 /**
- * generateMetadata - Métadonnées SEO dynamiques
+ * generateMetadata - Métadonnées SEO dynamiques avec Open Graph et Twitter Cards
  */
 export async function generateMetadata({
   params,
@@ -64,20 +65,29 @@ export async function generateMetadata({
 
   const { data: category } = await supabase
     .from("categories")
-    .select("name, description")
+    .select("id, name, description, image_url")
     .eq("slug", slug)
     .single();
 
   if (!category) {
     return {
-      title: "Catégorie non trouvée | THE PARFUMERIEE",
+      title: "Catégorie non trouvée",
     };
   }
 
-  return {
-    title: `${category.name} | THE PARFUMERIEE`,
-    description: category.description || `Découvrez notre sélection de parfums ${category.name}.`,
-  };
+  // Compter les produits de cette catégorie pour la description
+  const { count } = await supabase
+    .from("product_categories")
+    .select("*", { count: "exact", head: true })
+    .eq("category_id", category.id);
+
+  return generateCategoryMetadata({
+    name: category.name,
+    description: category.description,
+    slug: slug,
+    image: category.image_url,
+    productCount: count || undefined,
+  });
 }
 
 /**
@@ -130,8 +140,21 @@ export default async function CategoryPage({
   // Récupérer les IDs de la wishlist
   const wishlistIds = await getWishlistIds();
 
+  // Générer le Schema.org JSON-LD pour le SEO
+  const categorySchema = generateCategorySchema({
+    name: typedCategory.name,
+    description: typedCategory.description,
+    slug: slug,
+    productCount: products.length,
+  });
+
   return (
     <main className="min-h-screen bg-white pt-[120px] pb-20">
+      {/* Schema.org JSON-LD pour le SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(categorySchema) }}
+      />
       {/* Header Catégorie */}
       <div className="px-6 md:px-12 max-w-[1800px] mx-auto mb-12">
         {/* Image de catégorie (si disponible) */}

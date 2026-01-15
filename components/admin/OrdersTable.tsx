@@ -16,7 +16,7 @@ import OrderDetailsModal from "./OrderDetailsModal";
 
 interface Order {
   id: string;
-  user_id: string;
+  user_id: string | null; // Nullable pour les commandes invités
   amount: number;
   status: string;
   shipping_address: any;

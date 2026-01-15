@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, Package, ShoppingBag, Settings, LogOut, X, Menu, FolderTree, Tag, AlertTriangle } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 import { clsx } from "clsx";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import gsap from "gsap";
 
 /**
@@ -60,33 +60,68 @@ const navigation = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Détecter si on est sur mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Toggle sidebar sur mobile
   const toggleSidebar = () => setIsOpen(!isOpen);
   const closeSidebar = () => setIsOpen(false);
 
+  // Initialiser la visibilité avec useLayoutEffect pour éviter l'erreur d'hydratation
+  useLayoutEffect(() => {
+    if (!sidebarRef.current || !overlayRef.current) return;
+    
+    const isMobileDevice = window.innerWidth < 768;
+    
+    if (isMobileDevice) {
+      // Sur mobile : initialiser comme invisible et positionné hors écran
+      gsap.set(sidebarRef.current, {
+        x: "-100%",
+        visibility: "hidden",
+      });
+      gsap.set(overlayRef.current, {
+        opacity: 0,
+        visibility: "hidden",
+      });
+    } else {
+      // Sur desktop : toujours visible
+      gsap.set(sidebarRef.current, {
+        x: 0,
+        visibility: "visible",
+      });
+    }
+  }, []);
+
   // Animation GSAP pour le drawer mobile
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
     if (!isMobile) return; // Pas d'animation sur desktop
+    if (!sidebarRef.current || !overlayRef.current) return;
 
     const ctx = gsap.context(() => {
       if (isOpen) {
         // Ouvrir : slide depuis la gauche
-        gsap.fromTo(
-          sidebarRef.current,
-          { x: "-100%", visibility: "visible" },
-          { x: 0, duration: 0.4, ease: "power3.out" }
-        );
-        if (overlayRef.current) {
-          gsap.to(overlayRef.current, {
-            opacity: 1,
-            visibility: "visible",
-            duration: 0.3,
-          });
-        }
+        gsap.to(sidebarRef.current, {
+          x: 0,
+          visibility: "visible",
+          duration: 0.4,
+          ease: "power3.out",
+        });
+        gsap.to(overlayRef.current, {
+          opacity: 1,
+          visibility: "visible",
+          duration: 0.3,
+        });
       } else {
         // Fermer : slide vers la gauche
         gsap.to(sidebarRef.current, {
@@ -95,30 +130,31 @@ export default function AdminSidebar() {
           ease: "power2.in",
           onComplete: () => {
             if (sidebarRef.current) {
-              sidebarRef.current.style.visibility = "hidden";
+              gsap.set(sidebarRef.current, { visibility: "hidden" });
             }
           },
         });
-        if (overlayRef.current) {
-          gsap.to(overlayRef.current, {
-            opacity: 0,
-            visibility: "hidden",
-            duration: 0.2,
-          });
-        }
+        gsap.to(overlayRef.current, {
+          opacity: 0,
+          duration: 0.2,
+          onComplete: () => {
+            if (overlayRef.current) {
+              gsap.set(overlayRef.current, { visibility: "hidden" });
+            }
+          },
+        });
       }
     });
 
     return () => ctx.revert();
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   // Fermer la sidebar lors de la navigation sur mobile
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
     if (isMobile && isOpen) {
       closeSidebar();
     }
-  }, [pathname]);
+  }, [pathname, isMobile, isOpen]);
 
   const handleLogout = async () => {
     await logoutAction();
@@ -140,7 +176,6 @@ export default function AdminSidebar() {
         ref={overlayRef}
         className="md:hidden fixed inset-0 bg-black/60 z-[40] opacity-0 invisible"
         onClick={closeSidebar}
-        style={{ visibility: isOpen ? "visible" : "hidden" }}
       />
 
       {/* Sidebar */}
@@ -150,13 +185,9 @@ export default function AdminSidebar() {
           "bg-black text-white flex flex-col h-screen",
           // Desktop : toujours visible, fixe à gauche
           "md:fixed md:left-0 md:top-0 md:w-64 md:z-30 md:visible",
-          // Mobile : drawer
-          "fixed left-0 top-0 w-64 z-[50]"
+          // Mobile : drawer (largeur 80% pour meilleure UX)
+          "fixed left-0 top-0 w-[80vw] max-w-sm z-[50] invisible"
         )}
-        style={{
-          // Sur desktop, toujours visible. Sur mobile, géré par l'animation GSAP
-          visibility: typeof window !== "undefined" && window.innerWidth >= 768 ? "visible" : undefined,
-        }}
       >
         {/* Header avec bouton fermer sur mobile */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
@@ -171,7 +202,7 @@ export default function AdminSidebar() {
           {/* Bouton fermer sur mobile */}
           <button
             onClick={closeSidebar}
-            className="md:hidden w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-colors"
+            className="md:hidden w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-colors z-[60] relative"
             aria-label="Fermer le menu"
           >
             <X className="w-5 h-5" strokeWidth={1.5} />

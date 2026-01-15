@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/utils/supabase/client";
 import clsx from "clsx";
 import gsap from "gsap";
 import {
@@ -17,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { signout } from "@/app/login/actions";
 
 /**
  * ProfileDrawer - Overlay de profil (style Byredo)
@@ -41,6 +41,8 @@ export default function ProfileDrawer() {
     setProfileView,
     refreshUser,
     openAuthDrawer,
+    setIsLoggingOut,
+    isLoggingOut,
   } = useAuth();
   const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -49,19 +51,29 @@ export default function ProfileDrawer() {
 
   // CRITIQUE : Rafraîchir le statut admin à chaque ouverture du drawer
   // Pour s'assurer que le menu affiche correctement les options admin/client
+  // IMPORTANT : Ne JAMAIS rafraîchir pendant la déconnexion
   useEffect(() => {
-    if (isProfileDrawerOpen && user) {
-      console.log("🔍 ProfileDrawer ouvert - Rafraîchissement du statut admin...");
-      console.log("🔍 État actuel - isAdmin:", isAdmin, "user:", user.email);
-      
-      // FORCER le rafraîchissement à chaque ouverture pour garantir la cohérence
-      refreshUser().then(() => {
-        console.log("✅ Rafraîchissement terminé");
-      }).catch((error) => {
-        console.error("❌ Erreur lors du rafraîchissement:", error);
-      });
+    // Ne pas rafraîchir si :
+    // 1. Le drawer n'est pas ouvert
+    // 2. Pas d'utilisateur
+    // 3. Déconnexion en cours (CRITIQUE : empêcher les conflits)
+    if (!isProfileDrawerOpen || !user || isLoggingOut) {
+      if (isLoggingOut) {
+        console.log("🚫 Rafraîchissement bloqué - Déconnexion en cours");
+      }
+      return;
     }
-  }, [isProfileDrawerOpen, user?.id]); // Dépendre de user?.id pour éviter les appels inutiles
+    
+    console.log("🔍 ProfileDrawer ouvert - Rafraîchissement du statut admin...");
+    console.log("🔍 État actuel - isAdmin:", isAdmin, "user:", user.email);
+    
+    // FORCER le rafraîchissement à chaque ouverture pour garantir la cohérence
+    refreshUser().then(() => {
+      console.log("✅ Rafraîchissement terminé");
+    }).catch((error) => {
+      console.error("❌ Erreur lors du rafraîchissement:", error);
+    });
+  }, [isProfileDrawerOpen, user?.id, isLoggingOut]);
 
   /**
    * Animation GSAP : Slide-in depuis la droite
@@ -138,51 +150,78 @@ export default function ProfileDrawer() {
   }, [isProfileExpanded, isProfileDrawerOpen]);
 
   /**
-   * Déconnexion
+   * CRITIQUE : Si l'utilisateur se déconnecte pendant que le drawer est ouvert,
+   * fermer immédiatement le ProfileDrawer et ouvrir l'AuthDrawer
+   * 
+   * IMPORTANT : Ce useEffect doit être AVANT tous les early returns
+   * pour respecter les règles des Hooks de React
+   * 
+   * IMPORTANT : Ne pas exécuter pendant la déconnexion manuelle (isLoggingOut)
+   * car handleLogout gère déjà la fermeture et l'ouverture de l'AuthDrawer
+   */
+  useEffect(() => {
+    // Ne pas exécuter si :
+    // 1. Le drawer n'est pas ouvert
+    // 2. L'utilisateur existe encore
+    // 3. Déconnexion en cours (handleLogout gère déjà)
+    if (!isProfileDrawerOpen || user || isLoggingOut) {
+      return;
+    }
+    
+    console.log("⚠️ ProfileDrawer ouvert mais user est null - Fermeture automatique + Ouverture AuthDrawer");
+    closeProfileDrawer();
+    // Ouvrir l'AuthDrawer après un court délai pour permettre la fermeture du ProfileDrawer
+    setTimeout(() => {
+      openAuthDrawer();
+    }, 100);
+  }, [isProfileDrawerOpen, user, isLoggingOut, closeProfileDrawer, openAuthDrawer]);
+
+  /**
+   * Déconnexion - Utilise une Server Action pour garantir la destruction du cookie HttpOnly
    */
   const handleLogout = async (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     
+    // Empêcher les clics multiples
+    if (isLoggingOut) {
+      console.log("⚠️ Déconnexion déjà en cours...");
+      return;
+    }
+    
     try {
-      console.log("🔓 Tentative de déconnexion depuis ProfileDrawer...");
+      console.log("🔓 ========== DÉBUT DÉCONNEXION ==========");
       console.log("🔍 État actuel - user:", user?.email, "isOpen:", isProfileDrawerOpen);
       
-      // Fermer le drawer immédiatement pour un feedback visuel
+      // 1. Fermer le drawer visuellement tout de suite (UX)
+      console.log("🔍 Fermeture du ProfileDrawer...");
       closeProfileDrawer();
       
-      // Déconnexion avec le client Supabase côté client
-      const supabase = createClient();
-      console.log("🔍 Création client Supabase...");
-
-      const { error } = await supabase.auth.signOut();
-
-      console.log("🔍 Résultat signOut - error:", error);
-
-      if (error) {
-        console.error("❌ Erreur lors de la déconnexion:", error.message);
-        alert(`Erreur lors de la déconnexion: ${error.message}`);
+      // 2. Activer le flag de déconnexion pour empêcher toute réouverture
+      console.log("🔒 Activation du flag isLoggingOut...");
+      setIsLoggingOut(true);
+      
+      // 3. Appeler la Server Action (C'est elle qui détruit le cookie HttpOnly et redirige)
+      console.log("🔍 Appel de la Server Action signout()...");
+      await signout();
+      
+      // Note: signout() redirige, donc le code suivant ne sera jamais exécuté
+      // Mais on le laisse pour le cas où il y aurait une erreur
+      console.log("✅ Déconnexion réussie");
+      
+    } catch (error: any) {
+      // Si c'est la redirection Next.js, on ne fait rien (c'est le comportement attendu)
+      // Next.js implémente redirect() en lançant une erreur spéciale "NEXT_REDIRECT"
+      if (error?.message === 'NEXT_REDIRECT' || error?.message?.includes('NEXT_REDIRECT') || error?.digest?.includes('NEXT_REDIRECT')) {
+        console.log("✅ Redirection Next.js détectée - Comportement normal");
         return;
       }
-
-      console.log("✅ Déconnexion réussie côté Supabase - Attente onAuthStateChange...");
       
-      // Attendre la fermeture du ProfileDrawer (animation GSAP ~400ms)
-      await new Promise((resolve) => setTimeout(resolve, 450));
-      
-      // Attendre que onAuthStateChange nettoie l'état
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      
-      console.log("🔓 Déconnexion complète - Ouverture du formulaire de connexion...");
-      
-      // Ouvrir automatiquement l'AuthDrawer pour permettre une nouvelle connexion
-      // L'AuthDrawer s'affichera à la place du ProfileDrawer
-      openAuthDrawer();
-    } catch (error) {
-      console.error("❌ Erreur inattendue lors de la déconnexion:", error);
+      // Pour toute autre erreur, on la log et on affiche une alerte
+      console.error("❌ Erreur lors de la déconnexion:", error);
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-      console.error("❌ Stack trace:", error instanceof Error ? error.stack : "Pas de stack");
-      alert(`Erreur inattendue lors de la déconnexion: ${errorMessage}`);
+      alert(`Erreur lors de la déconnexion: ${errorMessage}`);
+      setIsLoggingOut(false);
     }
   };
 
@@ -217,16 +256,12 @@ export default function ProfileDrawer() {
     }
   };
 
-  // Ne pas afficher si le drawer est fermé OU si l'utilisateur n'est pas connecté
-  // (Si l'utilisateur se déconnecte, le drawer doit se fermer automatiquement)
+  // Early returns : APRÈS tous les Hooks (règle des Hooks de React)
+  // Ne pas afficher si le drawer est fermé
   if (!isProfileDrawerOpen) return null;
   
-  // Si l'utilisateur se déconnecte pendant que le drawer est ouvert, le fermer
-  if (!user) {
-    console.log("⚠️ ProfileDrawer ouvert mais user est null - Fermeture automatique");
-    closeProfileDrawer();
-    return null;
-  }
+  // Si l'utilisateur n'est pas connecté, ne pas afficher le drawer
+  if (!user) return null;
 
   return (
     <>
@@ -424,11 +459,14 @@ export default function ProfileDrawer() {
                 console.log("🖱️ Bouton déconnexion cliqué");
                 handleLogout(e);
               }}
-              className="w-full flex items-center justify-center gap-3 py-3 border border-red-200 text-red-600 hover:bg-red-50 transition-colors rounded-sm group"
+              disabled={isLoggingOut}
+              className={`w-full flex items-center justify-center gap-3 py-3 border border-red-200 text-red-600 hover:bg-red-50 transition-colors rounded-sm group ${
+                isLoggingOut ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              <LogOut className="w-4 h-4" strokeWidth={1.5} />
+              <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-pulse" : ""}`} strokeWidth={1.5} />
               <span className="text-xs uppercase tracking-widest font-bold">
-                Déconnexion
+                {isLoggingOut ? "Déconnexion..." : "Déconnexion"}
               </span>
             </button>
           </div>

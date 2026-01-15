@@ -2,18 +2,7 @@
 
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-
-/**
- * AuthContext - Gestion de l'authentification côté client
- *
- * Fonctionnalités :
- * - Récupération de l'utilisateur connecté
- * - Gestion de l'overlay d'authentification (AuthDrawer)
- * - Gestion de l'overlay de profil (ProfileDrawer)
- * - Écoute des changements d'état d'authentification
- * - Rafraîchissement automatique de la session
- */
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 
 type ProfileView = "profile" | "orders" | "wishlist" | "dashboard" | "products" | "settings";
 
@@ -32,6 +21,8 @@ interface AuthContextType {
   toggleExpand: () => void;
   setProfileView: (view: ProfileView) => void;
   refreshUser: () => Promise<void>;
+  setIsLoggingOut: (value: boolean) => void;
+  isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,219 +31,166 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // États UI
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
   const [currentProfileView, setCurrentProfileView] = useState<ProfileView>("profile");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  /**
-   * Récupérer l'utilisateur connecté au montage du composant
-   */
+  // Fonction dédiée pour vérifier le rôle admin
+  // Utilise l'EMAIL comme identifiant unique (compatible avec Google OAuth et mot de passe)
+  const checkAdminRole = useCallback(async (email: string | undefined) => {
+    if (!email) {
+      console.log("⚠️ [AUTH] Pas d'email fourni - isAdmin = false");
+      setIsAdmin(false);
+      return;
+    }
+    
+    console.log("🕵️‍♂️ [AUTH] Vérification rôle DB pour l'email :", email);
+    
+    const supabase = createClient();
+    // On interroge la DB pour savoir si cet email a les droits admin
+    // maybeSingle() évite l'erreur si pas de profil trouvé
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("❌ [AUTH] Erreur lecture profil :", error.message);
+      console.error("❌ [AUTH] Détails erreur :", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      setIsAdmin(false);
+      return;
+    }
+
+    // La vérité vient uniquement de la DB
+    const dbIsAdmin = data?.is_admin === true;
+    console.log("✅ [AUTH] Statut Admin DB :", dbIsAdmin, "(is_admin dans DB:", data?.is_admin, ")");
+    
+    setIsAdmin(dbIsAdmin);
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
-
-    // Récupération initiale de l'utilisateur et statut admin
-    const getUser = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setUser(user);
-
-        // Si utilisateur connecté, récupérer le statut admin
-        if (user) {
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", user.id)
-            .single();
-          
-          if (profileError) {
-            console.error("❌ Erreur récupération profil pour isAdmin:", profileError);
-            setIsAdmin(false);
-          } else {
-            console.log("✅ Statut admin récupéré:", profile?.is_admin, "pour user:", user.email);
-            setIsAdmin(profile?.is_admin || false);
-          }
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error("❌ Erreur lors de la récupération de l'utilisateur:", error);
-        setUser(null);
+    
+    // 1. Initialisation
+    const initAuth = async () => {
+      console.log("🚀 [AUTH] Initialisation de l'authentification...");
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      
+      if (user) {
+        console.log("👤 [AUTH] Utilisateur trouvé :", user.email);
+        await checkAdminRole(user.email);
+      } else {
+        console.log("⚠️ [AUTH] Aucun utilisateur connecté");
         setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
-    getUser();
+    initAuth();
 
-    // Écouter les changements d'authentification (login, logout, token refresh)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("🔐 État d'authentification changé:", _event, "session:", session ? "présente" : "null");
-      
+    // 2. Écoute temps réel
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔔 [AUTH] Changement état :", event, "session:", session ? "présente" : "null");
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
       // Si déconnexion, nettoyer immédiatement l'état
-      if (_event === "SIGNED_OUT") {
-        console.log("🔒 Utilisateur déconnecté - Nettoyage immédiat de l'état");
+      if (event === "SIGNED_OUT") {
+        console.log("🔒 [AUTH] ========== SIGNED_OUT DÉTECTÉ ==========");
         setUser(null);
         setIsAdmin(false);
         setIsProfileDrawerOpen(false);
         setIsProfileExpanded(false);
         setIsLoading(false);
-        return; // Sortir immédiatement pour éviter le reste du traitement
+        setIsLoggingOut(false);
+        setIsAuthDrawerOpen(true);
+        console.log("✅ [AUTH] État nettoyé - AuthDrawer ouvert");
+        console.log("🔒 [AUTH] ========== FIN SIGNED_OUT ==========");
+        return;
       }
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      // Si utilisateur connecté, récupérer le statut admin
       if (currentUser) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", currentUser.id)
-            .single();
-          
-          if (profileError) {
-            console.error("❌ Erreur récupération profil pour isAdmin:", profileError);
-            setIsAdmin(false);
-          } else {
-            console.log("✅ Statut admin mis à jour:", profile?.is_admin, "pour user:", currentUser.email);
-            setIsAdmin(profile?.is_admin || false);
-          }
-        } catch (error) {
-          console.error("❌ Erreur récupération profil:", error);
-          setIsAdmin(false);
-        }
+        console.log("👤 [AUTH] Utilisateur connecté :", currentUser.email);
+        await checkAdminRole(currentUser.email);
       } else {
+        console.log("⚠️ [AUTH] Aucun utilisateur dans la session");
         setIsAdmin(false);
       }
-
+      
       setIsLoading(false);
 
       // Si l'utilisateur se connecte, fermer l'AuthDrawer
-      if (_event === "SIGNED_IN") {
+      if (event === "SIGNED_IN") {
         setIsAuthDrawerOpen(false);
       }
     });
 
-    // Cleanup : se désabonner lors du démontage
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [checkAdminRole]);
 
-  /**
-   * Rafraîchir manuellement l'utilisateur et statut admin
-   * Utile après un login/signup pour mettre à jour l'état immédiatement
-   * CRITIQUE : Cette fonction doit TOUJOURS récupérer le statut admin depuis la DB
-   */
+  // Refresh manuel
   const refreshUser = async () => {
+    console.log("🔄 [AUTH] Refresh manuel de l'utilisateur...");
     const supabase = createClient();
-    try {
-      console.log("🔄 refreshUser() appelé - Récupération user et statut admin...");
-      
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      
-      if (authError) {
-        console.error("❌ Erreur auth.getUser dans refreshUser:", authError);
-        setUser(null);
-        setIsAdmin(false);
-        return;
-      }
-
-      setUser(user);
-
-      // Récupérer le statut admin DEPUIS LA BASE DE DONNÉES à chaque fois
-      if (user) {
-        console.log("🔍 Récupération profil pour user:", user.id);
-        
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", user.id)
-          .single();
-        
-        if (profileError) {
-          console.error("❌ Erreur récupération profil dans refreshUser:", profileError);
-          console.error("❌ Détails erreur:", {
-            code: profileError.code,
-            message: profileError.message,
-            details: profileError.details,
-            hint: profileError.hint,
-          });
-          setIsAdmin(false);
-        } else {
-          const adminStatus = profile?.is_admin === true;
-          console.log("✅ Statut admin rafraîchi depuis DB:", adminStatus, "pour user:", user.email);
-          setIsAdmin(adminStatus);
-        }
-      } else {
-        console.log("⚠️ Aucun user connecté - isAdmin = false");
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error("❌ Erreur inattendue lors du rafraîchissement de l'utilisateur:", error);
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+    if (user) {
+      console.log("👤 [AUTH] Utilisateur trouvé lors du refresh :", user.email);
+      await checkAdminRole(user.email);
+    } else {
+      console.log("⚠️ [AUTH] Aucun utilisateur lors du refresh");
       setIsAdmin(false);
     }
   };
 
-  /**
-   * Ouvrir l'overlay d'authentification
-   */
+  // Fonctions UI (Drawers)
   const openAuthDrawer = () => {
-    console.log("🔓 Ouverture de l'AuthDrawer");
+    console.log("🔓 [AUTH] Ouverture de l'AuthDrawer");
     setIsAuthDrawerOpen(true);
   };
 
-  /**
-   * Fermer l'overlay d'authentification
-   */
   const closeAuthDrawer = () => {
-    console.log("🔒 Fermeture de l'AuthDrawer");
+    console.log("🔒 [AUTH] Fermeture de l'AuthDrawer");
     setIsAuthDrawerOpen(false);
   };
 
-  /**
-   * Ouvrir le ProfileDrawer
-   * @param view - Vue à afficher (profile, orders, wishlist)
-   */
   const openProfileDrawer = (view: ProfileView = "profile") => {
-    console.log("👤 Ouverture du ProfileDrawer -", view);
+    // CRITIQUE : Ne pas ouvrir le drawer pendant la déconnexion
+    if (isLoggingOut) {
+      console.log("🚫 [AUTH] Ouverture du ProfileDrawer bloquée - Déconnexion en cours");
+      return;
+    }
+    
+    console.log("👤 [AUTH] Ouverture du ProfileDrawer -", view);
     setCurrentProfileView(view);
     setIsProfileDrawerOpen(true);
-    setIsProfileExpanded(false); // Toujours ouvrir en mode normal
+    setIsProfileExpanded(false);
   };
 
-  /**
-   * Fermer le ProfileDrawer
-   */
   const closeProfileDrawer = () => {
-    console.log("👤 Fermeture du ProfileDrawer");
+    console.log("👤 [AUTH] Fermeture du ProfileDrawer");
     setIsProfileDrawerOpen(false);
     setIsProfileExpanded(false);
   };
 
-  /**
-   * Toggle entre mode normal et plein écran
-   */
   const toggleExpand = () => {
-    console.log("🔲 Toggle expand:", !isProfileExpanded);
+    console.log("🔲 [AUTH] Toggle expand:", !isProfileExpanded);
     setIsProfileExpanded(!isProfileExpanded);
   };
 
-  /**
-   * Changer la vue du profil
-   */
   const setProfileView = (view: ProfileView) => {
-    console.log("👤 Changement de vue:", view);
+    console.log("👤 [AUTH] Changement de vue:", view);
     setCurrentProfileView(view);
   };
 
@@ -273,6 +211,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toggleExpand,
         setProfileView,
         refreshUser,
+        setIsLoggingOut,
+        isLoggingOut,
       }}
     >
       {children}
@@ -280,10 +220,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Hook personnalisé pour utiliser le AuthContext
- * Vérifie que le contexte est utilisé à l'intérieur d'un AuthProvider
- */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -291,4 +227,3 @@ export function useAuth() {
   }
   return context;
 }
-

@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { createBuildClient } from "@/utils/supabase/build";
 import ProductCard from "@/components/product/ProductCard";
 import { getWishlistIds } from "@/app/wishlist/actions";
+import { SITE_CONFIG } from "@/lib/metadata";
 
 /**
  * Page Tag Dynamique - Liste des produits par tag
@@ -48,7 +49,7 @@ export async function generateStaticParams() {
 }
 
 /**
- * generateMetadata - Métadonnées SEO dynamiques
+ * generateMetadata - Métadonnées SEO dynamiques avec Open Graph et Twitter Cards
  */
 export async function generateMetadata({
   params,
@@ -60,19 +61,44 @@ export async function generateMetadata({
 
   const { data: tag } = await supabase
     .from("tags")
-    .select("name")
+    .select("id, name")
     .eq("slug", slug)
     .single();
 
   if (!tag) {
     return {
-      title: "Tag non trouvé | THE PARFUMERIEE",
+      title: "Tag non trouvé",
     };
   }
 
+  // Compter les produits avec ce tag pour la description
+  const { count } = await supabase
+    .from("product_tags")
+    .select("*", { count: "exact", head: true })
+    .eq("tag_id", tag.id);
+
+  const title = `#${tag.name.toUpperCase()}`;
+  const description = `Découvrez notre sélection de parfums ${tag.name}${count ? ` (${count} produit${count > 1 ? "s" : ""})` : ""}.`;
+  const url = `${SITE_CONFIG.url}/tag/${slug}`;
+
   return {
-    title: `#${tag.name.toUpperCase()} | THE PARFUMERIEE`,
-    description: `Découvrez notre sélection de parfums ${tag.name}.`,
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      url,
+      title,
+      description,
+      siteName: SITE_CONFIG.name,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    alternates: {
+      canonical: url,
+    },
   };
 }
 

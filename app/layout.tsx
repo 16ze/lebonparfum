@@ -11,6 +11,7 @@ import { CheckoutProvider } from "@/context/CheckoutContext";
 import { MenuProvider } from "@/context/MenuContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { DEFAULT_METADATA } from "@/lib/metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,10 +21,7 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "THE PARFUMERIEE - Parfums de Niche & Dupes de Luxe",
-  description: "Revendeur de parfums de niche et dupes de luxe",
-};
+export const metadata: Metadata = DEFAULT_METADATA;
 
 export default function RootLayout({
   children,

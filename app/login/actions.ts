@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { validateEmail, validatePassword } from "@/lib/validators";
 
 /**
@@ -355,4 +356,45 @@ export async function logoutAction() {
 
   // Rediriger vers la home dans tous les cas
   redirect("/");
+}
+
+/**
+ * Server Action: Déconnexion utilisateur (Nouvelle version)
+ *
+ * Cette fonction garantit la destruction du cookie HttpOnly côté serveur.
+ * Elle doit être utilisée depuis les composants client pour une déconnexion complète.
+ *
+ * @returns Promise<void> - Redirige vers la home après déconnexion
+ */
+export async function signout() {
+  try {
+    console.log("🔓 [SERVER ACTION] Début de la déconnexion...");
+    
+    // 1. Créer le client Supabase serveur (gère les cookies HttpOnly)
+    const supabase = await createClient();
+    console.log("🔓 [SERVER ACTION] Client Supabase créé");
+
+    // 2. Appeler signOut() côté serveur pour supprimer le cookie
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error("❌ [SERVER ACTION] Erreur signOut Supabase:", error.message);
+      // Continuer quand même pour garantir la redirection
+    } else {
+      console.log("✅ [SERVER ACTION] signOut() réussi - Cookie supprimé");
+    }
+
+    // 3. Revalider le cache Next.js pour forcer le re-render avec le nouvel état
+    console.log("🔓 [SERVER ACTION] Revalidation du cache Next.js...");
+    revalidatePath('/', 'layout');
+    
+    // 4. Rediriger vers la home (ou /login si préféré)
+    console.log("🔓 [SERVER ACTION] Redirection vers la home...");
+    redirect('/');
+    
+  } catch (error) {
+    console.error("❌ [SERVER ACTION] Erreur inattendue lors de la déconnexion:", error);
+    // Rediriger quand même pour éviter que l'utilisateur reste bloqué
+    redirect('/');
+  }
 }

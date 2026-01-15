@@ -16,9 +16,14 @@ export default async function AdminDashboardPage() {
   const supabase = await createClient();
 
   // Récupérer les statistiques
-  const [productsResult, ordersResult] = await Promise.all([
+  const [productsResult, ordersResult, paidOrdersResult] = await Promise.all([
     supabase.from("products").select("id, stock, price", { count: "exact" }),
-    supabase.from("orders").select("amount", { count: "exact" }),
+    supabase.from("orders").select("id", { count: "exact" }),
+    // Récupérer uniquement les commandes payées pour le calcul du chiffre d'affaires
+    supabase
+      .from("orders")
+      .select("amount")
+      .eq("status", "paid"),
   ]);
 
   // Calculer les statistiques
@@ -29,9 +34,10 @@ export default async function AdminDashboardPage() {
   const totalStock =
     productsResult.data?.reduce((sum, product) => sum + (product.stock || 0), 0) || 0;
 
-  // Calculer le revenu total
+  // Calculer le revenu total (uniquement les commandes payées)
+  // Filtrer par status = 'paid' et sommer les montants
   const totalRevenue =
-    ordersResult.data?.reduce((sum, order) => sum + (order.amount || 0), 0) || 0;
+    paidOrdersResult.data?.reduce((sum, order) => sum + (Number(order.amount) || 0), 0) || 0;
 
   // Formater le revenu en euros
   const formattedRevenue = new Intl.NumberFormat("fr-FR", {
@@ -56,7 +62,7 @@ export default async function AdminDashboardPage() {
       name: "Revenu",
       value: formattedRevenue,
       icon: TrendingUp,
-      description: "Revenu total",
+      description: "Chiffre d'affaires (commandes payées)",
     },
     {
       name: "Stock",

@@ -24,6 +24,12 @@ import {
  * - Validation taille et type des images uploadées
  */
 
+interface ProductVariant {
+  label: string;
+  price: number; // En centimes
+  stock: number;
+}
+
 interface ProductFormData {
   name: string;
   slug: string;
@@ -36,6 +42,7 @@ interface ProductFormData {
   meta_description?: string | null;
   seo_keywords?: string[] | null;
   status: "draft" | "published" | "archived";
+  variants?: ProductVariant[] | null;
 }
 
 /**
@@ -146,6 +153,7 @@ export async function createProduct(
           meta_description: productData.meta_description?.trim() || null,
           seo_keywords: productData.seo_keywords || null,
           status: productData.status,
+          variants: productData.variants || null, // Ajouter les variantes
         },
       ])
       .select()
@@ -332,6 +340,7 @@ export async function updateProduct(
         meta_description: productData.meta_description?.trim() || null,
         seo_keywords: productData.seo_keywords || null,
         status: productData.status,
+        variants: productData.variants || null, // Ajouter les variantes
       })
       .eq("id", productId)
       .select()

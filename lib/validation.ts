@@ -1,5 +1,4 @@
 import { z } from "zod";
-import DOMPurify from "isomorphic-dompurify";
 
 /**
  * Schémas de validation Zod pour l'application
@@ -252,79 +251,43 @@ export function validateImageFile(file: File): {
 }
 
 // ===================================
-// SANITIZATION HTML
+// SANITIZATION HTML (Simplifiée)
 // ===================================
 
 /**
- * Configuration DOMPurify pour la sanitization HTML
- *
- * Permet uniquement les balises de formatage de texte simples :
- * - Gras, italique, souligné
- * - Listes (ul, ol, li)
- * - Paragraphes
- * - Liens (avec attributs limités)
- *
- * Bloque :
- * - Scripts (<script>)
- * - Styles inline dangereux
- * - Événements (onclick, onerror, etc.)
- * - Iframes
- */
-const DOMPURIFY_CONFIG = {
-  ALLOWED_TAGS: [
-    "p",
-    "br",
-    "strong",
-    "b",
-    "em",
-    "i",
-    "u",
-    "ul",
-    "ol",
-    "li",
-    "a",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-  ],
-  ALLOWED_ATTR: ["href", "target", "rel"],
-  ALLOW_DATA_ATTR: false,
-  KEEP_CONTENT: true,
-};
-
-/**
- * Sanitize une chaîne HTML pour enlever tout code dangereux
- *
- * Utilise DOMPurify pour :
- * - Supprimer les scripts
- * - Supprimer les événements inline (onclick, etc.)
- * - Supprimer les styles dangereux
- * - Garder uniquement les balises de formatage autorisées
+ * Sanitize simple pour les descriptions
+ * 
+ * Pour les champs texte simples (catégories, tags), on fait juste un trim.
+ * Pour les descriptions produits qui peuvent contenir du HTML, on fait un nettoyage basique
+ * en supprimant les balises script et les événements inline.
+ * 
+ * NOTE: Cette version simplifiée évite l'utilisation de DOMPurify/jsdom qui cause
+ * des problèmes avec Next.js 15 dans les Server Actions.
  *
  * @param html - Chaîne HTML potentiellement dangereuse
- * @returns Chaîne HTML nettoyée et sécurisée
- *
- * @example
- * sanitizeHtml('<p>Hello</p><script>alert("XSS")</script>')
- * // Retourne: '<p>Hello</p>'
+ * @returns Chaîne nettoyée (trim + suppression basique des scripts)
  */
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return "";
 
-  // Nettoyer le HTML avec DOMPurify
-  const clean = DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
+  // Trim le texte
+  let clean = html.trim();
+
+  // Suppression basique des balises script (regex simple)
+  // Cela ne remplace pas une vraie sanitization HTML mais évite le crash
+  clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  
+  // Suppression des événements inline (onclick, onerror, etc.)
+  clean = clean.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, "");
 
   return clean;
 }
 
 /**
- * Validation et sanitization combinées pour les descriptions produits
+ * Validation et sanitization combinées pour les descriptions
  *
  * 1. Valide que la longueur est acceptable
- * 2. Sanitize le HTML pour enlever le code dangereux
+ * 2. Trim et nettoyage basique du texte
  * 3. Retourne la version nettoyée
  *
  * @param description - Description HTML brute
@@ -346,7 +309,7 @@ export function validateAndSanitizeDescription(description: string | null | unde
     };
   }
 
-  // Sanitizer le HTML
+  // Sanitizer simple (trim + suppression basique des scripts)
   const sanitized = sanitizeHtml(result.data);
 
   return {

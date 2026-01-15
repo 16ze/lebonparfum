@@ -34,6 +34,11 @@ interface Product {
   image_url: string | null;
   stock: number;
   category: string | null;
+  variants?: Array<{
+    label: string;
+    price: number; // En centimes
+    stock: number;
+  }> | null;
   product_categories?: Array<{
     categories: {
       id: string;
@@ -194,11 +199,25 @@ export default async function ProductPage({
         "https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&w=800&auto=format&fit=crop",
       ];
 
-  // Variantes par défaut (à adapter selon vos besoins)
-  const variants = [
-    { id: "50ml", label: "50ML", value: "50ml" },
-    { id: "100ml", label: "100ML", value: "100ml" },
-  ];
+  // Récupérer les variantes depuis la base de données
+  // Si le produit a des variantes, les utiliser, sinon créer des variantes par défaut
+  const productVariants = typedProduct.variants && Array.isArray(typedProduct.variants) && typedProduct.variants.length > 0
+    ? typedProduct.variants.map((v: any, index: number) => ({
+        id: `variant-${index}`,
+        label: v.label || "50ml",
+        value: v.label || "50ml",
+        price: Number(v.price) || typedProduct.price, // Prix en centimes
+        stock: Number(v.stock) || 0,
+      }))
+    : [
+        { 
+          id: "default", 
+          label: "50ML", 
+          value: "50ml",
+          price: Number(typedProduct.price),
+          stock: typedProduct.stock,
+        },
+      ];
 
   // Récupérer les IDs de la wishlist pour afficher l'état des cœurs
   const wishlistIds = await getWishlistIds();
@@ -246,7 +265,7 @@ export default async function ProductPage({
             price={formattedPrice}
             priceNumeric={Number(typedProduct.price) / 100}
             description={typedProduct.description || ""}
-            variants={variants}
+            variants={productVariants}
             image={typedProduct.image_url || images[0]}
             stock={typedProduct.stock}
             notes={typedProduct.notes || undefined}

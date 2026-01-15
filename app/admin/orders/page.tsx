@@ -9,7 +9,8 @@ import OrdersTable from "@/components/admin/OrdersTable";
 export default async function AdminOrdersPage() {
   const supabase = await createClient();
 
-  // Récupérer toutes les commandes
+  // Récupérer toutes les commandes (sans filtre user_id - l'admin doit tout voir)
+  // La policy RLS "Admin can view all orders" garantit que seuls les admins voient tout
   const { data: orders, error: ordersError } = await supabase
     .from("orders")
     .select("*")
