@@ -14,7 +14,7 @@ interface Order {
   id: string;
   customer_email: string | null;
   customer_name: string | null;
-  total_amount: number;
+  amount: number; // Colonne 'amount' dans la DB orders
   status: string;
   created_at: string;
 }
@@ -114,7 +114,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
                       {new Intl.NumberFormat("fr-FR", {
                         style: "currency",
                         currency: "EUR",
-                      }).format(order.total_amount / 100)}
+                      }).format(order.amount / 100)}
                     </p>
                   </td>
 
@@ -168,7 +168,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
                     {new Intl.NumberFormat("fr-FR", {
                       style: "currency",
                       currency: "EUR",
-                    }).format(order.total_amount / 100)}
+                    }).format(order.amount / 100)}
                   </p>
                 </div>
 

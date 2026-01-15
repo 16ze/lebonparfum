@@ -127,7 +127,7 @@ export default async function AdminDashboardPage() {
   // =============================================
   const { data: latestOrders } = await supabase
     .from("orders")
-    .select("id, customer_email, customer_name, total_amount, status, created_at")
+    .select("id, customer_email, customer_name, amount, status, created_at")
     .order("created_at", { ascending: false })
     .limit(5);
 
