@@ -27,6 +27,7 @@ interface Product {
   price: number;
   stock: number;
   image_url?: string | null;
+  status?: string;
   product_categories?: Array<{
     category_id: string;
     categories: {
@@ -221,6 +222,9 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                   <th className="text-left px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
                     Stock
                   </th>
+                  <th className="text-left px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
+                    État
+                  </th>
                   <th className="text-right px-4 lg:px-6 py-3 lg:py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">
                     Actions
                   </th>
@@ -320,6 +324,24 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                         }`}
                       >
                         {product.stock}
+                      </span>
+                    </td>
+
+                    {/* État (Status) */}
+                    <td className="px-4 lg:px-6 py-3 lg:py-4">
+                      <span
+                        className={`inline-block px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs uppercase tracking-wider whitespace-nowrap ${
+                          product.status === "published"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : product.status === "archived"
+                            ? "bg-red-50 text-red-700 border border-red-200"
+                            : "bg-orange-50 text-orange-700 border border-orange-200"
+                        }`}
+                      >
+                        {product.status === "published" && "🟢 Publié"}
+                        {product.status === "draft" && "🟠 Brouillon"}
+                        {product.status === "archived" && "🔴 Archivé"}
+                        {!product.status && "🟠 Brouillon"}
                       </span>
                     </td>
 
@@ -423,8 +445,8 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                   </div>
                 </div>
 
-                {/* Informations : Prix + Stock */}
-                <div className="flex items-center justify-between pt-2 border-t border-black/5">
+                {/* Informations : Prix + Stock + État */}
+                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-black/5">
                   <div>
                     <p className="text-xs uppercase tracking-wider text-gray-500 mb-0.5">
                       Prix
@@ -436,7 +458,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                       }).format(product.price / 100)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-center">
                     <p className="text-xs uppercase tracking-wider text-gray-500 mb-0.5">
                       Stock
                     </p>
@@ -450,6 +472,25 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                       }`}
                     >
                       {product.stock}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs uppercase tracking-wider text-gray-500 mb-0.5">
+                      État
+                    </p>
+                    <span
+                      className={`inline-block px-2 py-1 text-[10px] uppercase tracking-wider whitespace-nowrap ${
+                        product.status === "published"
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : product.status === "archived"
+                          ? "bg-red-50 text-red-700 border border-red-200"
+                          : "bg-orange-50 text-orange-700 border border-orange-200"
+                      }`}
+                    >
+                      {product.status === "published" && "🟢 Publié"}
+                      {product.status === "draft" && "🟠 Draft"}
+                      {product.status === "archived" && "🔴 Archivé"}
+                      {!product.status && "🟠 Draft"}
                     </span>
                   </div>
                 </div>
