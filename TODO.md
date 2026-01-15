@@ -207,13 +207,15 @@
 - [x] Robots.txt
 - [x] Schema.org markup (produits)
 - [x] Open Graph images dynamiques
+- [x] Champs SEO personnalisables en DB
+- [x] Système Draft/Published/Archived
 
 **Implémentation complète Phase 1 - SEO Dynamique:**
 
 **Metadata système** (`lib/metadata.ts`):
 - SITE_CONFIG centralisé (nom, URL, description, réseaux sociaux)
 - DEFAULT_METADATA pour toutes les pages (OpenGraph, Twitter Cards, robots)
-- generateProductMetadata(): Génère métadonnées complètes produits
+- generateProductMetadata(): Génère métadonnées complètes produits (avec fallback custom → auto)
 - generateCategoryMetadata(): Génère métadonnées catégories
 - generateProductSchema(): JSON-LD Schema.org Product
 - generateOrganizationSchema(): JSON-LD Schema.org Organization
@@ -232,6 +234,7 @@
 - Pages dynamiques: products, categories, tags (depuis Supabase)
 - ISR avec revalidate: 86400s (24h)
 - Métadonnées: lastModified, changeFrequency, priority
+- Filtrage: Uniquement produits publiés
 
 **Schema.org intégré** (`app/product/[slug]/page.tsx`):
 - JSON-LD Product schema avec offer, availability, price
@@ -245,18 +248,75 @@
 - Style Byredo: fond blanc, texte noir, typographie géométrique
 - Format: 1200x630px (standard OG/Twitter)
 - Contenu produit: marque, nom, prix formaté
+- Filtrage: Uniquement produits publiés
 
-**Pages intégrées**:
-- ✅ Pages produits: metadata complètes + Schema.org + OG images
-- ⏳ À faire Phase 2: Ajouter champs SEO personnalisables en DB
+**Implémentation complète Phase 2 - SEO Personnalisable:**
 
-### 5. SEO Avancé - Phase 2 (En attente)
+**Migration DB** (`supabase/migrations/20260115_add_seo_fields.sql`):
+- Colonnes: meta_title (60 chars), meta_description (160 chars), seo_keywords (array)
+- Contraintes CHECK pour limites Google
+- Fonction PL/pgSQL generate_slug() avec gestion accents
+- Trigger auto_generate_slug pour génération automatique avec unicité
 
-- [ ] Migration DB: Ajouter colonnes meta_title, meta_description, seo_keywords
-- [ ] ProductForm: Section "Référencement" avec champs SEO personnalisables
-- [ ] Fonction generateSlug() pour auto-génération slugs
-- [ ] Validation Zod: slug unique, regex ^[a-z0-9-]+$
-- [ ] Intégration: Utiliser champs custom si remplis, sinon fallback sur valeurs auto
+**Validation** (`lib/validation.ts`):
+- Zod schemas avec limites caractères Google
+- Fonction JavaScript generateSlug() pour client-side
+- Normalisation accents avec NFD
+
+**Interface Admin** (`components/admin/ProductModal.tsx`):
+- Section "Référencement (SEO)" avec:
+  - Meta Title input + compteur caractères (60 max)
+  - Meta Description textarea + compteur (160 max)
+  - SEO Keywords input (comma-separated)
+  - Bouton "Générer depuis le nom" pour slug
+  - Placeholders dynamiques basés sur nom/marque
+- Validation Zod intégrée
+
+**Server Actions** (`app/admin/products/actions.ts`):
+- createProduct et updateProduct incluent champs SEO
+- Validation côté serveur avec Zod
+- Sanitization des inputs
+
+**Pages Publiques**:
+- ✅ app/product/[slug]/page.tsx: Utilise meta_title/meta_description custom avec fallback
+- ✅ app/sitemap.ts: Filtre produits publiés uniquement
+- ✅ OG images: Filtrent produits publiés uniquement
+
+**Implémentation complète Phase 3 - Draft/Published/Archived:**
+
+**Migration DB** (`supabase/migrations/20260115_add_product_status.sql`):
+- Colonne status ENUM: 'draft', 'published', 'archived'
+- Défaut: 'draft' (sécurité: invisible par défaut)
+- Contrainte CHECK pour valeurs valides
+- Indexes: idx_products_status + idx_products_status_created (performance)
+- Migration: Tous produits existants passés en 'published'
+- Fonction helper: get_product_status_stats()
+
+**Validation** (`lib/validation.ts`):
+- Zod enum: "draft" | "published" | "archived"
+
+**Interface Admin** (`components/admin/ProductModal.tsx`):
+- Section "Statut de publication" avec select:
+  - 🟠 Brouillon (invisible clients)
+  - 🟢 Publié (visible site)
+  - 🔴 Archivé (masqué, conservé)
+  - Texte d'aide dynamique selon statut
+
+**ProductsTable Admin** (`components/admin/ProductsTable.tsx`):
+- Colonne "État" avec badges colorés:
+  - 🟢 Publié (vert)
+  - 🟠 Brouillon (orange)
+  - 🔴 Archivé (rouge)
+- Layout mobile: 3 colonnes (Prix | Stock | État)
+
+**Protection Frontend** (CRITIQUE):
+- app/product/[slug]/page.tsx: 404 si status !== "published"
+- app/sitemap.ts: .eq("status", "published")
+- app/product/[slug]/opengraph-image.tsx: .eq("status", "published")
+- app/product/[slug]/twitter-image.tsx: .eq("status", "published")
+- app/collections/[slug]/page.tsx: Filtre produits publiés
+- components/layout/MenuOverlayWrapper.tsx: Filtre collections publiées
+- components/layout/SearchOverlayWrapper.tsx: Filtre produits publiés
 
 ---
 
