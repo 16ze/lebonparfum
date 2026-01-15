@@ -156,7 +156,7 @@ export function generateProductMetadata({
     title,
     description: metaDescription,
     openGraph: {
-      type: "product",
+      type: "website", // Next.js 15 n'accepte que "website" ou "article"
       url,
       title,
       description: metaDescription,

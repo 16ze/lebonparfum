@@ -44,3 +44,39 @@ export function getImagePlaceholder(type: "product" | "category" | "lifestyle" |
       return GENERIC_PLACEHOLDER_BLUR;
   }
 }
+
+/**
+ * Génère un SVG shimmer pour les placeholders dynamiques
+ * Utilisé pour créer des placeholders avec des dimensions personnalisées
+ */
+export function shimmer(width: number, height: number): string {
+  return `
+    <svg width="${width}" height="${height}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        <linearGradient id="g">
+          <stop stop-color="#f6f7f8" offset="0%" />
+          <stop stop-color="#edeef1" offset="20%" />
+          <stop stop-color="#f6f7f8" offset="40%" />
+          <stop stop-color="#f6f7f8" offset="100%" />
+        </linearGradient>
+      </defs>
+      <rect width="${width}" height="${height}" fill="#f6f7f8" />
+      <rect id="r" width="${width}" height="${height}" fill="url(#g)" />
+      <animate xlink:href="#r" attributeName="x" from="-${width}" to="${width}" dur="1s" repeatCount="indefinite"  />
+    </svg>
+  `;
+}
+
+/**
+ * Convertit une chaîne en base64
+ * Utilisé pour encoder les placeholders SVG
+ */
+export function toBase64(str: string): string {
+  if (typeof window === 'undefined') {
+    // Server-side (Node.js)
+    return Buffer.from(str).toString('base64');
+  } else {
+    // Client-side (Browser)
+    return window.btoa(str);
+  }
+}

@@ -151,7 +151,11 @@ export default async function ProductPage({
 
   // Gestion d'erreur : produit non trouvé OU non publié
   if (error || !product) {
-    console.error("Erreur lors de la récupération du produit:", error);
+    console.error("❌ [SERVER] Erreur ProductPage:", {
+      slug,
+      error: error?.message || "Produit non trouvé",
+      code: error?.code,
+    });
     notFound();
   }
 
