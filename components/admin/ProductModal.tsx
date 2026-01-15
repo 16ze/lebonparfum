@@ -20,6 +20,7 @@ interface Product {
   meta_title?: string | null;
   meta_description?: string | null;
   seo_keywords?: string[] | null;
+  status?: string;
 }
 
 interface Category {
@@ -59,6 +60,7 @@ export default function ProductModal({
     meta_title: "",
     meta_description: "",
     seo_keywords: "",
+    status: "draft",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -84,6 +86,7 @@ export default function ProductModal({
         meta_title: product.meta_title || "",
         meta_description: product.meta_description || "",
         seo_keywords: product.seo_keywords?.join(", ") || "",
+        status: product.status || "draft",
       });
     } else {
       setFormData({
@@ -96,6 +99,7 @@ export default function ProductModal({
         meta_title: "",
         meta_description: "",
         seo_keywords: "",
+        status: "draft",
       });
       setImageFile(null);
     }
@@ -238,6 +242,7 @@ export default function ProductModal({
         meta_title: formData.meta_title || null,
         meta_description: formData.meta_description || null,
         seo_keywords,
+        status: formData.status as "draft" | "published" | "archived",
       };
 
       let result;
@@ -490,6 +495,31 @@ export default function ProductModal({
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
                 placeholder="Ex: 50"
               />
+            </div>
+
+            {/* Section Statut */}
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
+              <label htmlFor="status" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                Statut de publication *
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+                className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+              >
+                <option value="draft">🟠 Brouillon (invisible clients)</option>
+                <option value="published">🟢 Publié (visible site)</option>
+                <option value="archived">🔴 Archivé (masqué, conservé)</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-2">
+                {formData.status === "draft" && "Le produit est invisible sur le site, visible uniquement dans l'admin"}
+                {formData.status === "published" && "Le produit est visible et accessible aux clients"}
+                {formData.status === "archived" && "Le produit est masqué mais conservé dans la base de données"}
+              </p>
             </div>
 
             {/* Section SEO (Référencement) */}

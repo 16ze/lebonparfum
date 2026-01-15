@@ -53,10 +53,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Récupérer tous les produits
+  // Récupérer tous les produits publiés uniquement
   const { data: products } = await supabase
     .from("products")
     .select("slug, updated_at")
+    .eq("status", "published")
     .order("updated_at", { ascending: false });
 
   const productPages: MetadataRoute.Sitemap =

@@ -9,10 +9,11 @@ import SearchOverlay from "./SearchOverlay";
 export default async function SearchOverlayWrapper() {
   const supabase = await createClient();
 
-  // Récupérer tous les produits (id, name, slug, price, image_url, collection)
+  // Récupérer tous les produits publiés (id, name, slug, price, image_url, collection)
   const { data: products, error } = await supabase
     .from("products")
     .select("id, name, slug, price, image_url, collection")
+    .eq("status", "published")
     .order("name", { ascending: true });
 
   if (error) {

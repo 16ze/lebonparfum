@@ -122,6 +122,13 @@ export const productSchema = z.object({
     .array(z.string())
     .optional()
     .nullable(),
+
+  // Statut de publication
+  status: z
+    .enum(["draft", "published", "archived"], {
+      errorMap: () => ({ message: "Le statut doit être 'draft', 'published' ou 'archived'" }),
+    })
+    .default("draft"),
 });
 
 /**

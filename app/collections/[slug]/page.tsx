@@ -1,12 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
+import { createBuildClient } from "@/utils/supabase/build";
 import { slugToCollectionName } from "@/lib/collections";
 import ProductCard from "@/components/product/ProductCard";
 import { getWishlistIds } from "@/app/wishlist/actions";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { SITE_CONFIG, generateCollectionSchema } from "@/lib/metadata";
 
 /**
- * Metadata dynamique pour la page collection
+ * Metadata dynamique pour la page collection avec Open Graph et Twitter Cards
  */
 export async function generateMetadata({
   params,
@@ -18,13 +20,40 @@ export async function generateMetadata({
 
   if (!collectionName) {
     return {
-      title: "Collection introuvable | THE PARFUMERIEE",
+      title: "Collection introuvable",
     };
   }
 
+  // Compter les produits de cette collection pour la description
+  const supabase = createBuildClient();
+  const { count } = await supabase
+    .from("products")
+    .select("*", { count: "exact", head: true })
+    .eq("collection", collectionName)
+    .eq("status", "published");
+
+  const title = collectionName;
+  const description = `Découvrez la collection ${collectionName} - Parfums de niche et dupes de luxe${count ? ` (${count} produit${count > 1 ? "s" : ""})` : ""}.`;
+  const url = `${SITE_CONFIG.url}/collections/${slug}`;
+
   return {
-    title: `${collectionName} | THE PARFUMERIEE`,
-    description: `Découvrez la collection ${collectionName} - Parfums de niche et dupes de luxe`,
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      url,
+      title,
+      description,
+      siteName: SITE_CONFIG.name,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    alternates: {
+      canonical: url,
+    },
   };
 }
 
@@ -53,10 +82,12 @@ export default async function CollectionPage({
   // Récupérer tous les produits de la collection
   // Utilisation de eq pour une correspondance exacte (case-sensitive)
   // Le mapping garantit que collectionName correspond exactement au nom en DB
+  // Filtre uniquement les produits publiés
   const { data: products, error } = await supabase
     .from("products")
     .select("id, name, slug, collection, price, image_url, stock")
     .eq("collection", collectionName)
+    .eq("status", "published")
     .order("name", { ascending: true });
 
   // Gestion d'erreur
@@ -71,8 +102,21 @@ export default async function CollectionPage({
   // Récupérer les IDs de la wishlist pour afficher l'état des cœurs
   const wishlistIds = await getWishlistIds();
 
+  // Générer le Schema.org JSON-LD pour le SEO
+  const collectionSchema = generateCollectionSchema({
+    name: collectionName,
+    description: null,
+    slug: slug,
+    productCount: typedProducts.length,
+  });
+
   return (
     <main className="min-h-screen bg-white pt-[120px] pb-20">
+      {/* Schema.org JSON-LD pour le SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
       <div className="max-w-[1800px] mx-auto px-4 md:px-8">
         {/* Header : Titre de la collection */}
         <div className="mb-16 md:mb-20 text-center">

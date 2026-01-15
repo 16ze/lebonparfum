@@ -33,16 +33,18 @@ export default async function MenuOverlayWrapper() {
     }
   }
 
-  // Récupérer toutes les collections distinctes
+  // Récupérer toutes les collections distinctes (produits publiés uniquement)
   const { data: collectionsData, error: collectionsError } = await supabase
     .from("products")
     .select("collection")
+    .eq("status", "published")
     .order("collection");
 
-  // Récupérer tous les produits avec leurs collections
+  // Récupérer tous les produits publiés avec leurs collections
   const { data: productsData, error: productsError } = await supabase
     .from("products")
     .select("name, slug, collection, image_url")
+    .eq("status", "published")
     .order("name");
 
   // Logs pour débugger

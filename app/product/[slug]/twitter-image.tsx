@@ -25,11 +25,12 @@ export default async function Image({
   const { slug } = await params;
   const supabase = createBuildClient();
 
-  // Récupérer les infos du produit
+  // Récupérer les infos du produit (seulement si publié)
   const { data: product } = await supabase
     .from("products")
-    .select("name, brand, price")
+    .select("name, brand, price, status")
     .eq("slug", slug)
+    .eq("status", "published")
     .single();
 
   if (!product) {

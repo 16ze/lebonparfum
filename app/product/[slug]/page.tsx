@@ -93,11 +93,12 @@ export async function generateMetadata({
 
   const { data: product } = await supabase
     .from("products")
-    .select("name, brand, description, price, image_url, stock, slug, meta_title, meta_description")
+    .select("name, brand, description, price, image_url, stock, slug, meta_title, meta_description, status")
     .eq("slug", slug)
     .single();
 
-  if (!product) {
+  // Si produit inexistant ou non publié, retourner metadata par défaut
+  if (!product || product.status !== "published") {
     return {
       title: "Produit non trouvé",
     };
@@ -148,20 +149,28 @@ export default async function ProductPage({
     .eq("slug", slug)
     .single();
 
-  // Gestion d'erreur : produit non trouvé
+  // Gestion d'erreur : produit non trouvé OU non publié
   if (error || !product) {
     console.error("Erreur lors de la récupération du produit:", error);
+    notFound();
+  }
+
+  // CRITIQUE: Bloquer l'accès aux produits non publiés
+  // Les clients ne doivent voir que les produits "published"
+  if (product.status !== "published") {
+    console.warn(`Tentative d'accès à un produit ${product.status}:`, slug);
     notFound();
   }
 
   // Cast le produit pour TypeScript
   const typedProduct = product as Product;
 
-  // Récupérer les produits similaires (même collection, excluant le produit actuel)
+  // Récupérer les produits similaires publiés (même collection, excluant le produit actuel)
   const { data: relatedProducts } = await supabase
     .from("products")
     .select("id, name, slug, collection, price, image_url, stock")
     .eq("collection", typedProduct.collection)
+    .eq("status", "published")
     .neq("slug", slug)
     .limit(4);
 

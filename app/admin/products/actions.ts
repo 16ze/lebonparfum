@@ -35,6 +35,7 @@ interface ProductFormData {
   meta_title?: string | null;
   meta_description?: string | null;
   seo_keywords?: string[] | null;
+  status: "draft" | "published" | "archived";
 }
 
 /**
@@ -144,6 +145,7 @@ export async function createProduct(
           meta_title: productData.meta_title?.trim() || null,
           meta_description: productData.meta_description?.trim() || null,
           seo_keywords: productData.seo_keywords || null,
+          status: productData.status,
         },
       ])
       .select()
@@ -329,6 +331,7 @@ export async function updateProduct(
         meta_title: productData.meta_title?.trim() || null,
         meta_description: productData.meta_description?.trim() || null,
         seo_keywords: productData.seo_keywords || null,
+        status: productData.status,
       })
       .eq("id", productId)
       .select()
