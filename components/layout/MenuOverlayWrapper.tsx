@@ -6,113 +6,135 @@ import MenuOverlay from "./MenuOverlay";
  *
  * Récupère les collections et produits depuis Supabase
  * et les passe au Client Component MenuOverlay
+ *
+ * FAIL-SAFE: En cas d'erreur DB, retourne un menu vide au lieu de crasher
  */
+
+interface Product {
+  name: string;
+  slug: string;
+  collection: string;
+  image_url: string | null;
+  brand: string;
+}
+
+interface UserProfile {
+  id: string;
+  email?: string;
+  isAdmin: boolean;
+}
+
 export default async function MenuOverlayWrapper() {
-  const supabase = await createClient();
+  let collections: string[] = [];
+  let productsByCollection: Array<{
+    id: string;
+    name: string;
+    products: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      image?: string;
+    }>;
+  }> = [];
+  let userProfile: UserProfile | null = null;
 
-  // Récupérer la session utilisateur
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
 
-  // Si utilisateur connecté, récupérer le profil (pour is_admin)
-  let userProfile = null;
-  if (authUser) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, email, is_admin")
-      .eq("id", authUser.id)
-      .single();
+    // 1. Récupérer l'utilisateur connecté
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
-    if (profile) {
-      userProfile = {
-        id: profile.id,
-        email: profile.email || undefined,
-        isAdmin: profile.is_admin || false,
-      };
+      if (authUser) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, email, is_admin")
+          .eq("id", authUser.id)
+          .single();
+
+        if (profileError) {
+          console.error("⚠️ [SERVER] Erreur fetch profil:", profileError.message);
+        } else if (profile) {
+          userProfile = {
+            id: profile.id,
+            email: profile.email || undefined,
+            isAdmin: profile.is_admin || false,
+          };
+        }
+      }
+    } catch (authError: any) {
+      console.error("⚠️ [SERVER] Erreur authentification:", authError.message || authError);
+      // Pas bloquant, on continue avec user = null
     }
-  }
 
-  // Récupérer toutes les collections distinctes (produits publiés uniquement)
-  const { data: collectionsData, error: collectionsError } = await supabase
-    .from("products")
-    .select("collection")
-    .eq("status", "published")
-    .order("collection");
+    // 2. Récupérer tous les produits publiés
+    const { data: productsData, error: productsError } = await supabase
+      .from("products")
+      .select("name, slug, collection, image_url, brand")
+      .eq("status", "published")
+      .order("collection")
+      .order("name");
 
-  // Récupérer tous les produits publiés avec leurs collections
-  const { data: productsData, error: productsError } = await supabase
-    .from("products")
-    .select("name, slug, collection, image_url")
-    .eq("status", "published")
-    .order("name");
+    if (productsError) {
+      throw new Error(`Erreur fetch produits: ${productsError.message}`);
+    }
 
-  // Logs pour débugger
-  console.log("🔍 MenuOverlayWrapper - Debug:");
-  console.log("Collections data:", collectionsData);
-  console.log("Collections error:", collectionsError);
-  console.log("Products data:", productsData?.length, "produits");
-  console.log("Products error:", productsError);
+    if (productsData && productsData.length > 0) {
+      // Extraire les collections uniques (utiliser 'brand' ou 'collection')
+      const uniqueCollections = Array.from(
+        new Set(
+          productsData
+            .map((p: Product) => p.brand || p.collection)
+            .filter(Boolean)
+        )
+      ) as string[];
 
-  // Gestion des erreurs
-  if (collectionsError || productsError) {
-    console.error("❌ Erreur lors du fetch des données:", {
-      collectionsError: collectionsError?.message,
-      productsError: productsError?.message,
+      collections = uniqueCollections;
+
+      // Organiser les produits par collection
+      productsByCollection = uniqueCollections.map((collectionName) => {
+        const collectionProducts = productsData
+          .filter((p: Product) => (p.brand || p.collection) === collectionName)
+          .map((p: Product) => ({
+            id: p.slug,
+            name: p.name,
+            slug: p.slug,
+            image: p.image_url || undefined,
+          }));
+
+        return {
+          id: collectionName.toLowerCase().replace(/\s+/g, "-"),
+          name: collectionName,
+          products: collectionProducts,
+        };
+      });
+
+      console.log("✅ [SERVER] MenuWrapper: ", {
+        collections: collections.length,
+        totalProducts: productsData.length,
+      });
+    } else {
+      console.warn("⚠️ [SERVER] MenuWrapper: Aucun produit publié trouvé");
+    }
+  } catch (error: any) {
+    // Logging robuste avec stack trace si disponible
+    console.error("❌ [SERVER] Erreur MenuOverlayWrapper:", {
+      message: error.message || "Erreur inconnue",
+      name: error.name,
+      stack: error.stack?.split("\n").slice(0, 3).join("\n"), // Première ligne de stack
     });
-    // Retourner un menu vide en cas d'erreur
-    return <MenuOverlay collections={[]} products={[]} user={userProfile} />;
+
+    // Ne pas throw : on retourne un menu vide pour ne pas crasher le site
   }
 
-  // Vérifier si les données sont vides
-  if (!collectionsData || collectionsData.length === 0) {
-    console.warn("⚠️ Aucune collection trouvée dans la base de données");
-    console.warn("💡 Vérifiez que:");
-    console.warn("   1. La table 'products' existe dans Supabase");
-    console.warn("   2. La RLS policy 'Public Read' est créée");
-    console.warn("   3. Les données ont été injectées (npm run seed)");
-    return <MenuOverlay collections={[]} products={[]} user={userProfile} />;
-  }
-
-  // Extraire les collections uniques
-  const uniqueCollections = Array.from(
-    new Set(collectionsData?.map((item) => item.collection) || [])
-  );
-
-  console.log("✅ Collections uniques trouvées:", uniqueCollections);
-
-  // Organiser les produits par collection
-  const productsByCollection = uniqueCollections.map((collection) => {
-    const collectionProducts =
-      productsData
-        ?.filter((product) => product.collection === collection)
-        .map((product) => ({
-          id: product.slug,
-          name: product.name,
-          slug: product.slug,
-          image: product.image_url || undefined,
-        })) || [];
-
-    console.log(`   - ${collection}: ${collectionProducts.length} produits`);
-
-    return {
-      id: collection.toLowerCase().replace(/\s+/g, "-"),
-      name: collection,
-      products: collectionProducts,
-    };
-  });
-
-  console.log("✅ MenuOverlayWrapper - Données prêtes:", {
-    collections: uniqueCollections.length,
-    totalProducts: productsData?.length || 0,
-  });
-
+  // Retourner le composant avec les données (vides ou remplies)
   return (
     <MenuOverlay
-      collections={uniqueCollections}
+      collections={collections}
       products={productsByCollection}
       user={userProfile}
     />
   );
 }
-
