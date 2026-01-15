@@ -38,6 +38,16 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     notFound();
   }
 
+  // Debug : Vérifier la structure des items
+  console.log("🔍 [ORDER DETAIL] Commande récupérée:", {
+    id: order.id,
+    hasItems: !!(order as any).items,
+    itemsType: typeof (order as any).items,
+    itemsIsArray: Array.isArray((order as any).items),
+    itemsLength: Array.isArray((order as any).items) ? (order as any).items.length : 0,
+    itemsPreview: (order as any).items ? JSON.stringify((order as any).items).substring(0, 200) : "null",
+  });
+
   // Enrichir avec profil utilisateur si user_id existe
   let profile = null;
   if (order.user_id) {
@@ -141,41 +151,96 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             </div>
 
             <div className="divide-y divide-gray-200">
-              {order.cart_items && order.cart_items.length > 0 ? (
-                order.cart_items.map((item: any, index: number) => (
-                  <div key={index} className="px-6 py-4 flex items-start gap-4">
-                    {item.image_url && (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover border border-gray-200"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm font-bold mb-1">{item.name}</p>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider">
-                        {item.brand || "N/A"}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-2">
-                        Quantité : {item.quantity}
+              {(() => {
+                // Les items sont stockés dans order.items (JSONB)
+                // Supabase peut retourner un string JSON qu'il faut parser
+                let items = (order as any).items;
+                
+                // Si items est une string, la parser en JSON
+                if (typeof items === 'string') {
+                  try {
+                    items = JSON.parse(items);
+                  } catch (e) {
+                    console.error("❌ [ORDER DETAIL] Erreur parsing items JSON:", e);
+                    items = null;
+                  }
+                }
+                
+                console.log("🔍 [ORDER DETAIL] Items récupérés:", {
+                  hasItems: !!items,
+                  itemsType: typeof items,
+                  isArray: Array.isArray(items),
+                  length: items?.length || 0,
+                  itemsRaw: (order as any).items,
+                  itemsParsed: items,
+                });
+
+                if (items && Array.isArray(items) && items.length > 0) {
+                  return items.map((item: any, index: number) => {
+                    // Structure OrderItem depuis le webhook :
+                    // { product_id, product_name, product_slug, quantity, price_at_time, image_url }
+                    const productName = item.product_name || item.name || "Produit inconnu";
+                    const productSlug = item.product_slug || item.slug || "";
+                    const quantity = item.quantity || 1;
+                    const priceAtTime = item.price_at_time || item.price || 0; // Prix en centimes
+                    const imageUrl = item.image_url || null;
+
+                    return (
+                      <div key={index} className="px-6 py-4 flex items-start gap-4">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={productName}
+                            className="w-16 h-16 object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex items-center justify-center">
+                            <Package size={24} className="text-gray-400" strokeWidth={1.5} />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm font-bold mb-1">{productName}</p>
+                          {productSlug && (
+                            <Link
+                              href={`/product/${productSlug}`}
+                              className="text-xs text-gray-500 uppercase tracking-wider hover:underline"
+                            >
+                              Voir le produit
+                            </Link>
+                          )}
+                          <p className="text-xs text-gray-600 mt-2">
+                            Quantité : {quantity}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Prix unitaire : {new Intl.NumberFormat("fr-FR", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(priceAtTime / 100)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">
+                            {new Intl.NumberFormat("fr-FR", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format((priceAtTime * quantity) / 100)}
+                          </p>
+                          <p className="text-xs text-gray-500">Total</p>
+                        </div>
+                      </div>
+                    );
+                  });
+                } else {
+                  return (
+                    <div className="px-6 py-8 text-center text-sm text-gray-500">
+                      <p className="mb-2">Aucun produit dans cette commande</p>
+                      <p className="text-xs text-gray-400">
+                        {items ? "Format d'items invalide" : "Items manquants"}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">
-                        {new Intl.NumberFormat("fr-FR", {
-                          style: "currency",
-                          currency: "EUR",
-                        }).format(item.price / 100)}
-                      </p>
-                      <p className="text-xs text-gray-500">par unité</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="px-6 py-8 text-center text-sm text-gray-500">
-                  Aucun produit dans cette commande
-                </div>
-              )}
+                  );
+                }
+              })()}
             </div>
 
             {/* Total */}
