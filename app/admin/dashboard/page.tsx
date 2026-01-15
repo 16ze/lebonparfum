@@ -1,29 +1,32 @@
 import { createClient } from "@/utils/supabase/server";
 import { Package, ShoppingBag, TrendingUp, Archive } from "lucide-react";
+import { sub, format, eachDayOfInterval, startOfDay } from "date-fns";
+import RevenueChart from "@/components/admin/dashboard/RevenueChart";
+import RecentOrders from "@/components/admin/dashboard/RecentOrders";
+import StockAlertsWidget from "@/components/admin/dashboard/StockAlertsWidget";
 
 /**
- * Page Dashboard Admin - Statistiques principales
+ * Page Dashboard Admin - Vue de pilotage complète
  *
  * Affiche :
- * - Nombre total de produits
- * - Nombre de commandes
- * - Revenu total
- * - Stock total
+ * - Cartes de stats globales (produits, commandes, revenus, stock)
+ * - Graphique d'évolution du CA (30 derniers jours)
+ * - Widget des stocks critiques
+ * - Liste des dernières commandes
  *
- * Design Byredo : Cards minimalistes avec icônes et chiffres
+ * Design Byredo : Minimaliste, cartes avec bordures fines, graphiques épurés
  */
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
 
-  // Récupérer les statistiques
+  // =============================================
+  // STATISTIQUES GLOBALES
+  // =============================================
   const [productsResult, ordersResult, paidOrdersResult] = await Promise.all([
     supabase.from("products").select("id, stock, price", { count: "exact" }),
     supabase.from("orders").select("id", { count: "exact" }),
     // Récupérer uniquement les commandes payées pour le calcul du chiffre d'affaires
-    supabase
-      .from("orders")
-      .select("amount")
-      .eq("status", "paid"),
+    supabase.from("orders").select("amount").eq("status", "paid"),
   ]);
 
   // Calculer les statistiques
@@ -32,12 +35,17 @@ export default async function AdminDashboardPage() {
 
   // Calculer le stock total
   const totalStock =
-    productsResult.data?.reduce((sum, product) => sum + (product.stock || 0), 0) || 0;
+    productsResult.data?.reduce(
+      (sum, product) => sum + (product.stock || 0),
+      0
+    ) || 0;
 
   // Calculer le revenu total (uniquement les commandes payées)
-  // Filtrer par status = 'paid' et sommer les montants
   const totalRevenue =
-    paidOrdersResult.data?.reduce((sum, order) => sum + (Number(order.amount) || 0), 0) || 0;
+    paidOrdersResult.data?.reduce(
+      (sum, order) => sum + (Number(order.amount) || 0),
+      0
+    ) || 0;
 
   // Formater le revenu en euros
   const formattedRevenue = new Intl.NumberFormat("fr-FR", {
@@ -72,8 +80,71 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  // =============================================
+  // DONNÉES GRAPHIQUE - ÉVOLUTION CA (30 JOURS)
+  // =============================================
+  const thirtyDaysAgo = sub(new Date(), { days: 30 });
+
+  // Récupérer toutes les commandes payées des 30 derniers jours
+  const { data: recentOrders } = await supabase
+    .from("orders")
+    .select("created_at, amount")
+    .eq("status", "paid")
+    .gte("created_at", thirtyDaysAgo.toISOString())
+    .order("created_at", { ascending: true });
+
+  // Générer un tableau avec tous les jours des 30 derniers jours
+  const daysInterval = eachDayOfInterval({
+    start: thirtyDaysAgo,
+    end: new Date(),
+  });
+
+  // Agréger les commandes par jour
+  const revenueByDay: { [key: string]: number } = {};
+
+  // Initialiser tous les jours à 0
+  daysInterval.forEach((day) => {
+    const dateKey = format(startOfDay(day), "yyyy-MM-dd");
+    revenueByDay[dateKey] = 0;
+  });
+
+  // Additionner les commandes par jour
+  recentOrders?.forEach((order) => {
+    const dateKey = format(startOfDay(new Date(order.created_at)), "yyyy-MM-dd");
+    revenueByDay[dateKey] = (revenueByDay[dateKey] || 0) + Number(order.amount);
+  });
+
+  // Convertir en tableau pour Recharts
+  const revenueData = Object.keys(revenueByDay)
+    .sort()
+    .map((date) => ({
+      date,
+      revenue: revenueByDay[date],
+    }));
+
+  // =============================================
+  // DERNIÈRES COMMANDES (5 dernières)
+  // =============================================
+  const { data: latestOrders } = await supabase
+    .from("orders")
+    .select("id, customer_email, customer_name, total_amount, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  // =============================================
+  // ALERTES STOCK (5 produits critiques)
+  // =============================================
+  const { data: lowStockProducts } = await supabase
+    .from("products")
+    .select("id, name, slug, stock")
+    .eq("status", "published")
+    .lte("stock", 5)
+    .order("stock", { ascending: true })
+    .order("name", { ascending: true })
+    .limit(5);
+
   return (
-    <div>
+    <div className="p-4 md:p-8">
       {/* Titre de la page */}
       <div className="mb-8">
         <h1 className="text-3xl uppercase tracking-widest font-bold mb-2">
@@ -84,8 +155,10 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Grille de stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ========================================= */}
+      {/* SECTION 1 : CARTES DE STATS (INTOUCHÉES) */}
+      {/* ========================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {stats.map((stat) => {
           const Icon = stat.icon;
 
@@ -101,9 +174,7 @@ export default async function AdminDashboardPage() {
 
               {/* Valeur */}
               <div className="mb-2">
-                <p className="text-3xl font-bold tracking-tight">
-                  {stat.value}
-                </p>
+                <p className="text-3xl font-bold tracking-tight">{stat.value}</p>
               </div>
 
               {/* Label */}
@@ -118,16 +189,26 @@ export default async function AdminDashboardPage() {
         })}
       </div>
 
-      {/* Section activité récente (placeholder) */}
-      <div className="mt-12">
-        <h2 className="text-xl uppercase tracking-widest font-bold mb-6">
-          Activité récente
-        </h2>
-        <div className="border border-black/10 p-8 text-center">
-          <p className="text-sm text-gray-400 uppercase tracking-wider">
-            Aucune activité récente
-          </p>
+      {/* ========================================= */}
+      {/* SECTION 2 : GRAPHIQUE + WIDGET STOCK */}
+      {/* ========================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        {/* Graphique évolution CA (2/3 largeur) */}
+        <div className="lg:col-span-2">
+          <RevenueChart data={revenueData} />
         </div>
+
+        {/* Widget Stocks Critiques (1/3 largeur) */}
+        <div className="lg:col-span-1">
+          <StockAlertsWidget products={lowStockProducts || []} />
+        </div>
+      </div>
+
+      {/* ========================================= */}
+      {/* SECTION 3 : COMMANDES RÉCENTES */}
+      {/* ========================================= */}
+      <div>
+        <RecentOrders orders={latestOrders || []} />
       </div>
     </div>
   );
