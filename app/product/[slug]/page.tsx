@@ -6,6 +6,11 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductCard from "@/components/product/ProductCard";
 import { getWishlistIds } from "@/app/wishlist/actions";
+import {
+  generateProductMetadata,
+  generateProductSchema,
+  generateOrganizationSchema,
+} from "@/lib/metadata";
 
 /**
  * Page Produit Dynamique - Style Byredo/Aesop
@@ -75,7 +80,8 @@ export async function generateStaticParams() {
 /**
  * generateMetadata - Génère les métadonnées SEO dynamiques
  *
- * Récupère le nom du produit pour le titre de la page
+ * Utilise generateProductMetadata() depuis lib/metadata.ts
+ * pour générer des métadonnées complètes (OpenGraph, Twitter Cards, etc.)
  */
 export async function generateMetadata({
   params,
@@ -87,29 +93,27 @@ export async function generateMetadata({
 
   const { data: product } = await supabase
     .from("products")
-    .select("name, collection, description")
+    .select("name, brand, description, price, image_url, stock, slug")
     .eq("slug", slug)
     .single();
 
   if (!product) {
     return {
-      title: "Produit non trouvé | THE PARFUMERIEE",
+      title: "Produit non trouvé",
     };
   }
 
-  return {
-    title: `${product.name} - ${product.collection} | THE PARFUMERIEE`,
-    description:
-      product.description ||
-      `Découvrez ${product.name} de la collection ${product.collection}. Parfum de niche de haute qualité.`,
-    openGraph: {
-      title: `${product.name} | THE PARFUMERIEE`,
-      description:
-        product.description ||
-        `${product.name} - Collection ${product.collection}`,
-      type: "website",
-    },
-  };
+  // Générer les métadonnées avec notre helper
+  // Note: generateProductMetadata attend le prix en centimes (pas de division par 100)
+  return generateProductMetadata({
+    name: product.name,
+    brand: product.brand,
+    description: product.description,
+    price: Number(product.price), // Prix déjà en centimes dans la DB
+    image: product.image_url,
+    slug: product.slug,
+    inStock: product.stock > 0,
+  });
 }
 
 /**
@@ -184,8 +188,31 @@ export default async function ProductPage({
   const wishlistIds = await getWishlistIds();
   const isWishlisted = wishlistIds.includes(typedProduct.id);
 
+  // Générer le Schema.org JSON-LD pour le SEO
+  const productSchema = generateProductSchema({
+    name: typedProduct.name,
+    brand: typedProduct.collection,
+    description: typedProduct.description || `Découvrez ${typedProduct.name}, un parfum de niche d'exception.`,
+    price: Number(typedProduct.price) / 100,
+    image: typedProduct.image_url,
+    slug: typedProduct.slug,
+    inStock: typedProduct.stock > 0,
+    sku: typedProduct.id,
+  });
+
+  const organizationSchema = generateOrganizationSchema();
+
   return (
     <main className="min-h-screen bg-white pt-[120px] pb-20">
+      {/* Schema.org JSON-LD pour le SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
       {/* Section Principale : Galerie + Infos */}
       <div className="px-6 md:px-12 max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* ZONE 1 : Galerie (Col 1 -> 7 sur Desktop) */}

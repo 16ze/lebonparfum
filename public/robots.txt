@@ -1,0 +1,66 @@
+# Robots.txt - Le Bon Parfum
+# https://lebonparfum.com/robots.txt
+
+# Règles pour tous les robots
+User-agent: *
+
+# Pages autorisées (Allow)
+Allow: /
+Allow: /product/
+Allow: /category/
+Allow: /tag/
+Allow: /collections/
+
+# Pages à ne pas indexer (Disallow)
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout/
+Disallow: /login
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /_next/
+Disallow: /wishlist
+
+# Fichiers statiques autorisés
+Allow: *.css
+Allow: *.js
+Allow: *.jpg
+Allow: *.jpeg
+Allow: *.png
+Allow: *.webp
+Allow: *.svg
+Allow: *.gif
+Allow: *.woff
+Allow: *.woff2
+
+# Sitemap
+Sitemap: https://lebonparfum.com/sitemap.xml
+
+# Crawl delay (optionnel, pour éviter surcharge)
+# Crawl-delay: 1
+
+# Règles spécifiques pour Google
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout/
+
+# Règles spécifiques pour Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout/
+
+# Bloquer les mauvais bots (scraping, spam)
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: DotBot
+User-agent: MJ12bot
+User-agent: BLEXBot
+Disallow: /
