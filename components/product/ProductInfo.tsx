@@ -141,23 +141,39 @@ export default function ProductInfo({
         )}
       </div>
 
-      {/* Indicateur de Stock */}
-      <div className="flex items-center gap-2 mb-6">
-        {isOutOfStock ? (
-          <>
-            <AlertCircle size={14} className="text-gray-400" strokeWidth={1.5} />
-            <span className="text-xs uppercase tracking-widest text-gray-400">
+      {/* Indicateur de Stock - Scarcity Marketing */}
+      <div className="mb-6">
+        {stock === 0 ? (
+          // RUPTURE DE STOCK - Badge Rouge
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200">
+            <AlertCircle size={12} className="text-red-600" strokeWidth={2} />
+            <span className="text-[10px] uppercase tracking-[0.15em] font-medium text-red-600">
               Rupture de stock
             </span>
-          </>
+          </div>
+        ) : stock > 0 && stock <= 5 ? (
+          // STOCK FAIBLE - Badge Orange + Message d'urgence
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-200">
+              <AlertCircle size={12} className="text-orange-600" strokeWidth={2} />
+              <span className="text-[10px] uppercase tracking-[0.15em] font-medium text-orange-600">
+                Dernières pièces
+              </span>
+            </div>
+            <p className="text-xs text-orange-600 uppercase tracking-widest font-medium">
+              Vite ! Plus que {stock} exemplaire{stock > 1 ? "s" : ""}.
+            </p>
+          </div>
         ) : (
-          <>
-            <Check size={14} className="text-green-600" strokeWidth={1.5} />
-            <span className="text-xs uppercase tracking-widest text-green-600">
-              En stock ({stock} disponible{stock > 1 ? "s" : ""})
+          // EN STOCK - Badge Vert discret
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200">
+            <Check size={12} className="text-green-600" strokeWidth={2} />
+            <span className="text-[10px] uppercase tracking-[0.15em] font-medium text-green-600">
+              En stock
             </span>
-          </>
-        )}</div>
+          </div>
+        )}
+      </div>
 
       {/* Description */}
       <p className="text-sm text-gray-600 leading-relaxed mb-8">
@@ -185,15 +201,6 @@ export default function ProductInfo({
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Message d'urgence si stock faible */}
-      {!isOutOfStock && stock > 0 && stock < 5 && (
-        <div className="mb-4">
-          <p className="text-xs text-red-600 uppercase tracking-widest font-medium">
-            Plus que {stock} exemplaire{stock > 1 ? "s" : ""} !
-          </p>
         </div>
       )}
 

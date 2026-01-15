@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Package, ShoppingBag, Settings, LogOut, X, Menu, FolderTree, Tag } from "lucide-react";
+import { Home, Package, ShoppingBag, Settings, LogOut, X, Menu, FolderTree, Tag, AlertTriangle } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 import { clsx } from "clsx";
 import { useState, useEffect, useRef } from "react";
@@ -29,6 +29,11 @@ const navigation = [
     name: "Produits",
     href: "/admin/products",
     icon: Package,
+  },
+  {
+    name: "Alertes Stock",
+    href: "/admin/stock-alerts",
+    icon: AlertTriangle,
   },
   {
     name: "Catégories",
