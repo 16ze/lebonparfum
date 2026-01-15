@@ -42,18 +42,46 @@ export default async function AdminOrdersPage() {
   });
 
   // Enrichir les commandes avec les infos profil
-  const enrichedOrders = orders.map((order) => ({
-    ...order,
-    profiles: order.user_id
-      ? profilesMap.get(order.user_id) || {
+  // Logique d'affichage :
+  // 1. Si utilisateur connecté : utiliser profiles (full_name, email)
+  // 2. Sinon : utiliser customer_name et customer_email (snapshot pour invités)
+  // 3. Sinon : afficher "Invité (Email manquant)"
+  const enrichedOrders = orders.map((order) => {
+    // Cas 1 : Utilisateur connecté - utiliser le profil
+    if (order.user_id) {
+      const profile = profilesMap.get(order.user_id);
+      return {
+        ...order,
+        profiles: profile || {
           full_name: "Utilisateur inconnu",
           email: "N/A",
-        }
-      : {
-          full_name: "Invité",
-          email: "N/A",
         },
-  }));
+      };
+    }
+    
+    // Cas 2 : Invité - utiliser les snapshot customer_name/customer_email
+    const customerName = order.customer_name || null;
+    const customerEmail = order.customer_email || null;
+    
+    if (customerName || customerEmail) {
+      return {
+        ...order,
+        profiles: {
+          full_name: customerName || "Invité",
+          email: customerEmail || "Email manquant",
+        },
+      };
+    }
+    
+    // Cas 3 : Aucune info disponible
+    return {
+      ...order,
+      profiles: {
+        full_name: "Invité",
+        email: "Email manquant",
+      },
+    };
+  });
 
   return <OrdersTable orders={enrichedOrders} />;
 }

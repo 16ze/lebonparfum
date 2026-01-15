@@ -21,6 +21,8 @@ interface Order {
   status: string;
   shipping_address: any;
   created_at: string;
+  customer_email?: string | null; // Snapshot email pour invités
+  customer_name?: string | null; // Snapshot nom pour invités
   profiles: {
     full_name: string;
     email: string;

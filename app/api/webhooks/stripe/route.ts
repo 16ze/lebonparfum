@@ -44,7 +44,9 @@ export async function POST(request: NextRequest) {
   console.log("✅ Variables d'environnement présentes:", {
     hasStripeKey: !!stripeSecretKey,
     hasWebhookSecret: !!webhookSecret,
-    webhookSecretPreview: webhookSecret ? `${webhookSecret.substring(0, 10)}...` : "manquant",
+    webhookSecretPreview: webhookSecret
+      ? `${webhookSecret.substring(0, 10)}...`
+      : "manquant",
   });
 
   const stripe = new Stripe(stripeSecretKey);
@@ -105,6 +107,32 @@ export async function POST(request: NextRequest) {
         hasCustomerEmail: !!paymentIntent.metadata.customer_email,
       });
 
+      // Vérifier l'idempotence AVANT de créer la commande
+      console.log("🔍 ========== VÉRIFICATION IDEMPOTENCE ==========");
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabaseCheck = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: existingOrder } = await supabaseCheck
+          .from("orders")
+          .select("id, stripe_payment_id")
+          .eq("stripe_payment_id", paymentIntent.id)
+          .maybeSingle();
+
+        if (existingOrder) {
+          console.log("⚠️ ========== COMMANDE DÉJÀ EXISTANTE ==========");
+          console.log("⚠️ Commande déjà créée:", {
+            orderId: existingOrder.id,
+            stripePaymentId: existingOrder.stripe_payment_id,
+          });
+          console.log("✅ Webhook traité (idempotence) - Retour 200 OK");
+          // Retourner 200 OK pour indiquer à Stripe que l'événement a été traité
+          return NextResponse.json({ received: true, duplicate: true });
+        }
+        console.log("✅ Aucune commande existante - Création autorisée");
+      }
+
       // Créer la commande dans Supabase
       console.log("📦 ========== DÉBUT CRÉATION COMMANDE ==========");
       try {
@@ -112,7 +140,10 @@ export async function POST(request: NextRequest) {
         console.log("✅ ========== COMMANDE CRÉÉE AVEC SUCCÈS ==========");
       } catch (orderError) {
         console.error("❌ ========== ERREUR CRÉATION COMMANDE ==========");
-        console.error("❌ Erreur lors de la création de la commande:", orderError);
+        console.error(
+          "❌ Erreur lors de la création de la commande:",
+          orderError
+        );
         if (orderError instanceof Error) {
           console.error("❌ Détails erreur:", {
             message: orderError.message,
@@ -162,7 +193,7 @@ async function createOrderFromPaymentIntent(
   paymentIntent: Stripe.PaymentIntent
 ) {
   console.log("🔧 Début createOrderFromPaymentIntent...");
-  
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -194,11 +225,17 @@ async function createOrderFromPaymentIntent(
     length: cartItemsJson?.length || 0,
     preview: cartItemsJson ? cartItemsJson.substring(0, 200) + "..." : "null",
   });
-  
+
   if (!cartItemsJson) {
     console.error("❌ cart_items manquant dans les metadata du PaymentIntent");
-    console.error("📋 Metadata disponibles:", Object.keys(paymentIntent.metadata));
-    console.error("📋 Toutes les metadata:", JSON.stringify(paymentIntent.metadata, null, 2));
+    console.error(
+      "📋 Metadata disponibles:",
+      Object.keys(paymentIntent.metadata)
+    );
+    console.error(
+      "📋 Toutes les metadata:",
+      JSON.stringify(paymentIntent.metadata, null, 2)
+    );
     throw new Error("cart_items manquant dans les metadata");
   }
 
@@ -207,21 +244,40 @@ async function createOrderFromPaymentIntent(
     cartItems = JSON.parse(cartItemsJson);
     console.log("✅ Items parsés avec succès:", {
       count: cartItems.length,
-      items: cartItems.map(i => ({ id: i.id, qty: i.qty })),
+      items: cartItems.map((i) => ({ id: i.id, qty: i.qty })),
     });
   } catch (parseError) {
     console.error("❌ Erreur lors du parsing de cart_items:", parseError);
     console.error("❌ Contenu brut:", cartItemsJson);
-    throw new Error(`Erreur parsing cart_items: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    throw new Error(
+      `Erreur parsing cart_items: ${
+        parseError instanceof Error ? parseError.message : "Unknown error"
+      }`
+    );
   }
 
   // Récupérer le user_id depuis les metadata (si présent)
-  const userId = paymentIntent.metadata.user_id === 'guest' ? null : paymentIntent.metadata.user_id || null;
-  const customerEmail = paymentIntent.metadata.customer_email || paymentIntent.receipt_email || null;
-  
+  const userId =
+    paymentIntent.metadata.user_id === "guest"
+      ? null
+      : paymentIntent.metadata.user_id || null;
+
+  // Récupérer l'email client (priorité: receipt_email > metadata)
+  const customerEmail =
+    paymentIntent.receipt_email ||
+    paymentIntent.metadata.customer_email ||
+    null;
+
+  // Récupérer le nom client (priorité: shipping.name > metadata)
+  const customerName =
+    paymentIntent.shipping?.name ||
+    paymentIntent.metadata.customer_name ||
+    null;
+
   console.log("👤 Informations utilisateur:", {
     userId: userId || "invité",
     customerEmail: customerEmail || "non fourni",
+    customerName: customerName || "non fourni",
   });
 
   // Récupérer l'adresse de livraison depuis Stripe
@@ -290,7 +346,7 @@ async function createOrderFromPaymentIntent(
 
   console.log("✅ Produits récupérés:", {
     count: products.length,
-    products: products.map(p => ({ id: p.id, name: p.name, price: p.price })),
+    products: products.map((p) => ({ id: p.id, name: p.name, price: p.price })),
   });
 
   if (!products || products.length === 0) {
@@ -319,7 +375,10 @@ async function createOrderFromPaymentIntent(
 
     if (!product) {
       console.error(`⚠️ Produit introuvable: ${item.id}`);
-      console.error(`⚠️ Produits disponibles:`, Array.from(productMapById.keys()));
+      console.error(
+        `⚠️ Produits disponibles:`,
+        Array.from(productMapById.keys())
+      );
       continue;
     }
 
@@ -342,7 +401,11 @@ async function createOrderFromPaymentIntent(
 
   console.log("✅ Order items construits:", {
     count: orderItems.length,
-    items: orderItems.map(i => ({ name: i.product_name, qty: i.quantity, price: i.price_at_time })),
+    items: orderItems.map((i) => ({
+      name: i.product_name,
+      qty: i.quantity,
+      price: i.price_at_time,
+    })),
   });
 
   // 4. Calculer les montants
@@ -376,11 +439,16 @@ async function createOrderFromPaymentIntent(
     status: "paid" as const,
     items: orderItems,
     shipping_address: shippingAddress, // ✅ Sauvegarder l'adresse de livraison
+    customer_email: customerEmail, // ✅ Snapshot email client (pour invités)
+    customer_name: customerName, // ✅ Snapshot nom client (pour invités)
   };
 
   console.log("📤 Données à insérer dans orders:", {
     ...orderData,
-    items: orderData.items.map(i => ({ name: i.product_name, qty: i.quantity })),
+    items: orderData.items.map((i) => ({
+      name: i.product_name,
+      qty: i.quantity,
+    })),
   });
 
   const { data: order, error: orderError } = await supabase
@@ -390,6 +458,25 @@ async function createOrderFromPaymentIntent(
     .single();
 
   if (orderError) {
+    // Si l'erreur est due à la contrainte unique (doublon), c'est OK (idempotence)
+    if (
+      orderError.code === "23505" &&
+      orderError.message.includes("stripe_payment_id")
+    ) {
+      console.log(
+        "⚠️ ========== DOUBLON DÉTECTÉ (CONTRAINTE UNIQUE) =========="
+      );
+      console.log(
+        "⚠️ Commande déjà existante avec ce stripe_payment_id:",
+        paymentIntent.id
+      );
+      console.log(
+        "✅ Webhook traité (idempotence) - Commande ignorée (déjà créée)"
+      );
+      // Ne pas throw, la fonction retourne normalement (le webhook principal gère le 200 OK)
+      return;
+    }
+
     console.error("❌ ========== ERREUR CRÉATION COMMANDE ==========");
     console.error("❌ Erreur lors de la création de la commande:", orderError);
     console.error("❌ Détails erreur Supabase:", {
