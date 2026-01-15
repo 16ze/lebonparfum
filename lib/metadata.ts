@@ -122,6 +122,8 @@ export function generateProductMetadata({
   image,
   slug,
   inStock,
+  meta_title,
+  meta_description,
 }: {
   name: string;
   brand: string;
@@ -130,18 +132,25 @@ export function generateProductMetadata({
   image?: string | null;
   slug: string;
   inStock: boolean;
+  meta_title?: string | null;
+  meta_description?: string | null;
 }): Metadata {
   const url = `${SITE_CONFIG.url}/product/${slug}`;
-  const title = `${name} - ${brand}`;
   const formattedPrice = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
   }).format(price / 100);
 
+  // Utiliser meta_title custom si disponible, sinon générer automatiquement
+  const title = meta_title || `${name} - ${brand}`;
+
+  // Utiliser meta_description custom si disponible, sinon générer automatiquement
   const metaDescription =
+    meta_description ||
     description
       ?.replace(/<[^>]*>/g, "") // Strip HTML
-      .slice(0, 155) || `${name} par ${brand}. ${formattedPrice}. ${inStock ? "En stock" : "Rupture de stock"}.`;
+      .slice(0, 155) ||
+    `${name} par ${brand}. ${formattedPrice}. ${inStock ? "En stock" : "Rupture de stock"}.`;
 
   return {
     title,

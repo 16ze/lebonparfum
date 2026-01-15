@@ -93,7 +93,7 @@ export async function generateMetadata({
 
   const { data: product } = await supabase
     .from("products")
-    .select("name, brand, description, price, image_url, stock, slug")
+    .select("name, brand, description, price, image_url, stock, slug, meta_title, meta_description")
     .eq("slug", slug)
     .single();
 
@@ -104,6 +104,7 @@ export async function generateMetadata({
   }
 
   // Générer les métadonnées avec notre helper
+  // Utilise les champs SEO personnalisés si disponibles, sinon fallback sur auto-génération
   // Note: generateProductMetadata attend le prix en centimes (pas de division par 100)
   return generateProductMetadata({
     name: product.name,
@@ -113,6 +114,8 @@ export async function generateMetadata({
     image: product.image_url,
     slug: product.slug,
     inStock: product.stock > 0,
+    meta_title: product.meta_title,
+    meta_description: product.meta_description,
   });
 }
 

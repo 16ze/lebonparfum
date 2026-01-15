@@ -104,6 +104,24 @@ export const productSchema = z.object({
     .max(1000, "L'inspiration ne peut pas dépasser 1000 caractères")
     .optional()
     .nullable(),
+
+  // Champs SEO personnalisables
+  meta_title: z
+    .string()
+    .max(60, "Le titre SEO ne peut pas dépasser 60 caractères (recommandation Google)")
+    .optional()
+    .nullable(),
+
+  meta_description: z
+    .string()
+    .max(160, "La description SEO ne peut pas dépasser 160 caractères (recommandation Google)")
+    .optional()
+    .nullable(),
+
+  seo_keywords: z
+    .array(z.string())
+    .optional()
+    .nullable(),
 });
 
 /**
@@ -328,6 +346,42 @@ export function validateAndSanitizeDescription(description: string | null | unde
     valid: true,
     sanitized,
   };
+}
+
+// ===================================
+// GÉNÉRATION DE SLUGS
+// ===================================
+
+/**
+ * Génère un slug URL-friendly depuis un texte
+ *
+ * Transformations:
+ * - Convertit en minuscules
+ * - Supprime les accents
+ * - Remplace espaces et caractères spéciaux par des tirets
+ * - Supprime les tirets multiples
+ *
+ * @param text - Texte à transformer en slug
+ * @returns Slug URL-friendly
+ *
+ * @example
+ * generateSlug("Parfum L'Homme Élégant") // "parfum-lhomme-elegant"
+ * generateSlug("Oud & Rose - Edition Spéciale") // "oud-rose-edition-speciale"
+ */
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    // Remplacer les accents
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    // Remplacer apostrophes et guillemets par rien
+    .replace(/['''"`]/g, "")
+    // Remplacer tous les caractères non alphanumériques par des tirets
+    .replace(/[^a-z0-9]+/g, "-")
+    // Supprimer les tirets au début et à la fin
+    .replace(/^-+|-+$/g, "")
+    // Remplacer les tirets multiples par un seul
+    .replace(/-+/g, "-");
 }
 
 // ===================================

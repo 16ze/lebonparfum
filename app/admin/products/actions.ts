@@ -32,6 +32,9 @@ interface ProductFormData {
   price: number; // En centimes
   stock: number;
   image_url?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  seo_keywords?: string[] | null;
 }
 
 /**
@@ -138,6 +141,9 @@ export async function createProduct(
           price: productData.price,
           stock: productData.stock,
           image_url: imageUrl,
+          meta_title: productData.meta_title?.trim() || null,
+          meta_description: productData.meta_description?.trim() || null,
+          seo_keywords: productData.seo_keywords || null,
         },
       ])
       .select()
@@ -320,6 +326,9 @@ export async function updateProduct(
         price: productData.price,
         stock: productData.stock,
         image_url: imageUrl,
+        meta_title: productData.meta_title?.trim() || null,
+        meta_description: productData.meta_description?.trim() || null,
+        seo_keywords: productData.seo_keywords || null,
       })
       .eq("id", productId)
       .select()

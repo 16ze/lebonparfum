@@ -6,6 +6,7 @@ import Drawer from "@/components/ui/Drawer";
 import ImageUpload from "./ImageUpload";
 import { createProduct, updateProduct } from "@/app/admin/products/actions";
 import { createClient } from "@/utils/supabase/client";
+import { generateSlug } from "@/lib/validation";
 
 interface Product {
   id: string;
@@ -16,6 +17,9 @@ interface Product {
   price: number;
   stock: number;
   image_url?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  seo_keywords?: string[] | null;
 }
 
 interface Category {
@@ -52,6 +56,9 @@ export default function ProductModal({
     description: "",
     price: "",
     stock: "0",
+    meta_title: "",
+    meta_description: "",
+    seo_keywords: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -74,6 +81,9 @@ export default function ProductModal({
         description: product.description || "",
         price: (product.price / 100).toString(),
         stock: product.stock.toString(),
+        meta_title: product.meta_title || "",
+        meta_description: product.meta_description || "",
+        seo_keywords: product.seo_keywords?.join(", ") || "",
       });
     } else {
       setFormData({
@@ -83,6 +93,9 @@ export default function ProductModal({
         description: "",
         price: "",
         stock: "0",
+        meta_title: "",
+        meta_description: "",
+        seo_keywords: "",
       });
       setImageFile(null);
     }
@@ -147,17 +160,17 @@ export default function ProductModal({
   const handleNameChange = (name: string) => {
     setFormData((prev) => ({ ...prev, name }));
 
+    // Auto-générer le slug uniquement en mode création
     if (!isEditMode) {
-      const slug = name
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-");
-
+      const slug = generateSlug(name);
       setFormData((prev) => ({ ...prev, slug }));
     }
+  };
+
+  // Fonction pour générer manuellement le slug depuis le nom
+  const handleGenerateSlug = () => {
+    const slug = generateSlug(formData.name);
+    setFormData((prev) => ({ ...prev, slug }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -209,6 +222,11 @@ export default function ProductModal({
         return;
       }
 
+      // Préparer les mots-clés SEO (convertir string en array)
+      const seo_keywords = formData.seo_keywords
+        ? formData.seo_keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0)
+        : null;
+
       const productData = {
         name: formData.name,
         slug: formData.slug,
@@ -217,6 +235,9 @@ export default function ProductModal({
         price: priceInCents,
         stock,
         image_url: product?.image_url || null,
+        meta_title: formData.meta_title || null,
+        meta_description: formData.meta_description || null,
+        seo_keywords,
       };
 
       let result;
@@ -299,9 +320,19 @@ export default function ProductModal({
 
             {/* Section Slug */}
             <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
-              <label htmlFor="slug" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                Slug (URL) *
-              </label>
+              <div className="flex items-end justify-between gap-2 mb-2">
+                <label htmlFor="slug" className="block text-xs uppercase tracking-widest text-gray-500">
+                  Slug (URL) *
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateSlug}
+                  disabled={isLoading || !formData.name}
+                  className="text-xs text-gray-500 hover:text-black underline disabled:opacity-50 disabled:no-underline"
+                >
+                  Générer depuis le nom
+                </button>
+              </div>
               <input
                 type="text"
                 id="slug"
@@ -443,7 +474,7 @@ export default function ProductModal({
             </div>
 
             {/* Section Stock */}
-            <div className="px-4 md:px-6 py-4 md:py-6">
+            <div className="border-b border-black/10 px-4 md:px-6 py-4 md:py-6">
               <label htmlFor="stock" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
                 Stock *
               </label>
@@ -459,6 +490,79 @@ export default function ProductModal({
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
                 placeholder="Ex: 50"
               />
+            </div>
+
+            {/* Section SEO (Référencement) */}
+            <div className="bg-gray-50/50 px-4 md:px-6 py-4 md:py-6 border-b border-black/10">
+              <h3 className="text-xs uppercase tracking-widest text-gray-700 mb-4 font-medium">
+                🎯 Référencement (SEO)
+              </h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Personnalisez les métadonnées SEO pour optimiser le référencement Google.
+                Si vide, des valeurs seront générées automatiquement.
+              </p>
+
+              {/* Meta Title */}
+              <div className="mb-4">
+                <label htmlFor="meta_title" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                  Meta Title <span className="normal-case text-gray-400">(max 60 caractères)</span>
+                </label>
+                <input
+                  type="text"
+                  id="meta_title"
+                  name="meta_title"
+                  value={formData.meta_title}
+                  onChange={handleChange}
+                  maxLength={60}
+                  disabled={isLoading}
+                  className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                  placeholder={`${formData.name || 'Nom du produit'} - ${formData.brand || 'Marque'} | Le Bon Parfum`}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  {formData.meta_title.length}/60 caractères
+                </p>
+              </div>
+
+              {/* Meta Description */}
+              <div className="mb-4">
+                <label htmlFor="meta_description" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                  Meta Description <span className="normal-case text-gray-400">(max 160 caractères)</span>
+                </label>
+                <textarea
+                  id="meta_description"
+                  name="meta_description"
+                  value={formData.meta_description}
+                  onChange={handleChange}
+                  maxLength={160}
+                  rows={3}
+                  disabled={isLoading}
+                  className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50 resize-none"
+                  placeholder="Description courte qui apparaîtra dans les résultats Google..."
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  {formData.meta_description.length}/160 caractères
+                </p>
+              </div>
+
+              {/* SEO Keywords */}
+              <div>
+                <label htmlFor="seo_keywords" className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+                  Mots-clés SEO <span className="normal-case text-gray-400">(séparés par des virgules)</span>
+                </label>
+                <input
+                  type="text"
+                  id="seo_keywords"
+                  name="seo_keywords"
+                  value={formData.seo_keywords}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black transition-colors disabled:opacity-50"
+                  placeholder="parfum niche, oud, boisé, luxe..."
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Pour référence interne (non affichés sur le site)
+                </p>
+              </div>
             </div>
           </div>
         </div>
