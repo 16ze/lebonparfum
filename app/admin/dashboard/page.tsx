@@ -127,9 +127,72 @@ export default async function AdminDashboardPage() {
   // =============================================
   const { data: latestOrders } = await supabase
     .from("orders")
-    .select("id, customer_email, customer_name, amount, status, created_at")
+    .select("id, customer_email, customer_name, amount, status, created_at, user_id, shipping_address")
     .order("created_at", { ascending: false })
     .limit(5);
+
+  // Enrichir les commandes avec les profils utilisateurs
+  let enrichedOrders = latestOrders || [];
+  if (enrichedOrders.length > 0) {
+    // Récupérer les user_ids uniques
+    const userIds = enrichedOrders
+      .map((order) => order.user_id)
+      .filter((id) => id !== null) as string[];
+
+    // Fetch profiles si on a des user_ids
+    let profilesMap = new Map();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+
+      profiles?.forEach((profile) => {
+        profilesMap.set(profile.id, profile);
+      });
+    }
+
+    // Enrichir chaque commande avec les infos client
+    enrichedOrders = enrichedOrders.map((order: any) => {
+      // Cas 1 : Utilisateur connecté - utiliser le profil
+      if (order.user_id) {
+        const profile = profilesMap.get(order.user_id);
+        if (profile) {
+          return {
+            ...order,
+            customer_name: profile.full_name || order.customer_name || "Utilisateur sans nom",
+            customer_email: profile.email || order.customer_email || "Email manquant",
+          };
+        }
+      }
+
+      // Cas 2 : Utiliser customer_name/customer_email (snapshot)
+      if (order.customer_name || order.customer_email) {
+        return order;
+      }
+
+      // Cas 3 : Essayer shipping_address pour les invités
+      if (order.shipping_address) {
+        const shippingName = order.shipping_address.first_name
+          ? `${order.shipping_address.first_name} ${order.shipping_address.last_name || ""}`.trim()
+          : null;
+        const shippingEmail = order.shipping_address.email || null;
+
+        return {
+          ...order,
+          customer_name: shippingName || "Invité",
+          customer_email: shippingEmail || "Email manquant",
+        };
+      }
+
+      // Cas 4 : Aucune info disponible
+      return {
+        ...order,
+        customer_name: "Invité",
+        customer_email: "Email manquant",
+      };
+    });
+  }
 
   // =============================================
   // ALERTES STOCK (5 produits critiques)
@@ -208,7 +271,7 @@ export default async function AdminDashboardPage() {
       {/* SECTION 3 : COMMANDES RÉCENTES */}
       {/* ========================================= */}
       <div>
-        <RecentOrders orders={latestOrders || []} />
+        <RecentOrders orders={enrichedOrders} />
       </div>
     </div>
   );
