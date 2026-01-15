@@ -7,7 +7,7 @@
 - Paiement: Stripe
 - Hébergement: Vercel (à déployer)
 
-**Status Général**: 🟡 94% terminé - Phase de sécurisation
+**Status Général**: 🟢 96% terminé - Phase de finalisation
 
 **GitHub**: https://github.com/16ze/lebonparfum
 
@@ -353,6 +353,11 @@
 - [x] Page 404 custom
 - [x] Page 500 custom
 - [x] ProfileDrawer la déconnexion. quand on clique sur déconnecter le statut est bien deconnecter mais le profile drawer montre encore un état connecter il faut corriger cela. Quand on clique sur deconnexion le profile drawer doit montrer un etat deconnecter et afficher le login pour la connexion
+- [x] Fix déconnexion ProfileDrawer (Server Action avec invalidation cookie HttpOnly)
+- [x] Fix détection rôle Admin pour authentification Google OAuth
+- [x] Fix RLS policies profiles pour permettre lecture par email
+- [x] Fix crash jsdom dans admin (remplacement DOMPurify par sanitization regex)
+- [x] Fix Admin Sidebar (hydration error + responsive mobile)
 
 ### 2. Accessibilité (A11Y)
 
@@ -365,7 +370,7 @@
 
 - [ ] Tester toutes pages sur mobile
 - [ ] Menu burger responsive
-- [ ] sidebar coter admin responsive
+- [x] sidebar coter admin responsive (fix hydration + z-index + largeur mobile)
 - [x] Checkout mobile optimisé
 - [ ] Touch targets 44x44px minimum
 
@@ -507,6 +512,7 @@
 
 # 💡 PROCHAINES FEATURES (POST-LANCEMENT)
 
+- [x] Variantes produits (tailles avec prix/stock différents)
 - [ ] Système avis clients
 - [ ] Programme fidélité
 - [ ] Wishlist
@@ -600,14 +606,70 @@
 - Documentation complète: docs/SECURITY_HEADERS.md
 - Score attendu: A sur securityheaders.com
 
+## Gestion Commandes & Webhooks Stripe (15 Jan 2026)
+
+### Webhooks Stripe
+- [x] Metadata complètes envoyées à Stripe (user_id, customer_email, cart_items)
+- [x] Logs détaillés pour debugging (chaque étape tracée)
+- [x] Idempotence webhook (vérification doublons avant insertion)
+- [x] Gestion doublons avec contrainte UNIQUE sur stripe_payment_id
+- [x] Sauvegarde customer_email et customer_name (snapshot pour invités)
+- [x] Migration 18: Contrainte UNIQUE + colonnes customer_email/customer_name
+
+### Affichage Commandes Admin
+- [x] Fix RLS policies orders (migration 17: client voit ses commandes, admin voit tout)
+- [x] Fix affichage nom/email client (profiles > customer_name/email > shipping_address)
+- [x] Fix affichage produits dans page détail commande (order.items au lieu de cart_items)
+- [x] Page détail commande créée (/admin/orders/[id])
+- [x] Logs de débogage pour tracer problèmes affichage
+
+### Variantes Produits
+- [x] Migration 16: Colonne variants JSONB dans products
+- [x] Interface admin gestion variantes (label, price, stock par taille)
+- [x] Affichage dynamique variantes sur page produit
+- [x] Mise à jour prix/stock selon variante sélectionnée
+- [x] Support prix et stock différents par variante
+
+### Authentification & RLS
+- [x] Fix détection Admin pour Google OAuth (vérification par email)
+- [x] Migration 11: Fix RLS profiles (lecture par ID OU email)
+- [x] Server Action signout pour invalidation cookie HttpOnly
+- [x] Fix ProfileDrawer logout (gestion NEXT_REDIRECT error)
+
+### Fixes Techniques
+- [x] Remplacement isomorphic-dompurify par sanitization regex (fix crash jsdom)
+- [x] Fix Admin Sidebar hydration error (useLayoutEffect + GSAP)
+- [x] Fix Admin Sidebar responsive (z-index, largeur mobile)
+- [x] Fix orders RLS pour invités (user_id nullable, admin voit tout)
+
+**Fichiers créés/modifiés:**
+- `supabase/migrations/11_fix_profiles_rls.sql`
+- `supabase/migrations/15_fix_orders.sql`
+- `supabase/migrations/16_product_variants.sql`
+- `supabase/migrations/17_fix_orders_rls.sql`
+- `supabase/migrations/18_fix_orders_duplicates_and_email.sql`
+- `app/api/webhooks/stripe/route.ts` (logs + idempotence + customer_email/name)
+- `app/api/create-payment-intent/route.ts` (metadata complètes)
+- `app/admin/orders/page.tsx` (affichage nom/email client)
+- `app/admin/orders/[id]/page.tsx` (page détail commande)
+- `components/admin/ProductModal.tsx` (gestion variantes)
+- `components/product/ProductInfo.tsx` (sélection variantes)
+- `components/admin/AdminSidebar.tsx` (fix hydration + responsive)
+- `context/AuthContext.tsx` (checkAdminRole par email)
+- `app/login/actions.ts` (Server Action signout)
+- `lib/validation.ts` (remplacement DOMPurify)
+
 ## Issues Connues
 
 - Aucune issue bloquante détectée
 - Flux de paiement opérationnel
 - Système de catégories/tags opérationnel
+- Webhooks Stripe fonctionnels avec idempotence
+- Commandes créées correctement (doublons bloqués)
+- Affichage produits commandés corrigé
 - À nettoyer: logs console avant production
 
 ---
 
-**Temps estimé pour finir**: 3-4 jours de dev concentré
-**Dernière mise à jour**: 10 Janvier 2026
+**Temps estimé pour finir**: 2-3 jours de dev concentré
+**Dernière mise à jour**: 15 Janvier 2026
