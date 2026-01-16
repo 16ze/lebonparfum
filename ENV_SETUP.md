@@ -13,6 +13,19 @@ SUPABASE_SERVICE_ROLE_KEY=met_ta_cle_service_role_ici
 # Stripe Configuration
 STRIPE_SECRET_KEY=sk_test_met_ta_cle_secrete_ici
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_met_ta_cle_publique_ici
+STRIPE_WEBHOOK_SECRET=whsec_met_ton_secret_webhook_ici
+
+# Sentry Configuration (Error Tracking)
+NEXT_PUBLIC_SENTRY_DSN=https://met_ton_dsn_ici@o4500000000000000.ingest.sentry.io/0000000
+SENTRY_ORG=kairo-digital
+SENTRY_PROJECT=javascript-nextjs-lx
+SENTRY_AUTH_TOKEN=met_ton_auth_token_ici
+
+# Resend Configuration (Emails transactionnels)
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_FROM_EMAIL="Le Bon Parfum <noreply@lebonparfum.com>"
+ADMIN_EMAIL=admin@lebonparfum.com
+NEXT_PUBLIC_SITE_URL=https://lebonparfum.com
 ```
 
 ## 🔑 Où trouver ces valeurs ?
@@ -41,10 +54,44 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_met_ta_cle_publique_ici
    - Copiez la clé publique (commence par `pk_test_` pour le mode test, `pk_live_` pour la production)
    - Cette clé peut être exposée côté client (d'où le préfixe `NEXT_PUBLIC_`)
 
+6. **STRIPE_WEBHOOK_SECRET** :
+   - Allez dans Stripe Dashboard > Developers > Webhooks
+   - Créez un endpoint webhook ou utilisez celui existant
+   - Copiez le "Signing secret" (commence par `whsec_`)
+   - Utilisé pour vérifier l'authenticité des webhooks Stripe
+
+7. **NEXT_PUBLIC_SENTRY_DSN** :
+   - Allez dans Sentry Dashboard > Settings > Projects > javascript-nextjs-lx
+   - Dans "Client Keys (DSN)", copiez le DSN (commence par `https://`)
+   - Cette clé peut être exposée côté client (d'où le préfixe `NEXT_PUBLIC_`)
+
+8. **SENTRY_AUTH_TOKEN** :
+   - Allez dans Sentry Dashboard > Settings > Account > Auth Tokens
+   - Créez un nouveau token avec les permissions : `project:read`, `project:releases`, `org:read`
+   - Utilisé pour uploader les source maps lors du build
+
+9. **RESEND_API_KEY** :
+   - Allez sur [resend.com](https://resend.com) et créez un compte
+   - Dans le dashboard, allez dans "API Keys"
+   - Créez une nouvelle clé (commence par `re_`)
+   - Utilisée pour envoyer les emails transactionnels
+
+10. **RESEND_FROM_EMAIL** :
+    - Format : `"Nom <email@domaine.com>"`
+    - En mode test, utilisez `onboarding@resend.dev`
+    - En production, configurez votre domaine dans Resend et utilisez votre email vérifié
+
+11. **ADMIN_EMAIL** :
+    - Email où seront envoyées les notifications de nouvelles commandes
+
+12. **NEXT_PUBLIC_SITE_URL** :
+    - URL de votre site en production (pour les liens dans les emails)
+
 ## ⚠️ Note
 
 - Le fichier `.env.local` est déjà dans `.gitignore` et ne sera pas commité
 - Ne partagez jamais vos clés publiquement
 - **SUPABASE_SERVICE_ROLE_KEY est maintenant REQUIS** pour la décrémentation automatique du stock après paiement
+- **SENTRY_AUTH_TOKEN** est requis uniquement pour uploader les source maps en production (optionnel en développement)
 
 
