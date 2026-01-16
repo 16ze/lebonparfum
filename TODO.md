@@ -308,14 +308,25 @@
   - ✅ Fonction `sendNewOrderNotificationToAdmin` créée
   - ✅ Intégré dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
 - [x] Email confirmation commande → client
-  - ✅ Fonction `sendOrderConfirmationEmail` créée
+  - ✅ Fonction `sendOrderConfirmation` créée (React Email)
+  - ✅ Template React Email `OrderConfirmation.tsx` (style Byredo)
   - ✅ Intégré dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
 - [x] Email expédition → client
   - ✅ Fonction `sendShippingConfirmationEmail` créée
   - ✅ Intégré dans `app/admin/orders/[id]/actions.ts`
+- [x] Email alerte stock faible → admin
+  - ✅ Template React Email `LowStockAlert.tsx` (style Byredo, urgent)
+  - ✅ Fonction `sendLowStockAlert` créée
+  - ✅ Intégré dans webhook Stripe avec détection automatique (stock <= 3)
+  - ✅ Envoi groupé si plusieurs produits en stock critique
 - [x] Template email branded
-  - ✅ Template minimaliste style Byredo dans `lib/email.ts`
+  - ✅ Templates React Email minimalistes style Byredo
   - ✅ Design noir & blanc avec typographie soignée
+  - ✅ Templates HTML legacy conservés pour compatibilité
+- [x] Correction rate limit Resend
+  - ✅ Pauses de 1s entre envois emails (tier gratuit: max 2 req/s)
+  - ✅ Fonction `sleep()` utilitaire ajoutée
+  - ✅ Logs de débogage détaillés pour traçabilité
 
 #### SMS Twilio (optionnel)
 
@@ -545,7 +556,25 @@
 - `app/contact/actions.ts`
 - `components/layout/Footer.tsx` (mis à jour)
 
+## Système d'Alerte Stock Faible (17 Jan 2026)
+
+- Template React Email `LowStockAlert.tsx` créé (style Byredo, design urgent rouge/noir)
+- Fonction `sendLowStockAlert` dans `lib/email.ts` pour notifier admin
+- Intégration dans webhook Stripe avec détection automatique après décrémentation stock
+- Seuil critique: stock <= 3 unités
+- Envoi groupé si plusieurs produits en alerte
+- Correction rate limit Resend: pauses de 1s entre envois emails (tier gratuit: max 2 req/s)
+- Logs de débogage détaillés ajoutés pour traçabilité envois emails
+- Amélioration vérification `customerEmail` (gestion chaînes vides)
+- Email admin toujours envoyé même si email client manquant
+
+**Fichiers créés/modifiés:**
+
+- `emails/LowStockAlert.tsx` (nouveau template React Email)
+- `lib/email.ts` (fonction `sendLowStockAlert` + logs)
+- `app/api/webhooks/stripe/route.ts` (détection stock faible + pauses + logs)
+
 ---
 
 **Temps estimé pour finir**: 2-3 jours de dev concentré
-**Dernière mise à jour**: 16 Janvier 2026
+**Dernière mise à jour**: 17 Janvier 2026
