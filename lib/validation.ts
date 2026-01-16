@@ -73,7 +73,17 @@ export const productSchema = z.object({
     .string()
     .min(1, "Le nom du produit est requis")
     .max(200, "Le nom ne peut pas dépasser 200 caractères")
-    .trim(),
+    .trim()
+    .refine(
+      (val) => {
+        // Vérifier que le nom n'est pas vide après trim et sanitization
+        const sanitized = sanitizeHtml(val);
+        return sanitized.trim().length > 0;
+      },
+      {
+        message: "Le nom contient des caractères non autorisés ou est vide après nettoyage.",
+      }
+    ),
 
   slug: slugSchema,
 
@@ -81,7 +91,17 @@ export const productSchema = z.object({
     .string()
     .min(1, "La marque est requise")
     .max(100, "La marque ne peut pas dépasser 100 caractères")
-    .trim(),
+    .trim()
+    .refine(
+      (val) => {
+        // Vérifier que la marque n'est pas vide après trim et sanitization
+        const sanitized = sanitizeHtml(val);
+        return sanitized.trim().length > 0;
+      },
+      {
+        message: "La marque contient des caractères non autorisés ou est vide après nettoyage.",
+      }
+    ),
 
   description: htmlDescriptionSchema,
 
@@ -125,7 +145,7 @@ export const productSchema = z.object({
   // Statut de publication
   status: z
     .enum(["draft", "published", "archived"], {
-      errorMap: () => ({ message: "Le statut doit être 'draft', 'published' ou 'archived'" }),
+      message: "Le statut doit être 'draft', 'published' ou 'archived'",
     })
     .default("draft"),
 });
@@ -288,7 +308,8 @@ export function sanitizeHtml(html: string | null | undefined): string {
  *
  * 1. Valide que la longueur est acceptable
  * 2. Trim et nettoyage basique du texte
- * 3. Retourne la version nettoyée
+ * 3. Vérifie que le résultat n'est pas vide après nettoyage
+ * 4. Retourne la version nettoyée
  *
  * @param description - Description HTML brute
  * @returns Objet { valid: boolean, sanitized: string, error?: string }
@@ -311,6 +332,16 @@ export function validateAndSanitizeDescription(description: string | null | unde
 
   // Sanitizer simple (trim + suppression basique des scripts)
   const sanitized = sanitizeHtml(result.data);
+
+  // Vérifier que le résultat n'est pas vide après nettoyage
+  // Si l'input contenait uniquement du code malveillant, il sera vide après sanitization
+  if (description && description.trim().length > 0 && sanitized.trim().length === 0) {
+    return {
+      valid: false,
+      sanitized: "",
+      error: "Le texte contient des caractères non autorisés ou est vide après nettoyage.",
+    };
+  }
 
   return {
     valid: true,

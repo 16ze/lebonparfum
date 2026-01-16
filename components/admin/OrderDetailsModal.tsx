@@ -9,7 +9,7 @@ import Drawer from "@/components/ui/Drawer";
 
 interface Order {
   id: string;
-  user_id: string;
+  user_id: string | null; // Nullable pour les commandes invités
   amount: number;
   status: string;
   shipping_address: {
@@ -23,6 +23,8 @@ interface Order {
     email?: string;
   } | null; // Peut être null pour les anciennes commandes
   created_at: string;
+  customer_email?: string | null; // Snapshot email pour invités
+  customer_name?: string | null; // Snapshot nom pour invités
   profiles: {
     full_name: string;
     email: string;

@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -36,6 +37,12 @@ const nextConfig: NextConfig = {
         // Appliquer à toutes les routes
         source: "/:path*",
         headers: [
+          // DNS Prefetch Control : contrôle la résolution DNS anticipée
+          {
+            key: "X-DNS-Prefetch-Control",
+            value: "on",
+          },
+
           // Prévient le clickjacking (iframe embedding non autorisé)
           {
             key: "X-Frame-Options",
@@ -48,20 +55,20 @@ const nextConfig: NextConfig = {
             value: "nosniff",
           },
 
-          // Force HTTPS sur le domaine pendant 2 ans (31536000 secondes)
+          // Force HTTPS sur le domaine pendant 2 ans (63072000 secondes)
           // includeSubDomains : applique aussi aux sous-domaines
           // preload : permet l'inscription dans la liste HSTS preload des navigateurs
           {
             key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
 
           // Contrôle le référent envoyé lors de la navigation
-          // strict-origin-when-cross-origin : envoie l'origine complète en same-origin,
-          // seulement l'origine en cross-origin HTTPS, rien en HTTP
+          // origin-when-cross-origin : envoie l'origine complète en same-origin,
+          // seulement l'origine en cross-origin
           {
             key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
+            value: "origin-when-cross-origin",
           },
 
           // Permissions Policy (anciennement Feature-Policy)
@@ -104,4 +111,36 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Make sure adding Sentry options is the last code to run before exporting
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  org: "kairo-digital",
+  project: "javascript-nextjs-lx",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for better debugging
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: "/monitoring",
+
+  // Source maps configuration
+  sourcemaps: {
+    disable: true,
+  },
+
+  // Enables automatic instrumentation for Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+  // See the following for more information:
+  // https://docs.sentry.io/product/crons/
+  // automaticVercelMonitors: true,
+});

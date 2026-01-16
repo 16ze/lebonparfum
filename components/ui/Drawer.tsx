@@ -204,12 +204,8 @@ export default function Drawer({
           className="flex-1 overflow-y-auto overflow-x-hidden drawer-scrollbar"
           style={{
             minHeight: 0,
-            height: 0, // Force flexbox à calculer la hauteur
-            scrollBehavior: "smooth",
             WebkitOverflowScrolling: "touch",
             overscrollBehavior: "contain",
-            touchAction: "pan-y",
-            willChange: "scroll-position",
           }}
         >
           <div className="flex flex-col">{children}</div>
