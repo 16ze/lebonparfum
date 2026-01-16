@@ -22,6 +22,7 @@ interface WishlistButtonProps {
   initialIsActive: boolean;
   variant?: "icon" | "text";
   className?: string;
+  productName?: string; // Pour aria-label plus descriptif
 }
 
 export default function WishlistButton({
@@ -29,6 +30,7 @@ export default function WishlistButton({
   initialIsActive,
   variant = "icon",
   className = "",
+  productName,
 }: WishlistButtonProps) {
   const { user, openAuthDrawer } = useAuth();
   const router = useRouter();
@@ -77,14 +79,21 @@ export default function WishlistButton({
     }
   };
 
+  // Générer l'aria-label avec le nom du produit si disponible
+  const getAriaLabel = () => {
+    const action = isActive ? "Retirer des favoris" : "Ajouter aux favoris";
+    return productName ? `${action} : ${productName}` : action;
+  };
+
   // Variant "icon" - Pour les cartes produits
   if (variant === "icon") {
     return (
       <button
         onClick={handleClick}
         disabled={isPending}
-        className={`absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-200 active:scale-90 z-10 ${className}`}
-        aria-label={isActive ? "Retirer des favoris" : "Ajouter aux favoris"}
+        className={`absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-200 active:scale-90 z-10 min-h-[44px] min-w-[44px] ${className}`}
+        aria-label={getAriaLabel()}
+        aria-pressed={isActive}
       >
         <Heart
           className={`w-5 h-5 transition-all duration-200 ${
@@ -103,10 +112,11 @@ export default function WishlistButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className={`flex items-center gap-2 text-xs uppercase tracking-widest font-medium transition-colors hover:opacity-70 ${
+      className={`flex items-center gap-2 text-xs uppercase tracking-widest font-medium transition-colors hover:opacity-70 min-h-[44px] ${
         isActive ? "text-black" : "text-black/60"
       } ${className}`}
-      aria-label={isActive ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={getAriaLabel()}
+      aria-pressed={isActive}
     >
       <Heart
         className={`w-4 h-4 transition-all duration-200 ${

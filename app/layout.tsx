@@ -31,6 +31,11 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
+        {/* Skip link pour navigation clavier - A11Y */}
+        <a href="#main-content" className="skip-link">
+          Aller au contenu principal
+        </a>
+
         <AuthProvider>
           <CartProvider>
             <CheckoutProvider>
@@ -42,7 +47,9 @@ export default function RootLayout({
                     <AuthDrawer />
                     <ProfileDrawer />
                     <CartDrawer />
-                    {children}
+                    <main id="main-content" tabIndex={-1}>
+                      {children}
+                    </main>
                   </ConditionalLayout>
                 </SmoothScroll>
               </MenuProvider>

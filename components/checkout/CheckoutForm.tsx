@@ -32,8 +32,11 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
   return (
     <div className="space-y-12">
       {/* Section Livraison */}
-      <section>
-        <h2 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-8">
+      <section aria-labelledby="shipping-heading">
+        <h2
+          id="shipping-heading"
+          className="text-xs uppercase tracking-widest font-bold text-gray-500 mb-8"
+        >
           Livraison
         </h2>
 
@@ -42,9 +45,10 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
+              className="block text-xs uppercase tracking-widest text-gray-600 mb-2"
             >
-              Email *
+              Email <span aria-hidden="true">*</span>
+              <span className="sr-only">(obligatoire)</span>
             </label>
             <input
               type="email"
@@ -53,6 +57,8 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
               value={shippingAddress.email}
               onChange={handleChange}
               required
+              aria-required="true"
+              autoComplete="email"
               className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
               placeholder="exemple@email.com"
             />
@@ -63,9 +69,10 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
             <div>
               <label
                 htmlFor="firstName"
-                className="block text-xs uppercase tracking-widest text-gray-500 mb-2"
+                className="block text-xs uppercase tracking-widest text-gray-600 mb-2"
               >
-                Prénom *
+                Prénom <span aria-hidden="true">*</span>
+                <span className="sr-only">(obligatoire)</span>
               </label>
               <input
                 type="text"
@@ -74,6 +81,8 @@ export default function CheckoutForm({ paymentForm }: CheckoutFormProps) {
                 value={shippingAddress.firstName}
                 onChange={handleChange}
                 required
+                aria-required="true"
+                autoComplete="given-name"
                 className="w-full border-0 border-b border-black/20 pb-2 text-sm focus:outline-none focus:border-black transition-colors bg-transparent"
                 placeholder="Jean"
               />
