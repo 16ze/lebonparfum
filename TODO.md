@@ -259,21 +259,21 @@
   - ✅ Présents sur les liens produits
   - ✅ Présents sur les actions admin (éditer, supprimer)
   - ✅ Présents sur les composants Drawer/Modal
-- [ ] Navigation clavier
+- [x] Navigation clavier
   - [x] ✅ Fermeture avec Escape (Drawer, Menu, Modal)
-  - [ ] Focus trap dans les modals/drawers
-  - [ ] Navigation complète au clavier (Tab, Shift+Tab, Enter, Espace)
-  - [ ] Skip links pour navigation rapide
+  - [x] ✅ Focus trap dans les modals/drawers (IMPLÉMENTÉ via useFocusTrap)
+  - [x] ✅ Navigation complète au clavier (Tab, Shift+Tab, Enter, Espace) - Les boutons HTML natifs gèrent Enter/Espace par défaut
+  - [x] ✅ Skip links pour navigation rapide (IMPLÉMENTÉ via SkipLinks)
 - [ ] Contraste couleurs WCAG AA
   - [x] ✅ Noir sur blanc (contraste excellent)
-  - [ ] Vérifier les gris (text-gray-400, text-gray-500)
-  - [ ] Vérifier les états hover/focus
-  - [ ] Audit avec outil (axe DevTools, WAVE)
-- [ ] Screen reader friendly
+  - [ ] ⚠️ Vérifier les gris (text-gray-400, text-gray-500) - Utilisés mais non vérifiés
+  - [ ] ⚠️ Vérifier les états hover/focus - Présents mais non audités
+  - [ ] ❌ Audit avec outil (axe DevTools, WAVE) (NON FAIT)
+- [x] Screen reader friendly
   - [x] ✅ Aria-labels présents
-  - [ ] Landmarks ARIA (main, nav, aside)
-  - [ ] États ARIA (aria-expanded, aria-hidden)
-  - [ ] Textes alternatifs pour images décoratives
+  - [x] ✅ États ARIA (aria-expanded, aria-hidden) - Présents dans Header, AccordionItem
+  - [x] ✅ Textes alternatifs pour images - Tous les `<img>` ont des `alt` descriptifs
+  - [x] ✅ Landmarks ARIA (main, nav, aside) - Ajoutés dans ConditionalLayout et Header
 
 ### 3. Mobile
 
@@ -304,12 +304,12 @@
 - [x] Installer Resend
   - ✅ Package `resend@^6.7.0` installé
   - ✅ Configuration dans `lib/email.ts`
-- [ ] Email nouvelle commande → admin
+- [x] Email nouvelle commande → admin
   - ✅ Fonction `sendNewOrderNotificationToAdmin` créée
-  - [ ] Intégrer dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
-- [ ] Email confirmation commande → client
+  - ✅ Intégré dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
+- [x] Email confirmation commande → client
   - ✅ Fonction `sendOrderConfirmationEmail` créée
-  - [ ] Intégrer dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
+  - ✅ Intégré dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
 - [x] Email expédition → client
   - ✅ Fonction `sendShippingConfirmationEmail` créée
   - ✅ Intégré dans `app/admin/orders/[id]/actions.ts`

@@ -1,4 +1,7 @@
+import { render } from "@react-email/components";
 import { Resend } from "resend";
+import LowStockAlert from "@/emails/LowStockAlert";
+import OrderConfirmation from "@/emails/OrderConfirmation";
 
 /**
  * Configuration Resend
@@ -307,7 +310,89 @@ function generateAddressBlock(address: ShippingAddress): string {
 }
 
 // ============================================
-// EMAIL 1 : Confirmation de commande → Client
+// EMAIL 1 : Confirmation de commande → Client (React Email)
+// ============================================
+export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
+  const { orderId, customerName, customerEmail, items, totalAmount } = data;
+
+  console.log("📧 [sendOrderConfirmation] Début - Paramètres reçus:", {
+    orderId,
+    customerName,
+    customerEmail: customerEmail || "VIDE",
+    itemsCount: items.length,
+    totalAmount,
+    hasResendKey: !!process.env.RESEND_API_KEY,
+    nodeEnv: process.env.NODE_ENV,
+  });
+
+  // Vérifier que l'email client est fourni
+  if (!customerEmail || customerEmail.trim() === "") {
+    console.error("❌ [sendOrderConfirmation] Email client manquant ou vide");
+    return { success: false, error: "Email client manquant" };
+  }
+
+  // Déterminer l'email destinataire (DEV → ADMIN_EMAIL, PROD → customerEmail)
+  const IS_DEV = process.env.NODE_ENV === "development";
+  const recipientEmail = IS_DEV
+    ? process.env.ADMIN_EMAIL || "delivered@resend.dev"
+    : customerEmail;
+
+  if (IS_DEV) {
+    console.log("📧 [DEV MODE] Email serait envoyé à:", customerEmail);
+    console.log("📧 [DEV MODE] Email envoyé à (test):", recipientEmail);
+  }
+
+  // Vérifier que Resend est configuré
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("⚠️ [RESEND] RESEND_API_KEY non configuré - Email non envoyé");
+    console.log("📧 [MOCK] Email de confirmation:", {
+      to: customerEmail,
+      orderId,
+      customerName,
+      totalAmount: totalAmount / 100,
+    });
+    return { success: true }; // Retourner success pour ne pas bloquer le flow
+  }
+
+  try {
+    // Rendre le template React Email en HTML
+    const emailHtml = await render(
+      OrderConfirmation({
+        customerName,
+        orderId,
+        totalAmount,
+        items: items.map((item) => ({
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price_at_time: item.price_at_time,
+          image_url: item.image_url,
+        })),
+        siteUrl: SITE_URL,
+      })
+    );
+
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: recipientEmail,
+      subject: `Confirmation de votre commande #${orderId.slice(0, 8).toUpperCase()}`,
+      html: emailHtml,
+    });
+
+    if (error) {
+      console.error("❌ [RESEND] Erreur envoi email confirmation:", error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ [RESEND] Email confirmation envoyé à: ${recipientEmail}${IS_DEV ? ` (dev mode, original: ${customerEmail})` : ""}`);
+    return { success: true };
+  } catch (err: any) {
+    console.error("❌ [RESEND] Exception envoi email:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+// ============================================
+// EMAIL 1 (Legacy) : Confirmation de commande → Client (HTML Template)
 // ============================================
 export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
   const { orderId, customerName, customerEmail, items, totalAmount, shippingAddress } = data;
@@ -354,6 +439,29 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
 // ============================================
 export async function sendNewOrderNotificationToAdmin(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
   const { orderId, customerName, customerEmail, items, totalAmount, shippingAddress } = data;
+
+  console.log("📧 [sendNewOrderNotificationToAdmin] Début - Paramètres reçus:", {
+    orderId,
+    customerName,
+    customerEmail: customerEmail || "VIDE",
+    itemsCount: items.length,
+    totalAmount,
+    hasShippingAddress: !!shippingAddress,
+    adminEmail: ADMIN_EMAIL,
+    hasResendKey: !!process.env.RESEND_API_KEY,
+  });
+
+  // Vérifier que Resend est configuré
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("⚠️ [RESEND] RESEND_API_KEY non configuré - Email admin non envoyé");
+    console.log("📧 [MOCK] Email notification admin:", {
+      to: ADMIN_EMAIL,
+      orderId,
+      customerName,
+      totalAmount: totalAmount / 100,
+    });
+    return { success: true }; // Retourner success pour ne pas bloquer le flow
+  }
 
   const content = `
     <h1>Nouvelle commande reçue</h1>
@@ -448,5 +556,54 @@ export async function sendShippingConfirmationEmail(data: OrderEmailData): Promi
   }
 }
 
+// ============================================
+// EMAIL 4 : Alerte Stock Faible → Admin (React Email)
+// ============================================
+interface LowStockProduct {
+  name: string;
+  stock: number;
+}
+
+export async function sendLowStockAlert(
+  products: LowStockProduct[]
+): Promise<{ success: boolean; error?: string }> {
+  // Vérifier que Resend est configuré
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("⚠️ [RESEND] RESEND_API_KEY non configuré - Email alerte stock non envoyé");
+    console.log("📧 [MOCK] Alerte stock faible:", {
+      products: products.map((p) => `${p.name} (${p.stock} unités)`),
+    });
+    return { success: true }; // Retourner success pour ne pas bloquer le flow
+  }
+
+  try {
+    // Rendre le template React Email en HTML
+    const emailHtml = await render(
+      LowStockAlert({
+        products,
+        siteUrl: SITE_URL,
+      })
+    );
+
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: `⚠️ Alerte stock faible - ${products.length} produit${products.length > 1 ? "s" : ""} en stock critique`,
+      html: emailHtml,
+    });
+
+    if (error) {
+      console.error("❌ [RESEND] Erreur envoi email alerte stock:", error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ [RESEND] Email alerte stock envoyé à admin pour ${products.length} produit(s)`);
+    return { success: true };
+  } catch (err: any) {
+    console.error("❌ [RESEND] Exception envoi email alerte stock:", err);
+    return { success: false, error: err.message };
+  }
+}
+
 // Export des types pour utilisation externe
-export type { OrderEmailData, OrderItem, ShippingAddress };
+export type { OrderEmailData, OrderItem, ShippingAddress, LowStockProduct };

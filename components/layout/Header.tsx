@@ -209,7 +209,7 @@ export default function Header() {
 
   return (
     <header ref={headerRef} className={headerClasses} style={headerStyle}>
-      <nav className="flex items-center justify-between px-4 md:px-6 py-6">
+      <nav role="navigation" aria-label="Navigation principale" className="flex items-center justify-between px-4 md:px-6 py-6">
         {/* Gauche : Menu Burger + Recherche */}
         <div className="flex items-center gap-4">
           <button

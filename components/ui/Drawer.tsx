@@ -1,5 +1,6 @@
 "use client";
 
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import gsap from "gsap";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -34,6 +35,14 @@ export default function Drawer({
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
+  const focusTrapRef = useFocusTrap(isOpen);
+
+  // Connecter la ref du drawer au focus trap
+  useEffect(() => {
+    if (drawerRef.current && focusTrapRef.current !== drawerRef.current) {
+      (focusTrapRef as any).current = drawerRef.current;
+    }
+  }, [isOpen, focusTrapRef]);
 
   // Calculer dynamiquement la hauteur du header
   useEffect(() => {
@@ -166,6 +175,9 @@ export default function Drawer({
       {/* Drawer - sous le header avec bordures arrondies */}
       <div
         ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawer-title"
         className="fixed right-0 w-full md:w-[700px] lg:w-[900px] xl:w-[1100px] bg-white z-50 shadow-2xl flex flex-col rounded-tl-3xl rounded-bl-3xl"
         style={{
           transform: "translateX(100%)",
@@ -178,7 +190,10 @@ export default function Drawer({
         {/* Header fixe - style Byredo */}
         <div className="flex items-center justify-between border-b border-black/10 px-4 md:px-6 lg:px-8 py-4 md:py-6 flex-shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg md:text-xl uppercase tracking-widest font-bold truncate">
+            <h2
+              id="drawer-title"
+              className="text-lg md:text-xl uppercase tracking-widest font-bold truncate"
+            >
               {title}
             </h2>
             {subtitle && (

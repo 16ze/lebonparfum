@@ -39,7 +39,9 @@ export default function ConditionalLayout({
   return (
     <>
       <Header />
-      {children}
+      <main id="main-content" role="main">
+        {children}
+      </main>
       <Footer />
     </>
   );

@@ -4,6 +4,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import CookieConsent from "@/components/layout/CookieConsent";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
+import SkipLinks from "@/components/layout/SkipLinks";
 import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
 import ProfileDrawer from "@/components/profile/ProfileDrawer";
 import { AuthProvider } from "@/context/AuthContext";
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
+        <SkipLinks />
         <AuthProvider>
           <CartProvider>
             <CheckoutProvider>

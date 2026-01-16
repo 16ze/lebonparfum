@@ -13,6 +13,8 @@
     "stripe:listen:auto": "bash -c 'PORT=$(lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1 && echo 3001 || echo 3000); stripe listen --forward-to localhost:$PORT/api/webhooks/stripe'"
   },
   "dependencies": {
+    "@react-email/components": "^0.0.28",
+    "@react-email/html": "^0.0.10",
     "@sentry/nextjs": "^10.34.0",
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.6.0",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
@@ -28,6 +29,15 @@ export default function Modal({
   maxWidth = "3xl",
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const focusTrapRef = useFocusTrap(isOpen);
+  
+  // Connecter la ref du modal au focus trap
+  useEffect(() => {
+    if (modalRef.current && focusTrapRef.current !== modalRef.current) {
+      (focusTrapRef as any).current = modalRef.current;
+    }
+  }, [isOpen, focusTrapRef]);
 
   // Bloquer le scroll du body quand le modal est ouvert
   useEffect(() => {
@@ -80,13 +90,17 @@ export default function Modal({
       style={{ paddingTop: "2rem", paddingBottom: "2rem" }}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         className={`bg-white w-full ${maxWidthClasses[maxWidth]} min-h-[200px]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header fixe */}
         <div className="flex items-center justify-between border-b border-black/10 px-8 py-6 bg-white sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl uppercase tracking-widest font-bold">
+            <h2 id="modal-title" className="text-2xl uppercase tracking-widest font-bold">
               {title}
             </h2>
             {subtitle && (
@@ -100,6 +114,7 @@ export default function Modal({
             onClick={onClose}
             className="p-2 hover:bg-black/5 transition-colors"
             type="button"
+            aria-label="Fermer"
           >
             <X className="w-6 h-6" strokeWidth={1.5} />
           </button>

@@ -1,3 +1,8 @@
+import {
+  sendLowStockAlert,
+  sendNewOrderNotificationToAdmin,
+  sendOrderConfirmation,
+} from "@/lib/email";
 import type { OrderItem, StripeMetadataCart } from "@/types/payment";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -178,6 +183,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Webhook error" }, { status: 500 });
   }
 }
+
+/**
+ * Fonction utilitaire pour ajouter une pause (éviter Rate Limit Resend)
+ */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Créer une commande dans Supabase à partir d'un Payment Intent réussi
@@ -499,8 +509,125 @@ async function createOrderFromPaymentIntent(
     user_id: order.user_id || "invité",
   });
 
-  // 6. Décrémenter le stock de chaque produit
+  // 6. Envoyer les emails (confirmation client + notification admin)
+  console.log("📧 ========== ENVOI EMAILS ==========");
+  console.log("📧 DEBUG - État des variables email:", {
+    customerEmail: customerEmail || "VIDE/NULL",
+    customerName: customerName || "VIDE/NULL",
+    hasCustomerEmail: !!customerEmail,
+    receipt_email: paymentIntent.receipt_email || "VIDE",
+    metadata_customer_email: paymentIntent.metadata.customer_email || "VIDE",
+  });
+  
+  // Préparer les données pour les emails
+  const emailData = {
+    orderId: order.id,
+    customerName: customerName || "Client",
+    customerEmail: customerEmail || "",
+    items: orderItems.map((item) => ({
+      product_name: item.product_name,
+      product_slug: item.product_slug,
+      quantity: item.quantity,
+      price_at_time: item.price_at_time,
+      image_url: item.image_url,
+    })),
+    totalAmount: totalAmountCents,
+    shippingAddress: shippingAddress || undefined,
+  };
+
+  // Email de confirmation au client (si email disponible)
+  if (customerEmail && customerEmail.trim() !== "") {
+    try {
+      console.log("📧 ========== ENVOI EMAIL CONFIRMATION CLIENT ==========");
+      console.log("📧 Email client:", customerEmail);
+      console.log("📧 Nom client:", customerName || "Client");
+      console.log("📧 Commande:", order.id);
+      
+      const emailResult = await sendOrderConfirmation({
+        orderId: order.id,
+        customerName: customerName || "Client",
+        customerEmail: customerEmail,
+        items: orderItems.map((item) => ({
+          product_name: item.product_name,
+          product_slug: item.product_slug,
+          quantity: item.quantity,
+          price_at_time: item.price_at_time,
+          image_url: item.image_url,
+        })),
+        totalAmount: totalAmountCents,
+        shippingAddress: shippingAddress || undefined,
+      });
+      
+      if (emailResult.success) {
+        console.log("✅ Email confirmation client envoyé avec succès");
+        console.log("📧 Email envoyé !");
+      } else {
+        console.error("❌ Erreur envoi email confirmation client:", emailResult.error);
+        console.error("❌ Email non envoyé à :", customerEmail);
+        // On continue quand même (la commande est créée, le paiement reste valide)
+      }
+    } catch (err) {
+      console.error("❌ Exception lors de l'envoi email confirmation client:", err);
+      console.error("❌ Email non envoyé à :", customerEmail);
+      // On continue quand même (la commande est créée, le paiement reste valide)
+    }
+  } else {
+    console.warn("⚠️ Pas d'email client disponible - Email confirmation non envoyé");
+    console.warn("⚠️ customerEmail:", customerEmail);
+    console.warn("⚠️ receipt_email:", paymentIntent.receipt_email);
+    console.warn("⚠️ metadata.customer_email:", paymentIntent.metadata.customer_email);
+  }
+
+  // Pause pour éviter le Rate Limit Resend (tier gratuit: max 2 req/s)
+  await sleep(1000);
+  console.log("⏳ Pause de 1s avant envoi email admin...");
+
+  // Email de notification à l'admin (TOUJOURS envoyé, même si pas d'email client)
+  try {
+    console.log("📧 ========== ENVOI EMAIL NOTIFICATION ADMIN ==========");
+    console.log("📧 Admin email:", process.env.ADMIN_EMAIL || "NON CONFIGURÉ");
+    console.log("📧 Données email:", {
+      orderId: emailData.orderId,
+      customerName: emailData.customerName,
+      customerEmail: emailData.customerEmail || "NON FOURNI",
+      itemsCount: emailData.items.length,
+      totalAmount: emailData.totalAmount,
+    });
+    
+    const adminEmailResult = await sendNewOrderNotificationToAdmin(emailData);
+    if (adminEmailResult.success) {
+      console.log("✅ Email notification admin envoyé avec succès");
+    } else {
+      console.error("❌ Erreur envoi email notification admin:", adminEmailResult.error);
+      console.error("❌ Détails erreur:", JSON.stringify(adminEmailResult, null, 2));
+      // On continue quand même (la commande est créée)
+    }
+  } catch (err) {
+    console.error("❌ Exception lors de l'envoi email notification admin:", err);
+    if (err instanceof Error) {
+      console.error("❌ Stack trace:", err.stack);
+    }
+    // On continue quand même
+  }
+
+  // 7. Décrémenter le stock de chaque produit et détecter les stocks faibles
+  console.log("📦 ========== DÉCRÉMENTATION STOCK & DÉTECTION ALERTES ==========");
+  const lowStockItems: { name: string; stock: number }[] = [];
+
   for (const update of stockUpdates) {
+    // Récupérer le stock actuel avant décrémentation
+    const { data: productBefore } = await supabase
+      .from("products")
+      .select("name, stock")
+      .eq("id", update.id)
+      .single();
+
+    if (!productBefore) {
+      console.error(`⚠️ Produit introuvable: ${update.id}`);
+      continue;
+    }
+
+    // Décrémenter le stock avec la RPC
     const { error: stockError } = await supabase.rpc("decrement_stock", {
       product_id: update.id,
       quantity: update.quantity,
@@ -513,13 +640,49 @@ async function createOrderFromPaymentIntent(
       );
       // On continue quand même (la commande est déjà créée)
     } else {
+      // Calculer le nouveau stock
+      const newStock = productBefore.stock - update.quantity;
       console.log(
-        `✅ Stock décrémenté pour ${update.id} (-${update.quantity})`
+        `✅ Stock décrémenté pour ${productBefore.name} (${update.id}) - Ancien: ${productBefore.stock}, Nouveau: ${newStock}`
       );
+
+      // Vérifier si le stock est critique (<= 3)
+      if (newStock <= 3) {
+        console.log(
+          `⚠️ ALERTE: Stock faible détecté pour ${productBefore.name} (${newStock} unité${newStock > 1 ? "s" : ""})`
+        );
+        lowStockItems.push({
+          name: productBefore.name,
+          stock: newStock,
+        });
+      }
     }
   }
 
-  // 7. Attribuer des points de fidélité si l'utilisateur est connecté
+  // 7.5. Envoyer l'email d'alerte stock faible si nécessaire
+  if (lowStockItems.length > 0) {
+    // Pause pour éviter le Rate Limit Resend (tier gratuit: max 2 req/s)
+    await sleep(1000);
+    console.log("⏳ Pause de 1s avant envoi email alerte stock...");
+    
+    try {
+      console.log("📧 ========== ENVOI ALERTE STOCK FAIBLE ==========");
+      console.log(`📧 ${lowStockItems.length} produit(s) en stock critique`);
+      
+      const alertResult = await sendLowStockAlert(lowStockItems);
+      if (alertResult.success) {
+        console.log(`✅ Email alerte stock envoyé pour ${lowStockItems.length} produit(s)`);
+      } else {
+        console.error("❌ Erreur envoi email alerte stock:", alertResult.error);
+        // On continue quand même
+      }
+    } catch (err) {
+      console.error("❌ Exception lors de l'envoi email alerte stock:", err);
+      // On continue quand même
+    }
+  }
+
+  // 8. Attribuer des points de fidélité si l'utilisateur est connecté
   if (order.user_id) {
     try {
       const { error: loyaltyError } = await supabase.rpc(
@@ -538,7 +701,7 @@ async function createOrderFromPaymentIntent(
         const pointsEarned = Math.floor(totalAmountCents / 10);
         console.log(`🎁 Points de fidélité attribués: ${pointsEarned} points`);
 
-        // 8. Créer une notification pour informer l'utilisateur
+        // 9. Créer une notification pour informer l'utilisateur
         await supabase.from("notifications").insert({
           user_id: order.user_id,
           type: "order_status",
