@@ -64,15 +64,15 @@ export default function ProfileDrawer() {
       return;
     }
     
-    console.log("🔍 ProfileDrawer ouvert - Rafraîchissement du statut admin...");
-    console.log("🔍 État actuel - isAdmin:", isAdmin, "user:", user.email);
-    
-    // FORCER le rafraîchissement à chaque ouverture pour garantir la cohérence
-    refreshUser().then(() => {
-      console.log("✅ Rafraîchissement terminé");
-    }).catch((error) => {
-      console.error("❌ Erreur lors du rafraîchissement:", error);
-    });
+      console.log("🔍 ProfileDrawer ouvert - Rafraîchissement du statut admin...");
+      console.log("🔍 État actuel - isAdmin:", isAdmin, "user:", user.email);
+      
+      // FORCER le rafraîchissement à chaque ouverture pour garantir la cohérence
+      refreshUser().then(() => {
+        console.log("✅ Rafraîchissement terminé");
+      }).catch((error) => {
+        console.error("❌ Erreur lors du rafraîchissement:", error);
+      });
   }, [isProfileDrawerOpen, user?.id, isLoggingOut]);
 
   /**
@@ -216,7 +216,7 @@ export default function ProfileDrawer() {
         console.log("✅ Redirection Next.js détectée - Comportement normal");
         return;
       }
-      
+
       // Pour toute autre erreur, on la log et on affiche une alerte
       console.error("❌ Erreur lors de la déconnexion:", error);
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";

@@ -64,11 +64,7 @@
   }
 }
 
-/* ============================================
-   ACCESSIBILITÉ & MICRO-INTERACTIONS
-   Style Byredo - WCAG AA Compliant
-   ============================================ */
-
+/* Micro-interactions globales - Style Byredo */
 @layer base {
   /* Transitions fluides pour tous les éléments interactifs */
   button,
@@ -91,24 +87,14 @@
     transition-duration: 100ms;
   }
 
-  /* Focus states accessibles - WCAG AA compliant */
+  /* Focus states accessibles */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
-  select:focus-visible,
-  [role="button"]:focus-visible,
-  [tabindex]:focus-visible {
+  select:focus-visible {
     outline: 2px solid #000;
     outline-offset: 2px;
-  }
-
-  /* Focus visible sur fond sombre */
-  .dark button:focus-visible,
-  .dark a:focus-visible,
-  [data-theme="dark"] button:focus-visible,
-  [data-theme="dark"] a:focus-visible {
-    outline-color: #fff;
   }
 
   /* Disabled states */
@@ -120,93 +106,13 @@
     opacity: 0.5;
   }
 
-  /* Smooth scroll pour les ancres - Respecte prefers-reduced-motion */
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
+  /* Smooth scroll pour les ancres */
+  html {
+    scroll-behavior: smooth;
   }
 
   /* Micro-interaction pour les liens */
   a:not(:disabled):hover {
     opacity: 0.7;
   }
-}
-
-/* ============================================
-   SKIP LINK - Navigation au clavier
-   ============================================ */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: #000;
-  color: #fff;
-  padding: 8px 16px;
-  z-index: 100;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.skip-link:focus {
-  top: 0;
-}
-
-/* ============================================
-   PREFERS REDUCED MOTION
-   Désactive les animations pour les utilisateurs sensibles
-   ============================================ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* ============================================
-   CONTRASTE AMÉLIORÉ
-   Textes gris avec ratio minimum 4.5:1
-   ============================================ */
-@layer utilities {
-  /* text-gray-400 (#9ca3af) n'a que 2.85:1 sur blanc
-     On remplace par text-gray-600 (#4b5563) qui a 7:1 */
-  .a11y-gray {
-    color: #525252; /* neutral-600, ratio 7.21:1 */
-  }
-
-  /* Pour les labels/placeholders qui doivent être plus subtils
-     mais toujours lisibles (ratio 4.5:1 minimum) */
-  .a11y-muted {
-    color: #737373; /* neutral-500, ratio 4.56:1 */
-  }
-}
-
-/* ============================================
-   FOCUS TRAP - Pour modales et drawers
-   ============================================ */
-[aria-modal="true"] {
-  /* Empêche le scroll du body quand une modale est ouverte */
-}
-
-/* ============================================
-   SCREEN READER ONLY
-   Masque visuellement mais reste accessible
-   ============================================ */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
 }

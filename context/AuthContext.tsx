@@ -80,21 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
-    
+
     // 1. Initialisation
     const initAuth = async () => {
       console.log("🚀 [AUTH] Initialisation de l'authentification...");
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
+        setUser(user);
+
+        if (user) {
         console.log("👤 [AUTH] Utilisateur trouvé :", user.email);
         await checkAdminRole(user.email);
-      } else {
+          } else {
         console.log("⚠️ [AUTH] Aucun utilisateur connecté");
         setIsAdmin(false);
       }
-      setIsLoading(false);
+        setIsLoading(false);
     };
 
     initAuth();
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("🔔 [AUTH] Changement état :", event, "session:", session ? "présente" : "null");
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-
+      
       // Si déconnexion, nettoyer immédiatement l'état
       if (event === "SIGNED_OUT") {
         console.log("🔒 [AUTH] ========== SIGNED_OUT DÉTECTÉ ==========");
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("⚠️ [AUTH] Aucun utilisateur dans la session");
         setIsAdmin(false);
       }
-      
+
       setIsLoading(false);
 
       // Si l'utilisateur se connecte, fermer l'AuthDrawer
@@ -144,11 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("🔄 [AUTH] Refresh manuel de l'utilisateur...");
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-    if (user) {
+      setUser(user);
+      if (user) {
       console.log("👤 [AUTH] Utilisateur trouvé lors du refresh :", user.email);
       await checkAdminRole(user.email);
-    } else {
+        } else {
       console.log("⚠️ [AUTH] Aucun utilisateur lors du refresh");
       setIsAdmin(false);
     }

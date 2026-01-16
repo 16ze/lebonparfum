@@ -100,7 +100,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/mentions-legales"
+                  href="/legal/mentions"
                   className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wide"
                 >
                   Mentions Légales
@@ -108,7 +108,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/confidentialite"
+                  href="/legal/privacy"
                   className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wide"
                 >
                   Confidentialité
@@ -116,10 +116,26 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/cgv"
+                  href="/legal/terms"
                   className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wide"
                 >
                   CGV
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/legal/returns"
+                  className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wide"
+                >
+                  Retours & Remboursements
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/legal/cookies"
+                  className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wide"
+                >
+                  Politique des Cookies
                 </Link>
               </li>
             </ul>

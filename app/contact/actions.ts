@@ -10,7 +10,7 @@ const contactFormSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
   email: z.string().email("Email invalide"),
   subject: z.enum(["commande", "info", "autre"], {
-    message: "Veuillez sélectionner un sujet",
+    errorMap: () => ({ message: "Veuillez sélectionner un sujet" }),
   }),
   message: z
     .string()

@@ -2,11 +2,6 @@ import type { OrderItem, StripeMetadataCart } from "@/types/payment";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import {
-  sendOrderConfirmationEmail,
-  sendNewOrderNotificationToAdmin,
-  type OrderEmailData,
-} from "@/lib/email";
 
 /**
  * Webhook Stripe - Gestion des événements de paiement
@@ -569,66 +564,4 @@ async function createOrderFromPaymentIntent(
     totalAmount: totalAmountCents / 100,
     itemsCount: orderItems.length,
   });
-
-  // 9. Envoyer les emails de notification (async, non bloquant)
-  try {
-    const emailData: OrderEmailData = {
-      orderId: order.id,
-      customerName: customerName || "Client",
-      customerEmail: customerEmail || "",
-      items: orderItems.map((item) => ({
-        product_name: item.product_name,
-        product_slug: item.product_slug,
-        quantity: item.quantity,
-        price_at_time: item.price_at_time,
-        image_url: item.image_url || undefined,
-      })),
-      totalAmount: totalAmountCents,
-      shippingAddress: shippingAddress
-        ? {
-            first_name: shippingAddress.first_name || "",
-            last_name: shippingAddress.last_name || "",
-            address: shippingAddress.address || "",
-            postal_code: shippingAddress.postal_code || "",
-            city: shippingAddress.city || "",
-            country: shippingAddress.country || "France",
-            phone: shippingAddress.phone,
-          }
-        : undefined,
-    };
-
-    // Envoyer en parallèle : confirmation client + notification admin
-    const emailPromises = [];
-
-    // Email confirmation client (si on a un email)
-    if (customerEmail) {
-      emailPromises.push(
-        sendOrderConfirmationEmail(emailData).then((result) => {
-          if (result.success) {
-            console.log("📧 Email confirmation envoyé au client:", customerEmail);
-          } else {
-            console.error("⚠️ Échec envoi email client:", result.error);
-          }
-        })
-      );
-    }
-
-    // Email notification admin
-    emailPromises.push(
-      sendNewOrderNotificationToAdmin(emailData).then((result) => {
-        if (result.success) {
-          console.log("📧 Email notification envoyé à l'admin");
-        } else {
-          console.error("⚠️ Échec envoi email admin:", result.error);
-        }
-      })
-    );
-
-    // Attendre tous les emails (mais ne pas bloquer si erreur)
-    await Promise.allSettled(emailPromises);
-    console.log("📬 Emails de notification traités");
-  } catch (emailError) {
-    // Les erreurs d'email ne doivent pas faire échouer le webhook
-    console.error("⚠️ Erreur lors de l'envoi des emails:", emailError);
-  }
 }

@@ -190,9 +190,9 @@ export default function Drawer({
 
           <button
             onClick={onClose}
-            className="p-3 hover:bg-black/5 transition-colors ml-4 flex-shrink-0 rounded-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2 hover:bg-black/5 transition-colors ml-4 flex-shrink-0 rounded-sm"
             type="button"
-            aria-label="Fermer le panneau"
+            aria-label="Fermer"
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
@@ -204,11 +204,21 @@ export default function Drawer({
           className="flex-1 overflow-y-auto overflow-x-hidden drawer-scrollbar"
           style={{
             minHeight: 0,
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "contain",
+            height: 0, // Force flexbox à calculer la hauteur disponible
+            maxHeight: "100%", // S'assure que le conteneur ne dépasse pas le parent
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch", // Scroll fluide sur macOS/iOS
+            overscrollBehavior: "contain", // Empêche le scroll en chaîne
+            touchAction: "pan-y", // Optimise les gestes de scroll vertical
+            position: "relative", // Nécessaire pour certains navigateurs
+            isolation: "isolate", // Crée un nouveau contexte d'empilement
+          }}
+          onWheel={(e) => {
+            // Permet le scroll même si le contenu a flex-1
+            e.stopPropagation();
           }}
         >
-          <div className="flex flex-col">{children}</div>
+          <div className="flex flex-col min-h-full">{children}</div>
         </div>
       </div>
     </>

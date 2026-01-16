@@ -14,7 +14,6 @@ import { Metadata } from "next";
 export const SITE_CONFIG = {
   name: "Le Bon Parfum",
   title: "Le Bon Parfum - Parfums de Niche & Collections Exclusives",
-  tagline: "Parfums de Niche & Collections Exclusives",
   description:
     "Découvrez notre sélection exclusive de parfums de niche. Collections rares, créateurs indépendants et fragrances d'exception. Livraison offerte dès 100€.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://lebonparfum.com",

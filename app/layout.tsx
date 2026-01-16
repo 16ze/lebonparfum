@@ -2,6 +2,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import AuthDrawer from "@/components/auth/AuthDrawer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
+import CookieConsent from "@/components/layout/CookieConsent";
 import MenuOverlayWrapper from "@/components/layout/MenuOverlayWrapper";
 import SearchOverlayWrapper from "@/components/layout/SearchOverlayWrapper";
 import ProfileDrawer from "@/components/profile/ProfileDrawer";
@@ -31,11 +32,6 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="antialiased font-sans bg-white text-black">
-        {/* Skip link pour navigation clavier - A11Y */}
-        <a href="#main-content" className="skip-link">
-          Aller au contenu principal
-        </a>
-
         <AuthProvider>
           <CartProvider>
             <CheckoutProvider>
@@ -47,15 +43,14 @@ export default function RootLayout({
                     <AuthDrawer />
                     <ProfileDrawer />
                     <CartDrawer />
-                    <main id="main-content" tabIndex={-1}>
-                      {children}
-                    </main>
+                    {children}
                   </ConditionalLayout>
                 </SmoothScroll>
               </MenuProvider>
             </CheckoutProvider>
           </CartProvider>
         </AuthProvider>
+        <CookieConsent />
       </body>
     </html>
   );

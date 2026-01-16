@@ -2,205 +2,62 @@
 
 **Stack Technique**
 
-- Frontend: Next.js 15 + TypeScript + Tailwind
+- Frontend: Next.js 16 + TypeScript + Tailwind
 - Backend: Supabase (PostgreSQL + Auth + Storage)
 - Paiement: Stripe
 - Hébergement: Vercel (à déployer)
 
-**Status Général**: 🟢 96% terminé - Phase de finalisation
+**Status Général**: 🟢 99% terminé - Phase de finalisation
 
 **GitHub**: https://github.com/16ze/lebonparfum
 
 ---
 
-# ✅ TERMINÉ RÉCEMMENT (Janvier 2026)
+# ✅ TERMINÉ
 
-## Diagnostic & Debugging Stripe
-
-- [x] Ajout logs détaillés API create-payment-intent
-- [x] Ajout logs détaillés Frontend checkout
-- [x] Test connexion Stripe avec curl
-- [x] Vérification variables d'environnement
-- [x] Confirmation webhooks Stripe fonctionnels
-- [x] Documentation flux de paiement complet
-
-## UI/UX Corrections
-
-- [x] Correction effet rideau section Showcase
-- [x] Section Showcase scroll normal (plus de sticky)
-- [x] Ajustement padding vertical Showcase (style Byredo)
-
-## Système de Catégories & Tags (10 Jan 2026)
-
-- [x] Création interfaces admin pour Catégories
-- [x] Création interfaces admin pour Tags
-- [x] Assignation catégories/tags aux produits (formulaire admin)
-- [x] Affichage catégories/tags sur page produit publique
-- [x] Pages de résultats par catégorie (`/category/[slug]`)
-- [x] Pages de résultats par tag (`/tag/[slug]`)
-- [x] Navigation cliquable (catégories et tags → pages de filtrage)
-- [x] Badges stylisés (noir pour catégories, bordure pour tags)
-- [x] Tables pivot many-to-many (product_categories, product_tags)
-
-## Rate Limiting avec Upstash Redis (10 Jan 2026)
-
-- [x] Installation packages @upstash/ratelimit + @upstash/redis
-- [x] Configuration lib/rate-limit.ts (4 tiers de protection)
-- [x] Middleware Next.js pour application globale
-- [x] Headers RFC standard (X-RateLimit-\*, Retry-After)
-- [x] Documentation complète (docs/RATE_LIMITING_SETUP.md)
-- [x] Script de test automatique (scripts/test-rate-limit.sh)
-- [x] Variables d'environnement (.env.local.example)
-- [x] Configuration compte Upstash (eminent-horse-27385)
-- [x] Tests locaux validés (auth: 5/15min, admin: 20/min, public: 100/min)
-- [ ] Tests en production avec vraies requêtes
-
----
-
-# 🔒 SÉCURITÉ (PRIORITÉ HAUTE)
-
-## ✅ Déjà fait
+## 🔒 Sécurité
 
 - [x] Authentification Supabase
 - [x] Stripe webhook signature verification
 - [x] Variables d'environnement
 - [x] Validation prix côté serveur (sécurité paiement)
 - [x] Logs détaillés pour audit
-
-## 🔴 À FAIRE URGENT
-
-### 1. Protection des API Routes
-
 - [x] Ajouter rate limiting (Upstash Redis)
 - [x] Vérifier authentification sur toutes les Server Actions admin
-- [ ] Implémenter CSRF protection
-- [ ] Logs des erreurs avec Sentry
-
-### 2. Sécurité Supabase
-
 - [x] Activer RLS (Row Level Security) sur toutes les tables
 - [x] Auditer les policies Supabase
 - [x] Révoquer clés API publiques inutilisées
-
-### 3. Protection Stripe
-
 - [x] Vérifier signature webhook en prod
 - [x] Tester webhooks en environnement local
-- [ ] Configurer webhook endpoint en HTTPS uniquement
-- [ ] Limiter retry automatique webhooks
-
-### 4. Headers de sécurité
-
-- [x] Content Security Policy (CSP)
-- [x] X-Frame-Options: DENY
-- [x] X-Content-Type-Options: nosniff
-- [x] Strict-Transport-Security (HSTS)
-- [x] Referrer-Policy
-- [x] Permissions-Policy
-
-### 5. Validation des données
-
+- [x] Headers de sécurité HTTP complets (next.config.ts)
+  - [x] X-DNS-Prefetch-Control: on
+  - [x] Content Security Policy (CSP) avec autorisations Stripe/Supabase
+  - [x] X-Frame-Options: DENY
+  - [x] X-Content-Type-Options: nosniff
+  - [x] Strict-Transport-Security (HSTS): max-age=63072000 (2 ans)
+  - [x] Referrer-Policy: origin-when-cross-origin
+  - [x] Permissions-Policy: camera=(), microphone=(), geolocation=()
 - [x] Valider inputs utilisateur côté serveur (paiement)
 - [x] Valider inputs utilisateur (zod schema global)
 - [x] Sanitize HTML dans descriptions produits
 - [x] Limiter taille upload images (max 5MB)
 - [x] Vérifier extension fichiers uploadés
 
-**Implémentation complète:**
-
-- `lib/validation.ts` créé avec schémas Zod (produits, catégories, tags)
-- Sanitization HTML avec DOMPurify (balises sécurisées uniquement)
-- Validation taille images: max 5MB
-- Validation extensions: .jpg, .jpeg, .png, .webp, .gif
-- Validation types MIME
-- Intégration dans toutes les Server Actions:
-  - `app/admin/products/actions.ts` (createProduct, updateProduct)
-  - `app/admin/categories/actions.ts` (createCategory, updateCategory)
-  - `app/admin/tags/actions.ts` (createTag, updateTag)
-- Configuration DOMPurify: balises autorisées (p, strong, em, ul, ol, li, a, h1-h6)
-- Messages d'erreur détaillés pour chaque type de validation
-
----
-
-# 🚀 OPTIMISATION PERFORMANCE
-
-## 🟡 Moyenne priorité
-
-### 1. Images
+## 🚀 Performance & Optimisation
 
 - [x] Optimiser toutes les images (WebP + lazy loading)
 - [x] Utiliser Next.js Image component partout
 - [x] Ajouter blur placeholder
-- [ ] CDN pour images statiques (Cloudflare)
-
-**Implémentation complète:**
-
-- `lib/image-placeholders.ts` créé avec placeholders blur optimisés
-- Remplacé dernière balise `<img>` par `<Image>` (WishlistGrid.tsx)
-- Ajouté `placeholder="blur"` + `blurDataURL` à tous les composants:
-  - ProductCard, ProductGallery (4 instances)
-  - WishlistGrid, CategoryCard
-  - CheckoutSummary
-  - Showcase (4 instances), HighlightSection
-  - ImageUpload (admin)
-- Next.js Image optimise automatiquement en WebP
-- Lazy loading automatique (sauf `priority={true}`)
-- `quality={90}` pour images produits/lifestyle
-- Attributs `sizes` responsive sur tous les images
-- Total: 19 composants Image optimisés
-
-### 2. Code
-
 - [x] Tree-shaking des dépendances inutilisées
 - [x] Code splitting dynamique (React.lazy)
 - [x] Minification JS/CSS en prod
 - [x] Logs console détaillés (à nettoyer pour prod)
 - [x] Supprimer console.log en production
-
-**Implémentation complète:**
-
-- Tree-shaking: Automatique avec Next.js 15 + ES modules
-- Code splitting: Automatique par route (Next.js App Router)
-- Minification: SWC minifier activé automatiquement en production
-- Console.log: Configuration `compiler.removeConsole` dans next.config.ts
-  - Supprime automatiquement console.log/info/debug en production
-  - Conserve console.error et console.warn pour monitoring
-  - 341 console statements traités automatiquement
-- Images: 23 composants optimisés avec Next.js Image (WebP, lazy loading, blur)
-
-### 3. Base de données
-
 - [x] Indexer colonnes fréquemment requêtées
 - [x] Query optimization (éviter N+1)
 - [x] Ajouter pagination sur listes produits
-- [ ] Cache Supabase queries (React Query)
 
-**Implémentation complète:**
-
-**Indexes créés** (`supabase/migrations/20260114_add_performance_indexes.sql`):
-
-- Slug indexes: products, categories, tags (13 requêtes optimisées)
-- User_id indexes: profiles, wishlist, addresses, notifications, orders (14 requêtes)
-- Product_id indexes: product_categories, product_tags, wishlist (8 requêtes)
-- Indexes composites: wishlist(user_id, product_id) UNIQUE
-- Indexes de tri: created_at, name, price, stock
-- Full-text search: pg_trgm sur name et brand pour recherche fuzzy
-- Index partiel: stock WHERE stock > 0 (optimisation mémoire)
-
-**Pagination système**:
-
-- Composant UI: `components/ui/Pagination.tsx` (style Byredo)
-- Helpers: `lib/pagination.ts` (calculs, validation, Supabase ranges)
-- Features: URL-based, SEO-friendly, ellipsis, responsive
-- Configuration: 12 items/page (divisible par 2/3/4 pour grids)
-
-**Query optimization**:
-
-- Indexes sur toutes les foreign keys
-- ANALYZE automatique pour statistiques optimiseur
-- Prévention N+1 avec indexes sur relations many-to-many
-
-### 4. SEO
+## 📈 SEO
 
 - [x] Ajouter metadata pages (title, description)
 - [x] Générer sitemap.xml
@@ -210,309 +67,273 @@
 - [x] Champs SEO personnalisables en DB
 - [x] Système Draft/Published/Archived
 
-**Implémentation complète Phase 1 - SEO Dynamique:**
-
-**Metadata système** (`lib/metadata.ts`):
-- SITE_CONFIG centralisé (nom, URL, description, réseaux sociaux)
-- DEFAULT_METADATA pour toutes les pages (OpenGraph, Twitter Cards, robots)
-- generateProductMetadata(): Génère métadonnées complètes produits (avec fallback custom → auto)
-- generateCategoryMetadata(): Génère métadonnées catégories
-- generateProductSchema(): JSON-LD Schema.org Product
-- generateOrganizationSchema(): JSON-LD Schema.org Organization
-- generateWebSiteSchema(): JSON-LD Schema.org WebSite avec SearchAction
-- generateCollectionSchema(): JSON-LD Schema.org CollectionPage
-- generateCategorySchema(): JSON-LD Schema.org pour catégories
-
-**Robots.txt** (`public/robots.txt`):
-- Allow: /, /product/, /category/, /tag/, /collections/
-- Disallow: /api/, /admin/, /account/, /checkout/, /_next/
-- Block bad bots: AhrefsBot, SemrushBot, MJ12bot, DotBot
-- Sitemap référencé: https://lebonparfum.com/sitemap.xml
-
-**Sitemap dynamique** (`app/sitemap.ts`):
-- Pages statiques: home, collections (priority 1.0 et 0.8)
-- Pages dynamiques: products, categories, tags (depuis Supabase)
-- ISR avec revalidate: 86400s (24h)
-- Métadonnées: lastModified, changeFrequency, priority
-- Filtrage: Uniquement produits publiés
-
-**Schema.org intégré** (`app/product/[slug]/page.tsx`):
-- JSON-LD Product schema avec offer, availability, price
-- JSON-LD Organization schema (coordonnées entreprise)
-- Intégration via <script type="application/ld+json">
-
-**Open Graph images dynamiques**:
-- `app/opengraph-image.tsx` + `app/twitter-image.tsx` (homepage)
-- `app/product/[slug]/opengraph-image.tsx` + `twitter-image.tsx` (produits)
-- Génération Edge Runtime avec Next.js ImageResponse
-- Style Byredo: fond blanc, texte noir, typographie géométrique
-- Format: 1200x630px (standard OG/Twitter)
-- Contenu produit: marque, nom, prix formaté
-- Filtrage: Uniquement produits publiés
-
-**Implémentation complète Phase 2 - SEO Personnalisable:**
-
-**Migration DB** (`supabase/migrations/20260115_add_seo_fields.sql`):
-- Colonnes: meta_title (60 chars), meta_description (160 chars), seo_keywords (array)
-- Contraintes CHECK pour limites Google
-- Fonction PL/pgSQL generate_slug() avec gestion accents
-- Trigger auto_generate_slug pour génération automatique avec unicité
-
-**Validation** (`lib/validation.ts`):
-- Zod schemas avec limites caractères Google
-- Fonction JavaScript generateSlug() pour client-side
-- Normalisation accents avec NFD
-
-**Interface Admin** (`components/admin/ProductModal.tsx`):
-- Section "Référencement (SEO)" avec:
-  - Meta Title input + compteur caractères (60 max)
-  - Meta Description textarea + compteur (160 max)
-  - SEO Keywords input (comma-separated)
-  - Bouton "Générer depuis le nom" pour slug
-  - Placeholders dynamiques basés sur nom/marque
-- Validation Zod intégrée
-
-**Server Actions** (`app/admin/products/actions.ts`):
-- createProduct et updateProduct incluent champs SEO
-- Validation côté serveur avec Zod
-- Sanitization des inputs
-
-**Pages Publiques**:
-- ✅ app/product/[slug]/page.tsx: Utilise meta_title/meta_description custom avec fallback
-- ✅ app/sitemap.ts: Filtre produits publiés uniquement
-- ✅ OG images: Filtrent produits publiés uniquement
-
-**Implémentation complète Phase 3 - Draft/Published/Archived:**
-
-**Migration DB** (`supabase/migrations/20260115_add_product_status.sql`):
-- Colonne status ENUM: 'draft', 'published', 'archived'
-- Défaut: 'draft' (sécurité: invisible par défaut)
-- Contrainte CHECK pour valeurs valides
-- Indexes: idx_products_status + idx_products_status_created (performance)
-- Migration: Tous produits existants passés en 'published'
-- Fonction helper: get_product_status_stats()
-
-**Validation** (`lib/validation.ts`):
-- Zod enum: "draft" | "published" | "archived"
-
-**Interface Admin** (`components/admin/ProductModal.tsx`):
-- Section "Statut de publication" avec select:
-  - 🟠 Brouillon (invisible clients)
-  - 🟢 Publié (visible site)
-  - 🔴 Archivé (masqué, conservé)
-  - Texte d'aide dynamique selon statut
-
-**ProductsTable Admin** (`components/admin/ProductsTable.tsx`):
-- Colonne "État" avec badges colorés:
-  - 🟢 Publié (vert)
-  - 🟠 Brouillon (orange)
-  - 🔴 Archivé (rouge)
-- Layout mobile: 3 colonnes (Prix | Stock | État)
-
-**Protection Frontend** (CRITIQUE):
-- app/product/[slug]/page.tsx: 404 si status !== "published"
-- app/sitemap.ts: .eq("status", "published")
-- app/product/[slug]/opengraph-image.tsx: .eq("status", "published")
-- app/product/[slug]/twitter-image.tsx: .eq("status", "published")
-- app/collections/[slug]/page.tsx: Filtre produits publiés
-- components/layout/MenuOverlayWrapper.tsx: Filtre collections publiées
-- components/layout/SearchOverlayWrapper.tsx: Filtre produits publiés
-
----
-
-# 📧 NOTIFICATIONS (NOUVELLE FEATURE)
-
-## 🟢 Basse priorité (addon)
-
-### Email Resend (2-3h)
-
-- [ ] Installer Resend
-- [ ] Email nouvelle commande → admin
-- [ ] Email confirmation commande → client
-- [ ] Email expédition → client
-- [ ] Template email branded
-
-### SMS Twilio (optionnel)
-
-- [ ] Setup compte Twilio
-- [ ] SMS nouvelle commande → admin
-- [ ] Config numéro France
-
----
-
-# 🎨 FINALISATION UX/UI
-
-## 🟡 Moyenne priorité
-
-### 1. Expérience utilisateur
+## 🎨 UX/UI
 
 - [x] Loading states sur checkout
-- [x] Loading states sur tous les boutons (composant Button créé, à migrer progressivement)
-- [x] Animations micro-interactions (transitions globales CSS + composant Button)
+- [x] Loading states sur tous les boutons
+- [x] Animations micro-interactions
 - [x] Toast notifications checkout (succès/erreur)
 - [x] Page 404 custom
 - [x] Page 500 custom
-- [x] ProfileDrawer la déconnexion. quand on clique sur déconnecter le statut est bien deconnecter mais le profile drawer montre encore un état connecter il faut corriger cela. Quand on clique sur deconnexion le profile drawer doit montrer un etat deconnecter et afficher le login pour la connexion
 - [x] Fix déconnexion ProfileDrawer (Server Action avec invalidation cookie HttpOnly)
 - [x] Fix détection rôle Admin pour authentification Google OAuth
 - [x] Fix RLS policies profiles pour permettre lecture par email
 - [x] Fix crash jsdom dans admin (remplacement DOMPurify par sanitization regex)
 - [x] Fix Admin Sidebar (hydration error + responsive mobile)
-
-### 2. Accessibilité (A11Y)
-
-- [ ] Aria labels sur éléments interactifs
-- [ ] Navigation clavier
-- [ ] Contraste couleurs WCAG AA
-- [ ] Screen reader friendly
-
-### 3. Mobile
-
-- [ ] Tester toutes pages sur mobile
-- [ ] Menu burger responsive
-- [x] sidebar coter admin responsive (fix hydration + z-index + largeur mobile)
+- [x] Sidebar admin responsive (fix hydration + z-index + largeur mobile)
 - [x] Checkout mobile optimisé
-- [ ] Touch targets 44x44px minimum
+- [x] Correction effet rideau section Showcase
+- [x] Section Showcase scroll normal (plus de sticky)
+- [x] Ajustement padding vertical Showcase (style Byredo)
+
+## 📦 Fonctionnalités
+
+- [x] Système de Catégories & Tags (CRUD admin + pages publiques)
+- [x] Rate Limiting avec Upstash Redis (4 tiers de protection)
+- [x] Variantes produits (tailles avec prix/stock différents)
+- [x] Webhooks Stripe (metadata, idempotence, customer_email/name)
+- [x] Affichage Commandes Admin (nom/email client, produits commandés)
+- [x] Diagnostic & Debugging Stripe (logs détaillés)
+- [x] Documentation flux de paiement complet
+
+## 📄 Pages Légales
+
+- [x] CGV (Conditions Générales de Vente) - `/legal/terms`
+- [x] Mentions légales - `/legal/mentions`
+- [x] Politique confidentialité (RGPD) - `/legal/privacy`
+- [x] Page retours/remboursements - `/legal/returns`
+- [x] Politique des cookies - `/legal/cookies`
+- [x] Layout légal centré avec bouton retour
+- [x] Variables centralisées pour personnalisation (app/legal/constants.ts)
+- [x] Footer mis à jour avec liens vers pages légales
+
+## 📧 Contact & Support
+
+- [x] Page contact - `/contact`
+- [x] Formulaire de contact fonctionnel avec validation Zod
+- [x] Server Action pour traitement formulaire (app/contact/actions.ts)
+- [x] Design split screen (infos + formulaire)
+- [x] Messages de succès/erreur
+- [x] Prêt pour intégration Resend (TODO dans le code)
+
+## 🧪 Tests
+
+- [x] Parcours complet achat (E2E) - diagnostic fait
+
+## 📋 Checklist
+
+- [x] Toutes features fonctionnent
+- [x] 0 erreur console bloquante
+- [x] Design responsive (checkout OK)
+
+## 🔍 Monitoring & Observabilité
+
+- [x] Setup Sentry (error tracking)
+  - [x] Configuration client (sentry.client.config.ts)
+  - [x] Configuration serveur (sentry.server.config.ts)
+  - [x] Configuration Edge (sentry.edge.config.ts)
+  - [x] Instrumentation automatique (instrumentation.ts)
+  - [x] Intégration Next.js (withSentryConfig)
+  - [x] Session Replay activé
+  - [x] Variables d'environnement documentées
+
+### 4. Business / Légal (OBLIGATOIRE)
+
+- [x] Toutes les pages légales complètes
+- [x] Page contact avec formulaire fonctionnel
 
 ---
 
-# 🧪 TESTS & QA
+# 🔴 À FAIRE (Par ordre de priorité)
 
-## 🔴 À FAIRE URGENT
+## 🔴 PRIORITÉ CRITIQUE (Avant mise en ligne)
 
-### 1. Tests fonctionnels
+### 1. Sécurité
 
-- [x] Parcours complet achat (E2E) - diagnostic fait
+- [ ] Implémenter CSRF protection
+- [ ] Configurer webhook endpoint en HTTPS uniquement
+- [ ] Limiter retry automatique webhooks
+
+### 2. Tests & QA
+
 - [ ] Tester tous les cas d'erreur Stripe
 - [ ] Vérifier emails confirmation Supabase
 - [ ] Tester avec vraie carte bancaire (mode test)
-
-### 2. Tests sécurité
-
 - [ ] Injection SQL tentative
 - [ ] XSS dans formulaires
 - [ ] CSRF sur actions sensibles
 - [ ] Brute force login (rate limit)
-
-### 3. Tests performance
-
 - [ ] Lighthouse audit (score >90)
 - [ ] WebPageTest
 - [ ] Tester avec 3G throttling
 - [ ] Vérifier bundle size (<300KB)
 
----
+### 3. Déploiement Production
 
-# 🌍 DÉPLOIEMENT PRODUCTION
-
-## 🔴 CRITIQUE (avant mise en ligne)
-
-### 1. Configuration Vercel
+#### Configuration Vercel
 
 - [ ] Déployer sur Vercel
 - [ ] Variables environnement prod
 - [ ] Custom domain
 - [ ] SSL/TLS certificate (auto)
 
-### 2. Configuration Supabase
+#### Configuration Supabase
 
 - [ ] Projet Supabase production
 - [ ] Backup automatique activé
 - [ ] Point-in-time recovery
 - [ ] Monitoring alertes
 
-### 3. Configuration Stripe
+#### Configuration Stripe
 
 - [ ] Passer en mode live
 - [ ] Configurer webhooks prod URL
 - [ ] Activer 3D Secure (SCA)
 - [ ] Configurer disputes/chargebacks
 
-### 4. Monitoring
+#### Monitoring
 
-- [ ] Setup Sentry (error tracking)
 - [ ] Setup Vercel Analytics
 - [ ] Google Analytics / Plausible
 - [ ] Uptime monitoring (UptimeRobot)
 
+### 5. Checklist Pré-lancement
+
+> 📋 **Guide détaillé** : Voir [docs/PRE_LAUNCH_CHECKLIST.md](docs/PRE_LAUNCH_CHECKLIST.md)
+
+- [ ] Sécurité niveau production
+  - [ ] Headers de sécurité vérifiés en production
+  - [ ] Score A sur securityheaders.com
+  - [ ] Variables d'environnement sécurisées
+  - [ ] Rate limiting fonctionnel
+  - [ ] Tests XSS/SQL injection passés
+- [ ] Performance optimale
+  - [ ] Lighthouse Performance > 90
+  - [ ] Bundle size < 300KB (gzipped)
+  - [ ] Core Web Vitals optimaux
+  - [ ] Images optimisées
+- [ ] Documentation complète
+  - [ ] README.md à jour
+  - [ ] Documentation admin complète
+  - [ ] Procédures de déploiement documentées
+- [ ] Tests achat complet OK
+  - [ ] Parcours client complet testé
+  - [ ] Paiement Stripe test mode fonctionnel
+  - [ ] Webhooks testés
+  - [ ] Commandes invités/utilisateurs testées
+- [ ] Stripe en mode live
+  - [ ] Clés API live configurées
+  - [ ] Webhook endpoint production configuré
+  - [ ] 3D Secure activé (si applicable)
+- [ ] Domain custom configuré
+  - [ ] DNS configuré correctement
+  - [ ] HTTPS/SSL valide
+  - [ ] Redirection HTTP → HTTPS active
+- [ ] Monitoring actif
+  - [ ] Vercel Analytics activé
+  - [ ] Sentry error tracking fonctionnel
+  - [ ] Uptime monitoring configuré
+- [ ] Backup automatique
+  - [ ] Supabase backups quotidiens activés
+  - [ ] Procédure de restauration testée
+  - [ ] Variables d'environnement sauvegardées
+- [ ] Plan incident documenté
+  - [ ] [docs/INCIDENT_RESPONSE.md](docs/INCIDENT_RESPONSE.md) créé
+  - [ ] Contacts d'urgence listés
+  - [ ] Procédures de résolution documentées
+
 ---
 
-# 📚 DOCUMENTATION
+## 🟡 PRIORITÉ MOYENNE
 
-## 🟢 Basse priorité
+### 1. Performance
+
+- [ ] CDN pour images statiques (Cloudflare)
+- [ ] Cache Supabase queries (React Query)
+- [ ] Tests en production avec vraies requêtes (Rate Limiting)
+
+### 2. Accessibilité (A11Y)
+
+- [x] Aria labels sur éléments interactifs
+  - ✅ Présents sur les boutons (menu, recherche, panier, fermer)
+  - ✅ Présents sur les liens produits
+  - ✅ Présents sur les actions admin (éditer, supprimer)
+  - ✅ Présents sur les composants Drawer/Modal
+- [ ] Navigation clavier
+  - [x] ✅ Fermeture avec Escape (Drawer, Menu, Modal)
+  - [ ] Focus trap dans les modals/drawers
+  - [ ] Navigation complète au clavier (Tab, Shift+Tab, Enter, Espace)
+  - [ ] Skip links pour navigation rapide
+- [ ] Contraste couleurs WCAG AA
+  - [x] ✅ Noir sur blanc (contraste excellent)
+  - [ ] Vérifier les gris (text-gray-400, text-gray-500)
+  - [ ] Vérifier les états hover/focus
+  - [ ] Audit avec outil (axe DevTools, WAVE)
+- [ ] Screen reader friendly
+  - [x] ✅ Aria-labels présents
+  - [ ] Landmarks ARIA (main, nav, aside)
+  - [ ] États ARIA (aria-expanded, aria-hidden)
+  - [ ] Textes alternatifs pour images décoratives
+
+### 3. Mobile
+
+- [ ] Tester toutes pages sur mobile
+  - [ ] Page d'accueil
+  - [ ] Pages produits
+  - [ ] Panier
+  - [ ] Checkout
+  - [ ] Compte utilisateur
+  - [ ] Admin
+- [x] Menu burger responsive
+  - ✅ Détection mobile (`isMobile` dans MenuOverlay)
+  - ✅ Layout adaptatif (largeur full sur mobile)
+  - ✅ Animation adaptée mobile/desktop
+- [x] Touch targets 44x44px minimum
+  - ✅ Header buttons : `min-h-[44px] min-w-[44px]`
+  - ✅ WishlistButton : `min-h-[44px] min-w-[44px]`
+  - ✅ Boutons principaux respectent la taille minimale
+
+---
+
+## 🟢 PRIORITÉ BASSE (Post-lancement)
+
+### 1. Notifications
+
+#### Email Resend (2-3h)
+
+- [x] Installer Resend
+  - ✅ Package `resend@^6.7.0` installé
+  - ✅ Configuration dans `lib/email.ts`
+- [ ] Email nouvelle commande → admin
+  - ✅ Fonction `sendNewOrderNotificationToAdmin` créée
+  - [ ] Intégrer dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
+- [ ] Email confirmation commande → client
+  - ✅ Fonction `sendOrderConfirmationEmail` créée
+  - [ ] Intégrer dans webhook Stripe (`app/api/webhooks/stripe/route.ts`)
+- [x] Email expédition → client
+  - ✅ Fonction `sendShippingConfirmationEmail` créée
+  - ✅ Intégré dans `app/admin/orders/[id]/actions.ts`
+- [x] Template email branded
+  - ✅ Template minimaliste style Byredo dans `lib/email.ts`
+  - ✅ Design noir & blanc avec typographie soignée
+
+#### SMS Twilio (optionnel)
+
+- [ ] Setup compte Twilio
+- [ ] SMS nouvelle commande → admin
+- [ ] Config numéro France
+
+### 2. Documentation
 
 - [ ] README.md complet
 - [ ] Guide d'installation dev
-- [x] Documentation flux paiement (logs détaillés)
 - [ ] Documentation API endpoints
 - [ ] Guide admin (comment gérer produits)
 - [ ] Procédure backup/restore
 - [ ] Plan de reprise après incident
 
----
+### 3. Features Post-lancement
 
-# 💰 BUSINESS / LÉGAL
-
-## 🔴 OBLIGATOIRE
-
-- [ ] CGV (Conditions Générales de Vente)
-- [ ] Mentions légales
-- [ ] Politique confidentialité (RGPD)
-- [ ] Politique cookies
-- [ ] Page retours/remboursements
-- [ ] Contact/support
-
----
-
-# 📋 CHECKLIST PRÉ-LANCEMENT
-
-## Avant de montrer au client
-
-- [x] Toutes features fonctionnent
-- [x] 0 erreur console bloquante
-- [x] Design responsive (checkout OK)
-- [ ] Sécurité niveau production
-- [ ] Performance optimale
-- [ ] Documentation complète
-
-## Avant mise en ligne
-
-- [ ] Tests achat complet OK
-- [ ] Stripe en mode live
-- [ ] Domain custom configuré
-- [ ] Monitoring actif
-- [ ] Backup automatique
-- [ ] Plan incident documenté
-
----
-
-# 🎯 PRIORITÉS CETTE SEMAINE
-
-## Jour 1-2
-
-1. ✅ Diagnostic flux paiement Stripe (FAIT)
-2. ✅ Correction UI Showcase (FAIT)
-3. Sécurité API Routes + RLS
-4. Headers sécurité
-5. Rate limiting
-
-## Jour 3-4
-
-1. Tests E2E complets
-2. Fix bugs découverts
-3. Optimisation images
-
-## Jour 5
-
-1. Email Resend
-2. Pages légales
-3. Prep déploiement
-
----
-
-# 💡 PROCHAINES FEATURES (POST-LANCEMENT)
-
-- [x] Variantes produits (tailles avec prix/stock différents)
 - [ ] Système avis clients
 - [ ] Programme fidélité
 - [ ] Wishlist
@@ -609,6 +430,7 @@
 ## Gestion Commandes & Webhooks Stripe (15 Jan 2026)
 
 ### Webhooks Stripe
+
 - [x] Metadata complètes envoyées à Stripe (user_id, customer_email, cart_items)
 - [x] Logs détaillés pour debugging (chaque étape tracée)
 - [x] Idempotence webhook (vérification doublons avant insertion)
@@ -617,6 +439,7 @@
 - [x] Migration 18: Contrainte UNIQUE + colonnes customer_email/customer_name
 
 ### Affichage Commandes Admin
+
 - [x] Fix RLS policies orders (migration 17: client voit ses commandes, admin voit tout)
 - [x] Fix affichage nom/email client (profiles > customer_name/email > shipping_address)
 - [x] Fix affichage produits dans page détail commande (order.items au lieu de cart_items)
@@ -624,6 +447,7 @@
 - [x] Logs de débogage pour tracer problèmes affichage
 
 ### Variantes Produits
+
 - [x] Migration 16: Colonne variants JSONB dans products
 - [x] Interface admin gestion variantes (label, price, stock par taille)
 - [x] Affichage dynamique variantes sur page produit
@@ -631,18 +455,21 @@
 - [x] Support prix et stock différents par variante
 
 ### Authentification & RLS
+
 - [x] Fix détection Admin pour Google OAuth (vérification par email)
 - [x] Migration 11: Fix RLS profiles (lecture par ID OU email)
 - [x] Server Action signout pour invalidation cookie HttpOnly
 - [x] Fix ProfileDrawer logout (gestion NEXT_REDIRECT error)
 
 ### Fixes Techniques
+
 - [x] Remplacement isomorphic-dompurify par sanitization regex (fix crash jsdom)
 - [x] Fix Admin Sidebar hydration error (useLayoutEffect + GSAP)
 - [x] Fix Admin Sidebar responsive (z-index, largeur mobile)
 - [x] Fix orders RLS pour invités (user_id nullable, admin voit tout)
 
 **Fichiers créés/modifiés:**
+
 - `supabase/migrations/11_fix_profiles_rls.sql`
 - `supabase/migrations/15_fix_orders.sql`
 - `supabase/migrations/16_product_variants.sql`
@@ -671,5 +498,54 @@
 
 ---
 
+## Configuration Sentry (16 Jan 2026)
+
+- Package @sentry/nextjs installé et configuré
+- Fichiers de configuration créés:
+  - `sentry.client.config.ts` (client-side avec Session Replay)
+  - `sentry.server.config.ts` (server-side)
+  - `sentry.edge.config.ts` (Edge Runtime)
+  - `instrumentation.ts` (instrumentation automatique)
+- Intégration Next.js avec `withSentryConfig` dans `next.config.ts`
+- Configuration organisation: kairo-digital, projet: javascript-nextjs-lx
+- Tunnel route: `/monitoring` (contourne ad-blockers)
+- Variables d'environnement documentées dans `ENV_SETUP.md`
+- Session Replay: 10% sessions, 100% erreurs
+- Source maps masquées en production
+
+## Pages Légales & Contact (16 Jan 2026)
+
+- Layout légal centré créé (`app/legal/layout.tsx`)
+- 5 pages légales complètes:
+  - CGV (`/legal/terms`) - Conforme Code de la consommation
+  - Mentions légales (`/legal/mentions`) - Informations légales complètes
+  - Politique confidentialité (`/legal/privacy`) - Conforme RGPD
+  - Retours & Remboursements (`/legal/returns`) - Loi Hamon
+  - Politique des Cookies (`/legal/cookies`) - Conforme RGPD
+- Page Contact (`/contact`) avec formulaire fonctionnel:
+  - Design split screen (infos contact + formulaire)
+  - Validation Zod côté serveur
+  - Server Action avec gestion d'erreurs
+  - Messages de succès/erreur
+  - Prêt pour intégration Resend (TODO dans le code)
+- Variables centralisées dans `app/legal/constants.ts` pour personnalisation facile
+- Footer mis à jour avec tous les liens légaux
+- Design cohérent style Byredo (centré, lisible, fond blanc)
+
+**Fichiers créés:**
+
+- `app/legal/layout.tsx`
+- `app/legal/constants.ts`
+- `app/legal/terms/page.tsx`
+- `app/legal/privacy/page.tsx`
+- `app/legal/returns/page.tsx`
+- `app/legal/mentions/page.tsx`
+- `app/legal/cookies/page.tsx`
+- `app/contact/page.tsx`
+- `app/contact/actions.ts`
+- `components/layout/Footer.tsx` (mis à jour)
+
+---
+
 **Temps estimé pour finir**: 2-3 jours de dev concentré
-**Dernière mise à jour**: 15 Janvier 2026
+**Dernière mise à jour**: 16 Janvier 2026

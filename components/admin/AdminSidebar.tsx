@@ -117,11 +117,11 @@ export default function AdminSidebar() {
           duration: 0.4,
           ease: "power3.out",
         });
-        gsap.to(overlayRef.current, {
-          opacity: 1,
-          visibility: "visible",
-          duration: 0.3,
-        });
+          gsap.to(overlayRef.current, {
+            opacity: 1,
+            visibility: "visible",
+            duration: 0.3,
+          });
       } else {
         // Fermer : slide vers la gauche
         gsap.to(sidebarRef.current, {
@@ -134,15 +134,15 @@ export default function AdminSidebar() {
             }
           },
         });
-        gsap.to(overlayRef.current, {
-          opacity: 0,
-          duration: 0.2,
+          gsap.to(overlayRef.current, {
+            opacity: 0,
+            duration: 0.2,
           onComplete: () => {
             if (overlayRef.current) {
               gsap.set(overlayRef.current, { visibility: "hidden" });
             }
           },
-        });
+          });
       }
     });
 

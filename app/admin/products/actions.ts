@@ -8,6 +8,7 @@ import {
   validateImageFile,
   validateAndSanitizeDescription,
   validateWithSchema,
+  sanitizeHtml,
 } from "@/lib/validation";
 
 /**
@@ -82,6 +83,30 @@ export async function createProduct(
         error: "Accès refusé. Admin requis.",
       };
     }
+
+    // Sanitizer les champs texte avant validation Zod
+    // Cela permet de détecter les tentatives XSS qui rendraient les champs vides
+    const sanitizedName = sanitizeHtml(productData.name);
+    const sanitizedBrand = sanitizeHtml(productData.brand);
+
+    // Vérifier que les champs obligatoires ne sont pas vides après sanitization
+    if (!sanitizedName || sanitizedName.trim().length === 0) {
+      return {
+        success: false,
+        error: "Le nom du produit contient des caractères non autorisés ou est vide après nettoyage.",
+      };
+    }
+
+    if (!sanitizedBrand || sanitizedBrand.trim().length === 0) {
+      return {
+        success: false,
+        error: "La marque contient des caractères non autorisés ou est vide après nettoyage.",
+      };
+    }
+
+    // Mettre à jour productData avec les versions sanitizées
+    productData.name = sanitizedName.trim();
+    productData.brand = sanitizedBrand.trim();
 
     // Valider les données avec Zod
     const validation = validateWithSchema(productSchema, productData);
@@ -262,6 +287,30 @@ export async function updateProduct(
         error: "Produit introuvable",
       };
     }
+
+    // Sanitizer les champs texte avant validation Zod
+    // Cela permet de détecter les tentatives XSS qui rendraient les champs vides
+    const sanitizedName = sanitizeHtml(productData.name);
+    const sanitizedBrand = sanitizeHtml(productData.brand);
+
+    // Vérifier que les champs obligatoires ne sont pas vides après sanitization
+    if (!sanitizedName || sanitizedName.trim().length === 0) {
+      return {
+        success: false,
+        error: "Le nom du produit contient des caractères non autorisés ou est vide après nettoyage.",
+      };
+    }
+
+    if (!sanitizedBrand || sanitizedBrand.trim().length === 0) {
+      return {
+        success: false,
+        error: "La marque contient des caractères non autorisés ou est vide après nettoyage.",
+      };
+    }
+
+    // Mettre à jour productData avec les versions sanitizées
+    productData.name = sanitizedName.trim();
+    productData.brand = sanitizedBrand.trim();
 
     // Valider les données avec Zod
     const validation = validateWithSchema(productSchema, productData);

@@ -20,12 +20,6 @@ NEXT_PUBLIC_SENTRY_DSN=https://met_ton_dsn_ici@o4500000000000000.ingest.sentry.i
 SENTRY_ORG=kairo-digital
 SENTRY_PROJECT=javascript-nextjs-lx
 SENTRY_AUTH_TOKEN=met_ton_auth_token_ici
-
-# Resend Configuration (Emails transactionnels)
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-RESEND_FROM_EMAIL="Le Bon Parfum <noreply@lebonparfum.com>"
-ADMIN_EMAIL=admin@lebonparfum.com
-NEXT_PUBLIC_SITE_URL=https://lebonparfum.com
 ```
 
 ## 🔑 Où trouver ces valeurs ?
@@ -69,23 +63,6 @@ NEXT_PUBLIC_SITE_URL=https://lebonparfum.com
    - Allez dans Sentry Dashboard > Settings > Account > Auth Tokens
    - Créez un nouveau token avec les permissions : `project:read`, `project:releases`, `org:read`
    - Utilisé pour uploader les source maps lors du build
-
-9. **RESEND_API_KEY** :
-   - Allez sur [resend.com](https://resend.com) et créez un compte
-   - Dans le dashboard, allez dans "API Keys"
-   - Créez une nouvelle clé (commence par `re_`)
-   - Utilisée pour envoyer les emails transactionnels
-
-10. **RESEND_FROM_EMAIL** :
-    - Format : `"Nom <email@domaine.com>"`
-    - En mode test, utilisez `onboarding@resend.dev`
-    - En production, configurez votre domaine dans Resend et utilisez votre email vérifié
-
-11. **ADMIN_EMAIL** :
-    - Email où seront envoyées les notifications de nouvelles commandes
-
-12. **NEXT_PUBLIC_SITE_URL** :
-    - URL de votre site en production (pour les liens dans les emails)
 
 ## ⚠️ Note
 

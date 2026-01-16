@@ -217,7 +217,7 @@ export default async function ProductPage({
           price: Number(typedProduct.price),
           stock: typedProduct.stock,
         },
-      ];
+  ];
 
   // Récupérer les IDs de la wishlist pour afficher l'état des cœurs
   const wishlistIds = await getWishlistIds();

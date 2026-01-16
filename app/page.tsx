@@ -43,15 +43,15 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      <main>
-        <Hero />
-        <CategoryGrid />
-        <CampaignVideo />
-        <Showcase />
-        <HighlightSection />
-        
-        <Services />
-      </main>
+    <main>
+      <Hero />
+      <CategoryGrid />
+      <CampaignVideo />
+      <Showcase />
+      <HighlightSection />
+      
+      <Services />
+    </main>
     </>
   );
 }
