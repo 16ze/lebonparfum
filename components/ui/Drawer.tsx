@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
 import gsap from "gsap";
+import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Drawer - Panneau latéral fullscreen style Byredo
@@ -12,6 +12,7 @@ import gsap from "gsap";
  * - Fond blanc pur
  * - Layout en colonne (pas de grille)
  * - Animation GSAP fluide
+ * - Scroll optimisé avec hauteur dynamique
  */
 
 interface DrawerProps {
@@ -31,6 +32,26 @@ export default function Drawer({
 }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(80);
+
+  // Calculer dynamiquement la hauteur du header
+  useEffect(() => {
+    const calculateHeaderHeight = () => {
+      const header = document.querySelector("header");
+      if (header) {
+        const height = header.offsetHeight;
+        setHeaderHeight(height);
+      } else {
+        // Fallback si le header n'est pas trouvé
+        setHeaderHeight(80);
+      }
+    };
+
+    calculateHeaderHeight();
+    window.addEventListener("resize", calculateHeaderHeight);
+    return () => window.removeEventListener("resize", calculateHeaderHeight);
+  }, []);
 
   // Animation GSAP : Slide depuis la droite
   useEffect(() => {
@@ -38,21 +59,29 @@ export default function Drawer({
 
     const ctx = gsap.context(() => {
       if (isOpen) {
+        // S'assurer que la hauteur est définie avant l'animation
+        if (drawerRef.current) {
+          drawerRef.current.style.height = `calc(100vh - ${headerHeight}px)`;
+          drawerRef.current.style.maxHeight = `calc(100vh - ${headerHeight}px)`;
+        }
+
         // Entrée : Slide depuis la droite + Fade overlay
         gsap.fromTo(
           drawerRef.current,
-          { x: "100%" },
+          { x: "100%", visibility: "hidden" },
           {
             x: "0%",
+            visibility: "visible",
             duration: 0.6,
             ease: "power3.out",
           }
         );
         gsap.fromTo(
           overlayRef.current,
-          { opacity: 0 },
+          { opacity: 0, visibility: "hidden" },
           {
             opacity: 1,
+            visibility: "visible",
             duration: 0.4,
             ease: "power2.out",
           }
@@ -63,17 +92,27 @@ export default function Drawer({
           x: "100%",
           duration: 0.5,
           ease: "power3.in",
+          onComplete: () => {
+            if (drawerRef.current) {
+              drawerRef.current.style.visibility = "hidden";
+            }
+          },
         });
         gsap.to(overlayRef.current, {
           opacity: 0,
           duration: 0.3,
           ease: "power2.in",
+          onComplete: () => {
+            if (overlayRef.current) {
+              overlayRef.current.style.visibility = "hidden";
+            }
+          },
         });
       }
     });
 
     return () => ctx.revert();
-  }, [isOpen]);
+  }, [isOpen, headerHeight]);
 
   // Bloquer le scroll du body
   useEffect(() => {
@@ -127,20 +166,23 @@ export default function Drawer({
       {/* Drawer - sous le header avec bordures arrondies */}
       <div
         ref={drawerRef}
-        className="fixed right-0 bottom-0 w-full md:w-[700px] lg:w-[900px] xl:w-[1100px] bg-white z-50 shadow-2xl flex flex-col rounded-tl-3xl rounded-bl-3xl"
+        className="fixed right-0 w-full md:w-[700px] lg:w-[900px] xl:w-[1100px] bg-white z-50 shadow-2xl flex flex-col rounded-tl-3xl rounded-bl-3xl"
         style={{
           transform: "translateX(100%)",
-          top: "80px" // Hauteur approximative du header
+          top: `${headerHeight}px`,
+          height: `calc(100vh - ${headerHeight}px)`,
+          maxHeight: `calc(100vh - ${headerHeight}px)`,
+          visibility: "hidden",
         }}
       >
         {/* Header fixe - style Byredo */}
-        <div className="flex items-center justify-between border-b border-black/10 px-8 py-6 flex-shrink-0">
-          <div className="flex-1">
-            <h2 className="text-xl uppercase tracking-widest font-bold">
+        <div className="flex items-center justify-between border-b border-black/10 px-4 md:px-6 lg:px-8 py-4 md:py-6 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg md:text-xl uppercase tracking-widest font-bold truncate">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-xs uppercase tracking-widest text-gray-400 mt-1">
+              <p className="text-xs uppercase tracking-widest text-gray-400 mt-1 truncate">
                 {subtitle}
               </p>
             )}
@@ -148,18 +190,29 @@ export default function Drawer({
 
           <button
             onClick={onClose}
-            className="p-2 hover:bg-black/5 transition-colors ml-4 flex-shrink-0"
+            className="p-3 hover:bg-black/5 transition-colors ml-4 flex-shrink-0 rounded-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
             type="button"
+            aria-label="Fermer le panneau"
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
 
-        {/* Contenu scrollable - Layout en colonne */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col">
-            {children}
-          </div>
+        {/* Contenu scrollable - Layout en colonne avec scrollbar personnalisée */}
+        <div
+          ref={contentRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden drawer-scrollbar"
+          style={{
+            minHeight: 0,
+            height: 0, // Force flexbox à calculer la hauteur
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
+            touchAction: "pan-y",
+            willChange: "scroll-position",
+          }}
+        >
+          <div className="flex flex-col">{children}</div>
         </div>
       </div>
     </>

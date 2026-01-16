@@ -217,9 +217,10 @@ export default function Header() {
               elementsRef.current[0] = el;
             }}
             onClick={toggleMenu}
-            className="flex items-center gap-x-2 p-2 hover:opacity-50 transition-opacity duration-300"
+            className="flex items-center gap-x-2 p-2.5 md:p-2 hover:opacity-50 transition-opacity duration-300 min-h-[44px] min-w-[44px]"
             style={{ color: textColor }}
             aria-label="Ouvrir le menu"
+            aria-expanded={isOpen}
           >
             <Menu size={20} strokeWidth={1.5} style={{ stroke: textColor }} />
             <span className="hidden md:inline text-[10px] md:text-xs uppercase tracking-widest font-medium">
@@ -233,7 +234,7 @@ export default function Header() {
               elementsRef.current[1] = el;
             }}
             onClick={openSearch}
-            className="p-2 hover:opacity-50 transition-opacity duration-300"
+            className="p-2.5 md:p-2 hover:opacity-50 transition-opacity duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
             style={{ color: textColor }}
             aria-label="Ouvrir la recherche"
           >
@@ -267,7 +268,7 @@ export default function Header() {
                 openAuthDrawer();
               }
             }}
-            className="p-2 hover:opacity-50 transition-opacity duration-300"
+            className="p-2.5 md:p-2 hover:opacity-50 transition-opacity duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
             style={{ color: textColor }}
             aria-label={user ? "Ouvrir le profil" : "Se connecter"}
           >
@@ -280,7 +281,7 @@ export default function Header() {
               elementsRef.current[4] = el;
             }}
             onClick={openCart}
-            className="relative flex items-center gap-x-2 p-2 hover:opacity-50 transition-opacity duration-300"
+            className="relative flex items-center gap-x-2 p-2.5 md:p-2 hover:opacity-50 transition-opacity duration-300 min-h-[44px] min-w-[44px]"
             style={{ color: textColor }}
             aria-label={`Ouvrir le panier (${cartCount} article${cartCount > 1 ? "s" : ""})`}
           >
