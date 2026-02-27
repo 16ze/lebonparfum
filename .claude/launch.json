@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Next.js Dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "Stripe Webhook Listener",
+      "runtimeExecutable": "stripe",
+      "runtimeArgs": ["listen", "--forward-to", "localhost:3000/api/webhooks/stripe"],
+      "port": 4242
+    }
+  ]
+}

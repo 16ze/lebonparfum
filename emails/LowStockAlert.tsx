@@ -35,7 +35,7 @@ export const LowStockAlert = ({
   return (
     <Html>
       <Head />
-      <Preview>Alerte stock faible - {products.length} produit(s) en stock critique</Preview>
+      <Preview>{`Alerte stock faible - ${products.length} produit(s) en stock critique`}</Preview>
       <Body style={main}>
         <Container style={container}>
           {/* Header */}

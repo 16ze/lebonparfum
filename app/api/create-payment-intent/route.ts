@@ -240,7 +240,8 @@ export async function POST(request: NextRequest) {
       // Identifiant utilisateur (CRITIQUE pour lier la commande)
       user_id: user?.id || 'guest',
       // Email client (CRITIQUE pour les notifications et support)
-      customer_email: user?.email || 'guest@example.com',
+      // Pour les guests, l'email réel est set via receipt_email lors de stripe.confirmPayment()
+      customer_email: user?.email || 'guest',
     };
 
     console.log("📋 [API] Metadata complètes à envoyer à Stripe:", {
