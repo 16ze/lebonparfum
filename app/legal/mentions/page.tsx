@@ -145,9 +145,26 @@ export default function MentionsPage() {
             6. Cookies
           </h2>
           <p>
-            Le site utilise des cookies pour améliorer l'expérience utilisateur
-            et analyser le trafic. En continuant à naviguer sur ce site, vous
-            acceptez l'utilisation de cookies.
+            Le site utilise des cookies et traceurs. Conformément à la
+            délibération CNIL n°2020-092 du 17 septembre 2020, le simple fait
+            de continuer à naviguer ne constitue pas un consentement valable.
+          </p>
+          <p className="mt-4">
+            Lors de votre première visite, un bandeau vous permet d'
+            <strong>accepter ou refuser</strong> expressément le dépôt de
+            cookies non essentiels (analytics, personnalisation). Seuls les
+            cookies strictement nécessaires au fonctionnement du site sont
+            déposés sans consentement préalable.
+          </p>
+          <p className="mt-4">
+            Vous pouvez modifier vos préférences à tout moment via notre{" "}
+            <a
+              href="/legal/cookies"
+              className="text-black underline hover:text-gray-600"
+            >
+              Politique des Cookies
+            </a>
+            .
           </p>
         </section>
 
