@@ -102,7 +102,7 @@ export default function PaymentForm() {
             line1: shippingAddress.address,
             city: shippingAddress.city,
             postal_code: shippingAddress.postalCode,
-            country: shippingAddress.country === "France" ? "FR" : "FR",
+            country: shippingAddress.country === "France" ? "FR" : shippingAddress.country,
           },
           phone: shippingAddress.phone || undefined,
         },

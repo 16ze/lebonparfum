@@ -1,5 +1,6 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   // Optimisations de production
@@ -10,9 +11,18 @@ const nextConfig: NextConfig = {
     } : false,
   },
 
+  // Worktree : pointer vers le repo principal où se trouve node_modules
+  turbopack: {
+    root: path.resolve(__dirname, "../../.."),
+  },
+
+  // Autoriser les requêtes cross-origin depuis localhost en dev (preview tools)
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
+
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",
@@ -79,11 +89,10 @@ const nextConfig: NextConfig = {
             value: "origin-when-cross-origin",
           },
 
-          // Permissions Policy (anciennement Feature-Policy)
-          // Désactive les fonctionnalités dangereuses non utilisées
+          // Permissions Policy : désactive les API navigateur non utilisées
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            value: "camera=(), microphone=(), geolocation=(), usb=(), payment=(), fullscreen=(self)",
           },
 
           // Content Security Policy (CSP)
@@ -91,23 +100,30 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              // Script sources : self + inline (pour Next.js) + eval (pour dev)
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
-              // Styles : self + inline (pour Tailwind)
+              // Fallback global pour les types de contenu non couverts
+              "default-src 'self'",
+              // Scripts : unsafe-inline requis par Next.js (hydration inline scripts)
+              // unsafe-eval restreint à la prod — Next.js Turbopack en a besoin en dev
+              process.env.NODE_ENV === "production"
+                ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
+                : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+              // Styles : unsafe-inline requis par Tailwind (styles générés au runtime)
               "style-src 'self' 'unsafe-inline'",
               // Images : self + data URIs + domaines externes autorisés
-              "img-src 'self' data: https://images.unsplash.com https://placehold.co https://*.supabase.co",
-              // Fonts : self + data URIs
+              "img-src 'self' data: blob: https://images.unsplash.com https://placehold.co https://*.supabase.co",
+              // Fonts : self + data URIs (next/font auto-héberge Google Fonts)
               "font-src 'self' data:",
-              // Connexions (fetch, XHR, WebSocket) : self + Supabase + Stripe + Upstash
-              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.upstash.io wss://*.supabase.co",
-              // Frames : Stripe uniquement (pour checkout embedded)
+              // Connexions : self + Supabase + Stripe + Upstash + Sentry (via tunnel /monitoring = self)
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://q.stripe.com https://*.upstash.io",
+              // Frames : Stripe uniquement (checkout embedded + 3D Secure)
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-              // Base URI : limite les URLs de base
+              // Workers : Next.js service workers
+              "worker-src 'self' blob:",
+              // Base URI : interdit les injections via <base>
               "base-uri 'self'",
               // Form action : limite les destinations de formulaires
               "form-action 'self'",
-              // Objets (Flash, etc.) : aucun
+              // Objets (Flash, plugins) : aucun
               "object-src 'none'",
               // Upgrade insecure requests : force HTTPS
               "upgrade-insecure-requests",
@@ -144,9 +160,6 @@ export default withSentryConfig(nextConfig, {
 
   // Hides source maps from generated client bundles
   hideSourceMaps: true,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
 
   // Enables automatic instrumentation for Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
   // See the following for more information:

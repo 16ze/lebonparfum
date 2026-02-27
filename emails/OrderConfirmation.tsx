@@ -84,7 +84,7 @@ export const OrderConfirmation = ({
                 <thead>
                   <tr>
                     <th style={tableHeader}>Produit</th>
-                    <th style={[tableHeader, tableHeaderRight]}>Prix</th>
+                    <th style={{ ...tableHeader, ...tableHeaderRight }}>Prix</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -115,7 +115,7 @@ export const OrderConfirmation = ({
                           </tr>
                         </table>
                       </td>
-                      <td style={[tableCell, tableCellRight]}>
+                      <td style={{ ...tableCell, ...tableCellRight }}>
                         <Text style={price}>
                           {formatPrice(item.price_at_time * item.quantity)}
                         </Text>
@@ -129,16 +129,16 @@ export const OrderConfirmation = ({
                       <td style={tableCell}>
                         <Text style={label}>Frais de livraison</Text>
                       </td>
-                      <td style={[tableCell, tableCellRight]}>
+                      <td style={{ ...tableCell, ...tableCellRight }}>
                         <Text style={price}>{formatPrice(shippingFee)}</Text>
                       </td>
                     </tr>
                   )}
                   <tr>
-                    <td style={[tableCell, totalCell]}>
+                    <td style={{ ...tableCell, ...totalCell }}>
                       <Text style={totalLabel}>Total payé</Text>
                     </td>
-                    <td style={[tableCell, tableCellRight, totalCell]}>
+                    <td style={{ ...tableCell, ...tableCellRight, ...totalCell }}>
                       <Text style={totalPrice}>{formatPrice(totalAmount)}</Text>
                     </td>
                   </tr>

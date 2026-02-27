@@ -9,7 +9,7 @@ import {
 } from "@/lib/rate-limit";
 
 /**
- * Middleware Next.js - Rate Limiting Global
+ * Proxy Next.js - Rate Limiting Global
  *
  * Applique des limites de taux différentes selon le type de route :
  * - Auth routes : 5 req/15min (protection brute force)
@@ -18,21 +18,30 @@ import {
  * - Public routes : 100 req/min
  */
 
-export async function middleware(request: NextRequest) {
+/**
+ * Circuit breaker : après le premier échec réseau Upstash,
+ * toutes les requêtes suivantes bypassent instantanément le rate limiting.
+ * Reset uniquement au redémarrage du serveur.
+ */
+let upstashCircuitOpen = false;
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip rate limiting en développement si Upstash n'est pas configuré
+  // Skip rate limiting si Upstash n'est pas configuré
   if (!authRateLimit || !adminRateLimit || !apiRateLimit || !publicRateLimit) {
-    console.warn(
-      "⚠️  Rate limiting désactivé : Variables Upstash manquantes (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)"
-    );
+    return NextResponse.next();
+  }
+
+  // Circuit breaker ouvert → bypass immédiat (0ms overhead)
+  if (upstashCircuitOpen) {
     return NextResponse.next();
   }
 
   // Obtenir l'identifiant du client (IP)
   const identifier = getClientIdentifier(request);
 
-  // Déterminer quel rate limiter utiliser
+  // Déterminer quel rate limiter utiliser selon la route
   let rateLimit;
   let limitType = "public";
 
@@ -50,13 +59,15 @@ export async function middleware(request: NextRequest) {
     limitType = "public";
   }
 
-  // Vérifier la limite
   try {
-    const { success, limit, remaining, reset } = await rateLimit.limit(
-      `${limitType}_${identifier}`
-    );
+    // Timeout 500ms : si Upstash ne répond pas en 500ms, on fail-open
+    const { success, limit, remaining, reset } = await Promise.race([
+      rateLimit.limit(`${limitType}_${identifier}`),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("UPSTASH_TIMEOUT")), 500)
+      ),
+    ]);
 
-    // Headers de rate limiting (standard RFC)
     const response = success
       ? NextResponse.next()
       : NextResponse.json(
@@ -67,22 +78,19 @@ export async function middleware(request: NextRequest) {
           },
           {
             status: 429,
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
           }
         );
 
-    // Ajouter les headers de rate limiting à toutes les réponses
     response.headers.set("X-RateLimit-Limit", limit.toString());
     response.headers.set("X-RateLimit-Remaining", remaining.toString());
     response.headers.set("X-RateLimit-Reset", new Date(reset).toISOString());
 
-    // Si rate limit dépassé, ajouter Retry-After header
     if (!success) {
-      const retryAfter = Math.floor((reset - Date.now()) / 1000);
-      response.headers.set("Retry-After", retryAfter.toString());
-
+      response.headers.set(
+        "Retry-After",
+        Math.floor((reset - Date.now()) / 1000).toString()
+      );
       console.warn(
         `🚨 Rate limit dépassé : ${limitType} | IP: ${identifier} | Path: ${pathname}`
       );
@@ -90,8 +98,22 @@ export async function middleware(request: NextRequest) {
 
     return response;
   } catch (error) {
-    // En cas d'erreur Redis, laisser passer la requête (fail-open)
-    console.error("❌ Erreur rate limiting:", error);
+    // Erreur réseau ou timeout → ouvrir le circuit breaker
+    const cause = (error as { cause?: { code?: string } })?.cause;
+    const isNetworkError =
+      cause?.code === "ENOTFOUND" || cause?.code === "ECONNREFUSED";
+    const isTimeout = (error as Error).message === "UPSTASH_TIMEOUT";
+
+    if (isNetworkError || isTimeout) {
+      // Ouvrir le circuit : toutes les requêtes suivantes passent sans attente
+      upstashCircuitOpen = true;
+      console.warn(
+        "⚠️  Rate limiting désactivé (circuit ouvert) : Upstash Redis injoignable. Toutes les requêtes passent en fail-open."
+      );
+    } else {
+      console.error("❌ Erreur rate limiting inattendue:", error);
+    }
+
     return NextResponse.next();
   }
 }

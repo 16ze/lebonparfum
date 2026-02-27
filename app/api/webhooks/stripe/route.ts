@@ -344,7 +344,8 @@ async function createOrderFromPaymentIntent(
   });
 
   // Fusionner les résultats
-  const productsMap = new Map<string, any>();
+  type WebhookProduct = NonNullable<typeof slugResults.data>[0];
+  const productsMap = new Map<string, WebhookProduct>();
   slugResults.data?.forEach((product) => {
     productsMap.set(product.id, product);
   });
