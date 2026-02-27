@@ -48,8 +48,17 @@ export default function MentionsPage() {
             2. Directeur de publication
           </h2>
           <p>
-            Le directeur de la publication est le représentant légal de{" "}
-            {LEGAL_CONSTANTS.companyName}.
+            Le directeur de la publication est :{" "}
+            <strong>{LEGAL_CONSTANTS.directeurPublication}</strong>.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Contact :{" "}
+            <a
+              href={`mailto:${LEGAL_CONSTANTS.companyEmail}`}
+              className="text-black underline hover:text-gray-600"
+            >
+              {LEGAL_CONSTANTS.companyEmail}
+            </a>
           </p>
         </section>
 
