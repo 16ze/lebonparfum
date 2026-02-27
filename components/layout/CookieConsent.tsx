@@ -71,15 +71,15 @@ export default function CookieConsent() {
 
         {/* Texte */}
         <p className="text-sm font-light text-center mb-8 leading-relaxed text-black">
-          Nous utilisons des cookies pour vous offrir une expérience sur-mesure.
-          En continuant votre navigation, vous acceptez notre{" "}
+          Nous utilisons des cookies pour améliorer votre expérience. Vous
+          pouvez choisir d'accepter ou de refuser les cookies non essentiels.{" "}
           <a
             href="/legal/cookies"
             className="underline hover:no-underline transition-all"
             target="_blank"
             rel="noopener noreferrer"
           >
-            politique de confidentialité
+            En savoir plus
           </a>
           .
         </p>
