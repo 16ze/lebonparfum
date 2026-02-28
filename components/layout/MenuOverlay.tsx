@@ -257,12 +257,14 @@ export default function MenuOverlay({
       />
 
       {/* Menu Overlay - Structure bullet-proof pour le scroll */}
+      {/* height = 100dvh (viewport VISIBLE) - top 90px - bottom gap 1rem */}
+      {/* Pas de bottom: "1rem" qui causerait un cut-off mobile (ancré sur layout viewport) */}
       <div
         ref={menuRef}
         className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4"
         style={{
           top: "90px",
-          bottom: "1rem",
+          height: "calc(100dvh - 90px - 1rem)",
           width: activeBrand || isMobile ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
