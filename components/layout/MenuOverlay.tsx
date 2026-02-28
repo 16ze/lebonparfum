@@ -291,16 +291,17 @@ export default function MenuOverlay({
 
         {/* Contenu : Grille Cascading - prend tout l'espace restant */}
         {/*
-          Sur MOBILE : flexDirection column → mobileContentRef prend flex:1 vertical
-          (height: 100% ne fonctionne pas si le parent n'a pas de height CSS explicite)
-          Sur DESKTOP : flexDirection row → grille 3 colonnes
+          MOBILE : position relative → mobileContentRef en absolute inset:0
+          Garantit des dimensions 100% explicites (pas de dépendance flex-height).
+          DESKTOP : flex row → grille 3 colonnes.
         */}
         <div
           style={{
             flex: 1,
-            minHeight: 0, // CRITIQUE: permet au conteneur de shrink
+            minHeight: 0,
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
+            position: "relative", // Ancre pour l'enfant absolu mobile
             overflow: "hidden",
           }}
         >
@@ -309,8 +310,13 @@ export default function MenuOverlay({
             <div
               ref={mobileContentRef}
               style={{
-                flex: 1,              // CRITIQUE: flex:1 dans un column-flex = hauteur définie
-                minHeight: 0,
+                // position absolute + inset:0 = dimensions 100% garanties
+                // (contourne les problèmes de résolution height:100% via flex)
+                position: "absolute",
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
