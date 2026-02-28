@@ -305,9 +305,11 @@ export default function MenuOverlay({
               ref={mobileContentRef}
               style={{
                 width: "100%",
+                height: "100%",       // CRITIQUE: permet aux enfants de connaître leur budget flex
                 display: "flex",
                 flexDirection: "column",
                 minHeight: 0,
+                overflow: "hidden",   // Clips le contenu et active correctement le flex: 1 du scroll
               }}
             >
               {!activeBrand ? (
@@ -447,10 +449,12 @@ export default function MenuOverlay({
                 className="border-r border-black/10"
                 style={{
                   width: "350px",
+                  height: "100%",     // CRITIQUE: permet au flex: 1 du scroll de fonctionner
                   flexShrink: 0,
                   display: "flex",
                   flexDirection: "column",
                   minHeight: 0,
+                  overflow: "hidden",
                 }}
               >
                 {/* Zone scrollable des collections */}
