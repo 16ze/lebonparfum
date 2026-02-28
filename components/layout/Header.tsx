@@ -246,7 +246,7 @@ export default function Header() {
         <Link href="/">
           <h1
             ref={logoRef}
-            className="text-base md:text-lg font-bold uppercase tracking-widest"
+            className="text-xs md:text-lg font-bold uppercase tracking-widest whitespace-nowrap"
             style={{ color: isHome && !isScrolled ? "#FFFFFF" : textColor }}
           >
             THE PARFUMERIEE

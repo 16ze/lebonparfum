@@ -64,7 +64,7 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[100dvh] w-full overflow-hidden"
+      className="relative h-[50dvh] md:h-[100dvh] w-full overflow-hidden"
     >
       {/* Vidéo de fond (dominante) */}
       <div ref={imageRef} className="absolute inset-0 w-full h-full md:scale-110">
