@@ -75,6 +75,33 @@ export default function MenuOverlay({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  /**
+   * Hauteur PIXEL via visualViewport — contourne les bugs dvh sur mobile
+   * (Identique au fix ProfileDrawer : window.visualViewport.height est la
+   *  vraie zone visible, address bar incluse)
+   */
+  useEffect(() => {
+    if (!menuRef.current) return;
+
+    const GAP = 16; // 1rem en px
+
+    const updateMenuHeight = () => {
+      if (!menuRef.current) return;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      menuRef.current.style.height = `${vh - GAP * 2}px`;
+    };
+
+    // Appliquer immédiatement + écouter les changements de viewport
+    updateMenuHeight();
+    window.visualViewport?.addEventListener("resize", updateMenuHeight);
+    window.addEventListener("resize", updateMenuHeight);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateMenuHeight);
+      window.removeEventListener("resize", updateMenuHeight);
+    };
+  }, [isOpen]);
+
   // Animation de transition entre Collections et Produits (mobile)
   useEffect(() => {
     if (!isMobile || !mobileContentRef.current) return;
@@ -263,7 +290,9 @@ export default function MenuOverlay({
         className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4"
         style={{
           top: "1rem",
+          // Fallback CSS — immédiatement écrasé par le useEffect JS (visualViewport)
           height: "calc(100dvh - 2rem)",
+          maxHeight: "calc(100dvh - 2rem)",
           width: activeBrand || isMobile ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
