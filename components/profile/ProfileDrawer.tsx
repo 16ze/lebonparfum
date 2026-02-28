@@ -126,17 +126,34 @@ export default function ProfileDrawer() {
     const updateWidth = () => {
       if (!drawerRef.current) return;
       const isMobile = window.innerWidth < 768;
+
+      // Utiliser visualViewport pour les vraies dimensions visibles sur mobile
+      // (exclut la chrome du navigateur : barre d'adresse + barre de navigation)
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const GAP = 16; // 1rem = 16px
+
       const normalWidth = isMobile ? "95vw" : "480px";
-      // Sur mobile, en mode expanded, on prend toute la largeur sauf un petit padding
       const expandedWidth = isMobile ? "100vw" : "98vw";
+
+      // Calcul en pixels pour que GSAP puisse interpoler correctement
+      const targetHeight =
+        isProfileExpanded && isMobile
+          ? vh                  // Plein écran mobile (sans marges)
+          : vh - GAP * 2;       // Mode normal ou desktop expanded (marges top + bottom)
+
+      const targetTop = isProfileExpanded && isMobile ? 0 : GAP;
+      const targetRight = isProfileExpanded && isMobile ? 0 : GAP;
+
+      // Réinitialiser bottom pour passer en mode height-based (évite les conflits CSS)
+      gsap.set(drawerRef.current, { bottom: "auto" });
 
       gsap.to(drawerRef.current, {
         width: isProfileExpanded ? expandedWidth : normalWidth,
-        // Sur mobile expanded, retirer les marges
-        top: isProfileExpanded && isMobile ? 0 : undefined,
-        right: isProfileExpanded && isMobile ? 0 : undefined,
-        bottom: isProfileExpanded && isMobile ? 0 : undefined,
-        borderRadius: isProfileExpanded && isMobile ? 0 : undefined,
+        height: targetHeight,
+        top: targetTop,
+        right: targetRight,
+        left: isProfileExpanded && isMobile ? 0 : "auto",
+        borderRadius: isProfileExpanded && isMobile ? 0 : 24, // 1.5rem = rounded-3xl
         duration: 0.4,
         ease: "power2.inOut",
       });
@@ -144,9 +161,14 @@ export default function ProfileDrawer() {
 
     updateWidth();
 
-    // Re-calculer au resize
+    // Re-calculer au resize fenêtre ET au resize du viewport visuel
+    // (visualViewport.resize se déclenche quand la chrome mobile apparaît/disparaît)
     window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    window.visualViewport?.addEventListener("resize", updateWidth);
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+      window.visualViewport?.removeEventListener("resize", updateWidth);
+    };
   }, [isProfileExpanded, isProfileDrawerOpen]);
 
   /**
@@ -274,15 +296,17 @@ export default function ProfileDrawer() {
       />
 
       {/* Drawer */}
+      {/* height via style (100dvh = viewport VISIBLE) - pas de bottom-4 qui cause le cut-off mobile */}
       <div
         ref={drawerRef}
         className={clsx(
           "fixed bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden invisible",
-          // Mode normal
-          !isProfileExpanded && "top-4 right-4 bottom-4 w-[95vw] md:w-[480px] rounded-3xl",
-          // Mode expanded sur mobile : plein écran
-          isProfileExpanded && "top-0 right-0 bottom-0 left-0 w-full h-full rounded-none md:top-4 md:right-4 md:bottom-4 md:left-auto md:w-[98vw] md:rounded-3xl"
+          // Mode normal : top-4 + right-4, hauteur gérée par style prop / GSAP
+          !isProfileExpanded && "top-4 right-4 w-[95vw] md:w-[480px] rounded-3xl",
+          // Mode expanded sur mobile : plein écran (GSAP override les valeurs CSS)
+          isProfileExpanded && "top-0 right-0 left-0 w-full rounded-none md:top-4 md:right-4 md:left-auto md:w-[98vw] md:rounded-3xl"
         )}
+        style={{ height: "calc(100dvh - 2rem)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">

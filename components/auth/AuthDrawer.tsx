@@ -191,9 +191,11 @@ export default function AuthDrawer() {
       />
 
       {/* Drawer (Carte flottante) */}
+      {/* height: 100dvh = hauteur du viewport VISIBLE sur mobile (exclut la chrome du navigateur) */}
       <div
         ref={drawerRef}
-        className="fixed top-4 right-4 bottom-4 w-[90vw] md:w-[480px] bg-white rounded-3xl shadow-2xl z-[9999] flex flex-col overflow-hidden invisible"
+        className="fixed top-4 right-4 w-[90vw] md:w-[480px] bg-white rounded-3xl shadow-2xl z-[9999] flex flex-col overflow-hidden invisible"
+        style={{ height: "calc(100dvh - 2rem)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">

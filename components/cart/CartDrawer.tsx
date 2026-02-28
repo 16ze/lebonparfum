@@ -162,9 +162,11 @@ export default function CartDrawer() {
       />
 
       {/* Cart Drawer - Style carte flottante comme MenuOverlay */}
+      {/* height: 100dvh = hauteur du viewport VISIBLE sur mobile (exclut la chrome du navigateur) */}
       <div
         ref={drawerRef}
-        className="fixed top-4 right-4 bottom-4 w-[95vw] md:w-[400px] bg-white shadow-2xl rounded-3xl z-[60] overflow-hidden invisible flex flex-col"
+        className="fixed top-4 right-4 w-[95vw] md:w-[400px] bg-white shadow-2xl rounded-3xl z-[60] overflow-hidden invisible flex flex-col"
+        style={{ height: "calc(100dvh - 2rem)" }}
       >
         {/* Header - fixe */}
         <div
