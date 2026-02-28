@@ -256,15 +256,14 @@ export default function MenuOverlay({
         aria-hidden="true"
       />
 
-      {/* Menu Overlay - Structure bullet-proof pour le scroll */}
-      {/* height = 100dvh (viewport VISIBLE) - top 90px - bottom gap 1rem */}
-      {/* Pas de bottom: "1rem" qui causerait un cut-off mobile (ancré sur layout viewport) */}
+      {/* Menu Overlay - même positionnement que CartDrawer / AuthDrawer / ProfileDrawer */}
+      {/* top-4 + height calc(100dvh - 2rem) = carte flottante avec 1rem de marge tout autour */}
       <div
         ref={menuRef}
         className="fixed z-[60] bg-white shadow-2xl rounded-3xl left-4"
         style={{
-          top: "90px",
-          height: "calc(100dvh - 90px - 1rem)",
+          top: "1rem",
+          height: "calc(100dvh - 2rem)",
           width: activeBrand || isMobile ? "calc(100vw - 2rem)" : "350px",
           visibility: "hidden",
           transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -291,11 +290,17 @@ export default function MenuOverlay({
         </div>
 
         {/* Contenu : Grille Cascading - prend tout l'espace restant */}
+        {/*
+          Sur MOBILE : flexDirection column → mobileContentRef prend flex:1 vertical
+          (height: 100% ne fonctionne pas si le parent n'a pas de height CSS explicite)
+          Sur DESKTOP : flexDirection row → grille 3 colonnes
+        */}
         <div
           style={{
             flex: 1,
             minHeight: 0, // CRITIQUE: permet au conteneur de shrink
             display: "flex",
+            flexDirection: isMobile ? "column" : "row",
             overflow: "hidden",
           }}
         >
@@ -304,12 +309,11 @@ export default function MenuOverlay({
             <div
               ref={mobileContentRef}
               style={{
-                width: "100%",
-                height: "100%",       // CRITIQUE: permet aux enfants de connaître leur budget flex
+                flex: 1,              // CRITIQUE: flex:1 dans un column-flex = hauteur définie
+                minHeight: 0,
                 display: "flex",
                 flexDirection: "column",
-                minHeight: 0,
-                overflow: "hidden",   // Clips le contenu et active correctement le flex: 1 du scroll
+                overflow: "hidden",
               }}
             >
               {!activeBrand ? (
