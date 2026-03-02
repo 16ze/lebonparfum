@@ -66,7 +66,7 @@ export default async function Image() {
               lineHeight: 1.4,
             }}
           >
-            {SITE_CONFIG.tagline}
+            {SITE_CONFIG.description}
           </p>
         </div>
 

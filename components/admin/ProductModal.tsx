@@ -242,7 +242,7 @@ export default function ProductModal({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -293,7 +293,7 @@ export default function ProductModal({
     } else if (field === "stock") {
       updated[index] = { ...updated[index], stock: Number(value) };
     } else {
-      updated[index] = { ...updated[index], [field]: value };
+      updated[index] = { ...updated[index], [field]: value as string };
     }
     setVariants(updated);
   };

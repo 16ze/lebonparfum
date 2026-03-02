@@ -1,3 +1,6 @@
+// Force SSR sur toutes les pages — le layout utilise cookies() via Supabase auth
+export const dynamic = "force-dynamic";
+
 import SmoothScroll from "@/components/SmoothScroll";
 import AuthDrawer from "@/components/auth/AuthDrawer";
 import CartDrawer from "@/components/cart/CartDrawer";
