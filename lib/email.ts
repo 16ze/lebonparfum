@@ -392,49 +392,6 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
 }
 
 // ============================================
-// EMAIL 1 (Legacy) : Confirmation de commande → Client (HTML Template)
-// ============================================
-export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
-  const { orderId, customerName, customerEmail, items, totalAmount, shippingAddress } = data;
-
-  const content = `
-    <h1>Merci pour votre commande</h1>
-    <p>Bonjour ${customerName},</p>
-    <p>Nous avons bien reçu votre commande <strong>#${orderId.slice(0, 8).toUpperCase()}</strong> et nous préparons vos articles avec soin.</p>
-
-    ${generateOrderItemsTable(items, totalAmount)}
-
-    ${shippingAddress ? generateAddressBlock(shippingAddress) : ""}
-
-    <p>Vous recevrez un email avec les informations de suivi dès que votre colis sera expédié.</p>
-
-    <center>
-      <a href="${SITE_URL}/account/orders" class="button">Suivre ma commande</a>
-    </center>
-  `;
-
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: customerEmail,
-      subject: `Confirmation de commande #${orderId.slice(0, 8).toUpperCase()} - ${SITE_NAME}`,
-      html: baseTemplate(content),
-    });
-
-    if (error) {
-      console.error("❌ [RESEND] Erreur envoi email confirmation:", error);
-      return { success: false, error: error.message };
-    }
-
-    console.log("✅ [RESEND] Email confirmation envoyé à:", customerEmail);
-    return { success: true };
-  } catch (err: any) {
-    console.error("❌ [RESEND] Exception envoi email:", err);
-    return { success: false, error: err.message };
-  }
-}
-
-// ============================================
 // EMAIL 2 : Nouvelle commande → Admin
 // ============================================
 export async function sendNewOrderNotificationToAdmin(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
