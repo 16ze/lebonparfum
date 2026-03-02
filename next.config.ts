@@ -1,6 +1,12 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import fs from "fs";
 import path from "path";
+
+// Détecte si on tourne dans un git worktree (node_modules 3 niveaux au-dessus)
+// Sur Vercel ou en checkout normal, node_modules est dans __dirname → config standard
+const worktreeModules = path.resolve(__dirname, "../../..", "node_modules");
+const isWorktree = fs.existsSync(worktreeModules);
 
 const nextConfig: NextConfig = {
   // Optimisations de production
@@ -11,10 +17,13 @@ const nextConfig: NextConfig = {
     } : false,
   },
 
-  // Worktree : pointer vers le repo principal où se trouve node_modules
-  turbopack: {
-    root: path.resolve(__dirname, "../../.."),
-  },
+  // Worktree local uniquement : pointer vers le node_modules partagé
+  // Sur Vercel et en checkout normal, cette config est absente
+  ...(isWorktree && {
+    turbopack: {
+      root: path.resolve(__dirname, "../../.."),
+    },
+  }),
 
   // Autoriser les requêtes cross-origin depuis localhost en dev (preview tools)
   allowedDevOrigins: ["localhost", "127.0.0.1"],

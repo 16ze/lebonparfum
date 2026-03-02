@@ -20,7 +20,9 @@
       "Bash(do curl -s -o /dev/null -w \"Requête $i: %{http_code}\\\\n\" http://localhost:3000/)",
       "Bash(done)",
       "Bash(npm run build:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git -C /Users/bryandev/Documents/lebonparfum/.claude/worktrees/loving-wilson add components/layout/MenuOverlay.tsx)"
     ]
   }
 }
