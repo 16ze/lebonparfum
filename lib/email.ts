@@ -2,23 +2,29 @@ import { render } from "@react-email/components";
 import { Resend } from "resend";
 import LowStockAlert from "@/emails/LowStockAlert";
 import OrderConfirmation from "@/emails/OrderConfirmation";
+import { SITE_CONFIG } from "@/lib/site.config";
 
 /**
  * Configuration Resend
  *
  * Variables d'environnement requises :
- * - RESEND_API_KEY : Clé API Resend
- * - RESEND_FROM_EMAIL : Email expéditeur (ex: "Le Bon Parfum <noreply@lebonparfum.com>")
- * - ADMIN_EMAIL : Email admin pour notifications
+ * - RESEND_API_KEY   : Clé API Resend
+ * - RESEND_FROM_EMAIL: Email expéditeur (ex: "THE PARFUMERIEE <noreply@domain.com>")
+ * - ADMIN_EMAIL      : Email admin pour notifications internes
+ * - CONTACT_EMAIL    : Email de contact affiché dans les emails (optionnel)
+ *
+ * Le nom de la marque (SITE_NAME) et l'URL (SITE_URL) viennent de lib/site.config.ts.
  */
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Config
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Le Bon Parfum <onboarding@resend.dev>";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@lebonparfum.com";
-const SITE_NAME = "Le Bon Parfum";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lebonparfum.com";
+// Config — dérivée de SITE_CONFIG (lib/site.config.ts)
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL || `${SITE_CONFIG.name} <onboarding@resend.dev>`;
+const ADMIN_EMAIL = SITE_CONFIG.contact.adminEmail;
+const SITE_NAME = SITE_CONFIG.name;
+const SITE_URL = SITE_CONFIG.url;
+const CONTACT_EMAIL = SITE_CONFIG.contact.email;
 
 // Types
 interface OrderItem {
@@ -235,7 +241,7 @@ function baseTemplate(content: string): string {
       ${content}
     </div>
     <div class="footer">
-      <p>Des questions ? Contactez-nous à <a href="mailto:contact@lebonparfum.com">contact@lebonparfum.com</a></p>
+      <p>Des questions ? Contactez-nous à <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
       <p style="margin-top: 20px;">&copy; ${new Date().getFullYear()} ${SITE_NAME}. Tous droits réservés.</p>
     </div>
   </div>
@@ -368,6 +374,7 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
           image_url: item.image_url,
         })),
         siteUrl: SITE_URL,
+        siteName: SITE_NAME,
       })
     );
 
@@ -539,6 +546,7 @@ export async function sendLowStockAlert(
       LowStockAlert({
         products,
         siteUrl: SITE_URL,
+        siteName: SITE_NAME,
       })
     );
 

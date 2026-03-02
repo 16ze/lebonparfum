@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SITE_CONFIG } from "@/lib/site.config";
 
 /**
  * Footer - Footer Global du Site (Style Byredo Dark)
@@ -176,14 +177,14 @@ export default function Footer() {
           {/* Signature Gigantesque */}
           <div className="text-center mb-8">
             <h2 className="text-[8vw] font-bold uppercase tracking-wider leading-none">
-              THE PARFUMERIEE
+              {SITE_CONFIG.name}
             </h2>
           </div>
 
           {/* Copyright */}
           <div className="text-center">
             <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-              © 2026 THE PARFUMERIEE. Tous droits réservés.
+              © {new Date().getFullYear()} {SITE_CONFIG.name}. Tous droits réservés.
             </p>
           </div>
         </div>

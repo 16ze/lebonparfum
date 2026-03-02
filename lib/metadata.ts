@@ -1,49 +1,29 @@
 import { Metadata } from "next";
+import { SITE_CONFIG as BASE_CONFIG } from "@/lib/site.config";
 
 /**
- * Configuration des metadata SEO pour l'application
+ * Configuration des metadata SEO pour l'application.
  *
- * Utilisé pour générer:
- * - Meta tags HTML classiques
- * - Open Graph (Facebook, LinkedIn)
- * - Twitter Cards
- * - Metadata Next.js
+ * Les valeurs de base (name, url, contact, social, company) sont dérivées de
+ * lib/site.config.ts — source unique de vérité pour le branding.
+ * Ce fichier ajoute uniquement les champs SEO-spécifiques (title, locale, type).
+ *
+ * Pour changer le nom de la marque/les infos : modifier lib/site.config.ts.
  */
-
-// Configuration du site
 export const SITE_CONFIG = {
-  name: "Le Bon Parfum",
-  title: "Le Bon Parfum - Parfums de Niche & Collections Exclusives",
-  description:
-    "Découvrez notre sélection exclusive de parfums de niche. Collections rares, créateurs indépendants et fragrances d'exception. Livraison offerte dès 100€.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://lebonparfum.com",
+  // Valeurs dérivées de la config centrale
+  name: BASE_CONFIG.name,
+  description: BASE_CONFIG.description,
+  url: BASE_CONFIG.url,
+  contact: BASE_CONFIG.contact,
+  social: BASE_CONFIG.social,
+  company: BASE_CONFIG.company,
+
+  // Champs SEO-spécifiques (calculés à partir de la config centrale)
+  title: `${BASE_CONFIG.name} — ${BASE_CONFIG.tagline}`,
   locale: "fr_FR",
   type: "website",
-
-  // Réseaux sociaux
-  social: {
-    twitter: "@lebonparfum",
-    instagram: "@lebonparfum",
-  },
-
-  // Contact
-  contact: {
-    email: "contact@lebonparfum.com",
-    phone: "+33 1 23 45 67 89",
-  },
-
-  // Entreprise
-  company: {
-    name: "Le Bon Parfum SARL",
-    legalName: "Le Bon Parfum",
-    address: {
-      streetAddress: "123 Rue de la Paix",
-      addressLocality: "Paris",
-      postalCode: "75002",
-      addressCountry: "FR",
-    },
-  },
-};
+} as const;
 
 /**
  * Metadata par défaut pour toutes les pages

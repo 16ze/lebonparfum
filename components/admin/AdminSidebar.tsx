@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SITE_CONFIG } from "@/lib/site.config";
 import { usePathname } from "next/navigation";
 import { Home, Package, ShoppingBag, Settings, LogOut, X, Menu, FolderTree, Tag, AlertTriangle, Users } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
@@ -198,7 +199,7 @@ export default function AdminSidebar() {
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div>
             <h1 className="text-xl uppercase tracking-widest font-bold">
-              THE PARFUMERIEE
+              {SITE_CONFIG.name}
             </h1>
             <p className="text-xs uppercase tracking-widest text-white/50 mt-1">
               Administration

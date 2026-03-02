@@ -1,5 +1,6 @@
 "use client";
 
+import { SITE_CONFIG } from "@/lib/site.config";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useMenu } from "@/context/MenuContext";
@@ -249,7 +250,7 @@ export default function Header() {
             className="text-xs md:text-lg font-bold uppercase tracking-widest whitespace-nowrap"
             style={{ color: isHome && !isScrolled ? "#FFFFFF" : textColor }}
           >
-            THE PARFUMERIEE
+            {SITE_CONFIG.name}
           </h1>
         </Link>
 

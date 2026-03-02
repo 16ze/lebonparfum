@@ -33,6 +33,8 @@ interface OrderConfirmationProps {
   totalAmount: number; // en centimes
   items: OrderItem[];
   siteUrl?: string;
+  /** Nom de la marque — injecté depuis SITE_CONFIG.name dans lib/email.ts */
+  siteName?: string;
 }
 
 export const OrderConfirmation = ({
@@ -41,6 +43,7 @@ export const OrderConfirmation = ({
   totalAmount,
   items,
   siteUrl = "https://lebonparfum.com",
+  siteName = "THE PARFUMERIEE",
 }: OrderConfirmationProps) => {
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -63,7 +66,7 @@ export const OrderConfirmation = ({
         <Container style={container}>
           {/* Header - Logo centré */}
           <Section style={header}>
-            <Heading style={logo}>THE PARFUMERIEE</Heading>
+            <Heading style={logo}>{siteName}</Heading>
           </Section>
 
           <Hr style={hr} />
@@ -165,7 +168,7 @@ export const OrderConfirmation = ({
               Si vous avez des questions, répondez à cet email.
             </Text>
             <Text style={footerText}>
-              &copy; {new Date().getFullYear()} THE PARFUMERIEE. Tous droits
+              &copy; {new Date().getFullYear()} {siteName}. Tous droits
               réservés.
             </Text>
           </Section>

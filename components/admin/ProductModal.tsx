@@ -1,6 +1,7 @@
 "use client";
 
 import { createProduct, updateProduct } from "@/app/admin/products/actions";
+import { SITE_CONFIG } from "@/lib/site.config";
 import Drawer from "@/components/ui/Drawer";
 import Section from "@/components/ui/Section";
 import Toggle from "@/components/ui/Toggle";
@@ -893,7 +894,7 @@ export default function ProductModal({
                     )}
                     placeholder={`${formData.name || "Nom du produit"} - ${
                       formData.brand || "Marque"
-                    } | Le Bon Parfum`}
+                    } | ${SITE_CONFIG.name}`}
                   />
                 </div>
 

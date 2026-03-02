@@ -26,11 +26,14 @@ interface LowStockProduct {
 interface LowStockAlertProps {
   products: LowStockProduct[];
   siteUrl?: string;
+  /** Nom de la marque — injecté depuis SITE_CONFIG.name dans lib/email.ts */
+  siteName?: string;
 }
 
 export const LowStockAlert = ({
   products,
   siteUrl = "https://lebonparfum.com",
+  siteName = "THE PARFUMERIEE",
 }: LowStockAlertProps) => {
   return (
     <Html>
@@ -40,7 +43,7 @@ export const LowStockAlert = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Heading style={logo}>THE PARFUMERIEE</Heading>
+            <Heading style={logo}>{siteName}</Heading>
           </Section>
 
           <Hr style={hr} />
@@ -84,7 +87,7 @@ export const LowStockAlert = ({
           {/* Footer */}
           <Section style={footer}>
             <Text style={footerText}>
-              &copy; {new Date().getFullYear()} THE PARFUMERIEE. Tous droits
+              &copy; {new Date().getFullYear()} {siteName}. Tous droits
               réservés.
             </Text>
           </Section>

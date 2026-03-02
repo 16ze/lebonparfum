@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
+import { SITE_CONFIG } from "@/lib/site.config";
 import { useMenu } from "@/context/MenuContext";
 import { X, Search } from "lucide-react";
 import Link from "next/link";
@@ -191,7 +192,7 @@ export default function SearchOverlay({ products }: SearchOverlayProps) {
         <div className="max-w-6xl mx-auto px-6 md:px-12">
           {/* Logo centré */}
           <h1 className="text-3xl font-bold uppercase tracking-widest text-center mb-8">
-            THE PARFUMERIEE
+            {SITE_CONFIG.name}
           </h1>
 
           {/* Input de recherche style Louis Vuitton */}

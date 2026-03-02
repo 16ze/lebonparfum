@@ -1,7 +1,10 @@
 /**
  * ============================================================
- * CONSTANTES LÉGALES — THE PARFUMERIEE
+ * CONSTANTES LÉGALES
  * ============================================================
+ *
+ * Le nom de la marque, l'URL et les coordonnées de base sont
+ * dérivés de lib/site.config.ts — source unique de vérité.
  *
  * ⚠️  AVANT LA MISE EN LIGNE : remplissez tous les champs
  *     marqués "À COMPLÉTER". Un seul fichier à modifier,
@@ -16,40 +19,44 @@
  * ============================================================
  */
 
+import { SITE_CONFIG } from "@/lib/site.config";
+
 export const LEGAL_CONSTANTS = {
   // ── IDENTITÉ DE L'ENTREPRISE ──────────────────────────────
-  /** Raison sociale exacte telle qu'enregistrée */
-  companyName: "THE PARFUMERIEE",
+  /** Raison sociale — héritée de SITE_CONFIG.company.name */
+  companyName: SITE_CONFIG.company.name,
 
   /** Forme juridique : SAS, SARL, auto-entrepreneur, etc. */
-  companyType: "À COMPLÉTER — ex : Auto-entrepreneur / SAS",
+  companyType: SITE_CONFIG.company.type,
 
-  /** Numéro SIRET (14 chiffres) — obtenu à l'immatriculation */
-  companySIRET: "À COMPLÉTER — ex : 123 456 789 00012",
+  /** Numéro SIRET (14 chiffres) — À compléter dans lib/site.config.ts */
+  companySIRET: SITE_CONFIG.company.siret,
 
   /** Inscription au Registre du Commerce et des Sociétés */
-  companyRCS: "À COMPLÉTER — ex : RCS Paris B 123 456 789",
+  companyRCS: SITE_CONFIG.company.rcs,
 
   /** Numéro de TVA intracommunautaire (si assujetti) */
-  companyVAT: "À COMPLÉTER — ex : FR12 123456789",
+  companyVAT: SITE_CONFIG.company.vat,
 
   // ── COORDONNÉES ───────────────────────────────────────────
   /** Adresse postale complète du siège social */
-  companyAddress: "À COMPLÉTER — ex : 12 Rue du Commerce, 75015 Paris, France",
+  companyAddress: SITE_CONFIG.company.address.street
+    ? `${SITE_CONFIG.company.address.street}, ${SITE_CONFIG.company.address.postalCode} ${SITE_CONFIG.company.address.city}, ${SITE_CONFIG.company.address.country}`
+    : "À COMPLÉTER — ex : 12 Rue du Commerce, 75015 Paris, France",
 
-  /** Email de contact principal (affiché publiquement) */
-  companyEmail: "À COMPLÉTER — ex : contact@theparfumeriee.com",
+  /** Email de contact principal — héritée de SITE_CONFIG.contact.email */
+  companyEmail: SITE_CONFIG.contact.email,
 
   /** Téléphone (optionnel mais recommandé pour les CGV) */
-  companyPhone: "À COMPLÉTER — ex : +33 6 XX XX XX XX",
+  companyPhone: SITE_CONFIG.contact.phone,
 
-  /** URL du site en production */
-  siteUrl: "À COMPLÉTER — ex : https://www.theparfumeriee.com",
+  /** URL du site en production — héritée de SITE_CONFIG.url */
+  siteUrl: SITE_CONFIG.url,
 
   // ── RESPONSABLE LÉGAL ─────────────────────────────────────
   /**
    * Directeur de la publication — OBLIGATOIRE (loi LCEN art. 6-III)
-   * Prénom + Nom du gérant / représentant légal
+   * À compléter manuellement (Prénom + Nom du gérant)
    */
   directeurPublication: "À COMPLÉTER — Prénom Nom du gérant",
 
@@ -57,20 +64,20 @@ export const LEGAL_CONSTANTS = {
    * Email DPO / Délégué à la Protection des Données
    * Peut être identique à companyEmail si pas de DPO désigné
    */
-  dpoEmail: "À COMPLÉTER — ex : privacy@theparfumeriee.com",
+  dpoEmail: "À COMPLÉTER — ex : privacy@domain.com",
 
   // ── HÉBERGEUR ─────────────────────────────────────────────
-  // Vercel — ne pas modifier
-  hostName: "Vercel Inc.",
-  hostAddress: "340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis",
-  hostWebsite: "https://vercel.com",
+  // Dérivé de SITE_CONFIG.hosting — ne pas modifier ici
+  hostName: SITE_CONFIG.hosting.name,
+  hostAddress: SITE_CONFIG.hosting.address,
+  hostWebsite: SITE_CONFIG.hosting.website,
 
   // ── POLITIQUE COMMERCIALE ─────────────────────────────────
   /** Délai de livraison annoncé aux clients */
   deliveryDelay: "3 à 5 jours ouvrés",
 
-  /** Seuil de livraison gratuite en euros */
-  freeShippingThreshold: "100",
+  /** Seuil de livraison gratuite en euros (depuis SITE_CONFIG.ecommerce) */
+  freeShippingThreshold: String(SITE_CONFIG.ecommerce.freeShippingThreshold / 100),
 
   /** Frais de port en dessous du seuil (en euros) */
   shippingCost: "5",
